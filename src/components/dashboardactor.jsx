@@ -3,9 +3,9 @@ import { auth } from '../services/firebase';
 import { crearMicrositio, obtenerMicrositio } from '../services/firestore';
 import { logout } from '../services/auth';
 import { useNavigate } from 'react-router-dom';
-import FormularioMicrositio from './FormularioMicrositio';
-import GaleriaFotos from './GaleriaFotos';
-import CrearEvento from './CrearEvento';
+import FormularioMicrositio from './formulariomicrositio';
+import GaleriaFotos from './galeriafotos';
+import CrearEvento from './crearevento';
 import { LogOut, Eye } from 'lucide-react';
 
 export default function DashboardActor({ actorId }) {
