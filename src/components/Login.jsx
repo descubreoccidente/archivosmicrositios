@@ -32,8 +32,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-terracota to-terracota-dark flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative bg-cover bg-center"
+      style={{ backgroundImage: "url('/fondo-login.png')" }}
+    >
+      <div className="absolute inset-0 bg-terracota/20"></div>
+
+      <div className="relative bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <img
             src="/logo-teal.png"

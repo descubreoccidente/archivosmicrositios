@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Barlow:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&display=swap');
 
 * {
   margin: 0;
@@ -7,13 +7,9 @@
 }
 
 body {
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Arimo', sans-serif;
   color: #2C1810;
   background-color: #F7F0E8;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Fredoka', sans-serif;
 }
 
 html {

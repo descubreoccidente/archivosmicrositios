@@ -16,9 +16,8 @@ export default {
         gris: '#6B5B52',
       },
       fontFamily: {
-        primaria: ['Fredoka', 'sans-serif'],
-        secundaria: ['Barlow', 'sans-serif'],
-      },
+  sans: ['Arimo', 'sans-serif'],
+},
     },
   },
   plugins: [],
