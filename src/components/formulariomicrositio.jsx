@@ -3,16 +3,38 @@ import { crearMicrositio, obtenerMicrositio } from '../services/firestore';
 import { db } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
+const CATEGORIAS_SUBCATEGORIAS = {
+  'Hotel': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca'],
+  'Gastronomía': ['Típica/Tradicional', 'Gourmet', 'Rápida', 'Vegetariana/Vegana', 'Cafetería', 'Repostería', 'Comida internacional', 'Parrilla', 'Nikkei'],
+  'Tour operador': ['Tours de un día', 'Paquetes multidía', 'Aventura/Extremo', 'Cultural/Patrimonial', 'Ecoturismo'],
+  'Ente territorial': ['Alcaldía', 'Secretaría de Turismo', 'Casa de Cultura', 'Oficina de Turismo'],
+  'Institución': ['Caja de compensación', 'Cámara de comercio', 'Religiosa', 'Fundación', 'Adscrita a ministerio', 'Cooperativa', 'Corporación'],
+  'Microempresa': ['Artesanías', 'Souvenirs', 'Productos agroalimentarios', 'Confecciones'],
+  'Bares y pubs': ['Coctelería', 'Vinos', 'Música en vivo', 'Ambiente chill', 'Cerveza artesanal', 'Deportivo', 'Karaoke', 'Ambiente familiar'],
+  'Recuperadora de residuos': ['Reciclaje', 'Compostaje', 'Educación ambiental'],
+};
+
+const CATEGORIAS = Object.keys(CATEGORIAS_SUBCATEGORIAS);
+
+const MUNICIPIOS = [
+  'Abriaquí', 'Anzá', 'Armenia', 'Buriticá', 'Caicedo', 'Cañasgordas',
+  'Dabeiba', 'Ebéjico', 'Frontino', 'Giraldo', 'Heliconia', 'Liborina',
+  'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
+  'Sopetrán', 'Uramita'
+];
+
 export default function FormularioMicrositio({ actorId, onSave }) {
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: '',
+    subcategoria: '',
     municipio: '',
     telefono: '',
     email: '',
+    paginaWeb: '',
     descripcion: '',
     logo: '',
-    ubicacion: { lat: 0, lng: 0 }
+    ubicacion: { lat: '', lng: '' }
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -25,7 +47,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     try {
       const actorDoc = await getDoc(doc(db, 'actors', actorId));
       if (actorDoc.exists() && actorDoc.data().basicInfo) {
-        setFormData(actorDoc.data().basicInfo);
+        setFormData(prev => ({ ...prev, ...actorDoc.data().basicInfo }));
       }
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -34,7 +56,21 @@ export default function FormularioMicrositio({ actorId, onSave }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'categoria') {
+      setFormData(prev => ({ ...prev, categoria: value, subcategoria: '' }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUbicacionChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      ubicacion: { ...prev.ubicacion, [name]: value }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -51,33 +87,10 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     setLoading(false);
   };
 
-  const categorias = [
-    'Hotel',
-    'Gastronomía',
-    'Tour operador',
-    'Ente territorial',
-    'Institución',
-    'Corporación',
-    'Microempresa',
-    'Bar lounge',
-    'Pub-cervecería',
-    'Recuperadora de residuos'
-  ];
-
-  const municipios = [
-    'Santa Fe de Antioquia',
-    'Caramanta',
-    'Jericó',
-    'Támesis',
-    'Valdivia',
-    'Yarumal',
-    'Olaya',
-    'Sopetrán',
-    'Ebéjico'
-  ];
+  const subcategoriasDisponibles = formData.categoria ? CATEGORIAS_SUBCATEGORIAS[formData.categoria] : [];
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg p-8 max-w-2xl">
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 max-w-2xl">
       <h2 className="text-2xl font-bold text-terracota mb-6">Información del Micrositio</h2>
 
       {success && (
@@ -115,7 +128,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
               className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
             >
               <option value="">Selecciona...</option>
-              {categorias.map(cat => (
+              {CATEGORIAS.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -123,21 +136,42 @@ export default function FormularioMicrositio({ actorId, onSave }) {
 
           <div>
             <label className="block text-sm font-semibold text-marron mb-2">
-              Municipio
+              Subcategoría
             </label>
             <select
-              name="municipio"
-              value={formData.municipio}
+              name="subcategoria"
+              value={formData.subcategoria}
               onChange={handleChange}
               required
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+              disabled={!formData.categoria}
+              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota disabled:opacity-50 disabled:bg-gray-50"
             >
-              <option value="">Selecciona...</option>
-              {municipios.map(mun => (
-                <option key={mun} value={mun}>{mun}</option>
+              <option value="">
+                {formData.categoria ? 'Selecciona...' : 'Elige una categoría primero'}
+              </option>
+              {subcategoriasDisponibles.map(sub => (
+                <option key={sub} value={sub}>{sub}</option>
               ))}
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-marron mb-2">
+            Municipio
+          </label>
+          <select
+            name="municipio"
+            value={formData.municipio}
+            onChange={handleChange}
+            required
+            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+          >
+            <option value="">Selecciona...</option>
+            {MUNICIPIOS.map(mun => (
+              <option key={mun} value={mun}>{mun}</option>
+            ))}
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -166,6 +200,47 @@ export default function FormularioMicrositio({ actorId, onSave }) {
               onChange={handleChange}
               className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
               placeholder="correo@ejemplo.com"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-marron mb-2">
+            Página web <span className="text-gris font-normal">(opcional)</span>
+          </label>
+          <input
+            type="url"
+            name="paginaWeb"
+            value={formData.paginaWeb}
+            onChange={handleChange}
+            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+            placeholder="https://tunegocio.com"
+          />
+        </div>
+
+        <div className="bg-crema p-4 rounded-lg">
+          <label className="block text-sm font-semibold text-marron mb-2">
+            Ubicación (coordenadas)
+          </label>
+          <p className="text-xs text-gris mb-3">
+            Puedes obtener tus coordenadas buscando tu negocio en Google Maps, clic derecho sobre el punto exacto y copiar los números que aparecen primero.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="lat"
+              value={formData.ubicacion.lat}
+              onChange={handleUbicacionChange}
+              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+              placeholder="Latitud, ej: 6.5570"
+            />
+            <input
+              type="text"
+              name="lng"
+              value={formData.ubicacion.lng}
+              onChange={handleUbicacionChange}
+              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+              placeholder="Longitud, ej: -75.8353"
             />
           </div>
         </div>
