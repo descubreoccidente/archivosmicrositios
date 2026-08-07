@@ -11,6 +11,7 @@ import {
   limit,
   addDoc,
   updateDoc,
+  deleteDoc,
   increment
 } from 'firebase/firestore';
 
@@ -155,7 +156,33 @@ const actualizarRatingActor = async (actorId) => {
     console.error('Error actualizando rating:', error);
   }
 };
+// Obtener todos los eventos de un actor (para gestión en su dashboard)
+export const obtenerEventosActor = async (actorId) => {
+  try {
+    const eventos = await getDocs(
+      query(
+        collection(db, 'events'),
+        where('actorId', '==', actorId),
+        orderBy('fecha', 'desc')
+      )
+    );
+    return eventos.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error obteniendo eventos del actor:', error);
+    throw error;
+  }
+};
 
+// Eliminar evento
+export const eliminarEvento = async (eventId) => {
+  try {
+    await deleteDoc(doc(db, 'events', eventId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error eliminando evento:', error);
+    throw error;
+  }
+};
 // Obtener agenda regional filtrada
 export const obtenerAgendaRegional = async (filtros) => {
   try {

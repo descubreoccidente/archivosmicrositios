@@ -1,6 +1,25 @@
-import React, { useState } from 'react';
-import { crearEvento } from '../services/firestore';
-import { Calendar, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { crearEvento, obtenerEventosActor, eliminarEvento } from '../services/firestore';
+import { storage } from '../services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Calendar, MapPin, Trash2, Upload } from 'lucide-react';
+const CATEGORIAS_TIPOS = {
+  'Cultural': ['Cine', 'Musical', 'Artes plásticas', 'Teatro', 'Artesanal', 'Danza', 'Literario'],
+  'Normativo': ['Turismo', 'Agroalimentario', 'Municipal', 'Judicial', 'Salud'],
+  'Formación': ['Taller', 'Curso', 'Capacitación', 'Seminario', 'Conferencia', 'Diplomado', 'Congreso', 'Simposio', 'Coloquio'],
+  'Institucional': ['Empresarial', 'Caja de compensación', 'Acción comunal', 'JAL', 'Corporativo', 'Ente público nacional', 'Ente público municipal', 'Ente público regional', 'Cooperativo', 'Congreso', 'Feria', 'Show room', 'Comercial'],
+  'Religioso': ['Católico romano', 'Cristiano/Evangélico', 'Judío', 'Islámico', 'Otro'],
+  'Fiestas tradicionales': ['Municipal', 'Veredal', 'Regional'],
+  'Otros': [],
+};
+
+const CATEGORIAS = Object.keys(CATEGORIAS_TIPOS);
+const MUNICIPIOS = [
+  'Abriaquí', 'Anzá', 'Armenia', 'Buriticá', 'Caicedo', 'Cañasgordas',
+  'Dabeiba', 'Ebéjico', 'Frontino', 'Giraldo', 'Heliconia', 'Liborina',
+  'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
+  'Sopetrán', 'Uramita'
+];
 
 export default function CrearEvento({ actorId, onEventCreated }) {
   const [formData, setFormData] = useState({
@@ -8,7 +27,12 @@ export default function CrearEvento({ actorId, onEventCreated }) {
     descripcion: '',
     categoria: '',
     tipo: '',
-    fecha: '',
+    tipoOtro: '',
+    modalidad: 'Presencial',
+    requiereInscripcion: false,
+    linkInscripcion: '',
+    fechaInicio: '',
+    fechaFin: '',
     horaInicio: '',
     horaFin: '',
     municipio: '',
@@ -25,23 +49,34 @@ export default function CrearEvento({ actorId, onEventCreated }) {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  const categorias = [
-    'Académico', 'Cultural', 'Religioso', 'Formación', 'Foro', 
-    'Seminario', 'Panel', 'Feria', 'Festival', 'Musical', 'Institucional'
-  ];
-
-  const tipos = [
-    'Conferencia', 'Taller', 'Exposición', 'Concierto', 
-    'Cine', 'Obra de teatro', 'Competencia', 'Networking'
-  ];
-
+  const [eventos, setEventos] = useState([]);
+  const [mostrarForm, setMostrarForm] = useState(false);
+const [subiendoImagen, setSubiendoImagen] = useState(false);
   const alimentacionOpciones = [
     'Refrigerio', 'Estación de café', 'Almuerzo', 'Cena', 'Cóctel'
   ];
 
+  useEffect(() => {
+    cargarEventos();
+  }, [actorId]);
+
+  const cargarEventos = async () => {
+    try {
+      const data = await obtenerEventosActor(actorId);
+      setEventos(data);
+    } catch (error) {
+      console.error('Error cargando eventos:', error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    if (name === 'categoria') {
+      setFormData(prev => ({ ...prev, categoria: value, tipo: '', tipoOtro: '' }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -56,23 +91,44 @@ export default function CrearEvento({ actorId, onEventCreated }) {
         : [...prev.alimentacion, opcion]
     }));
   };
+const handleImagenUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    setSubiendoImagen(true);
+    try {
+      const storageRef = ref(storage, `events/${actorId}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setFormData(prev => ({ ...prev, imagen: url }));
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+    }
+    setSubiendoImagen(false);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const tipoFinal = formData.categoria === 'Otros' ? formData.tipoOtro : formData.tipo;
       await crearEvento(actorId, {
         ...formData,
-        fecha: new Date(formData.fecha)
+        tipo: tipoFinal,
+        fechaInicio: new Date(formData.fechaInicio),
+        fechaFin: formData.fechaFin ? new Date(formData.fechaFin) : new Date(formData.fechaInicio),
+        fecha: new Date(formData.fechaInicio) // se mantiene por compatibilidad con Agenda Regional
       });
       setSuccess(true);
       setFormData({
-        nombre: '', descripcion: '', categoria: '', tipo: '', fecha: '',
-        horaInicio: '', horaFin: '', municipio: '', lugar: '',
+        nombre: '', descripcion: '', categoria: '', tipo: '', tipoOtro: '',
+        modalidad: 'Presencial', requiereInscripcion: false, linkInscripcion: '',
+        fechaInicio: '', fechaFin: '', horaInicio: '', horaFin: '', municipio: '', lugar: '',
         ubicacion: { lat: 6.4, lng: -75.5 }, imagen: '',
         publico: true, cobro: false, precio: 0, boleteria: '',
         parqueo: false, alimentacion: [], capacidad: 0
       });
+      cargarEventos();
+      setMostrarForm(false);
       if (onEventCreated) onEventCreated();
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -81,242 +137,454 @@ export default function CrearEvento({ actorId, onEventCreated }) {
     setLoading(false);
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg p-8 max-w-2xl">
-      <h2 className="text-2xl font-bold text-terracota mb-6">Crear Evento</h2>
+  const handleDelete = async (eventId) => {
+    if (!confirm('¿Eliminar este evento?')) return;
+    try {
+      await eliminarEvento(eventId);
+      cargarEventos();
+      if (onEventCreated) onEventCreated();
+    } catch (error) {
+      console.error('Error eliminando evento:', error);
+    }
+  };
 
+  const formatFecha = (fecha) => {
+    if (!fecha) return '';
+    const date = fecha.toDate ? fecha.toDate() : new Date(fecha);
+    return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const formatRangoFechas = (evento) => {
+    const inicio = formatFecha(evento.fechaInicio || evento.fecha);
+    const fin = evento.fechaFin ? formatFecha(evento.fechaFin) : null;
+    if (fin && fin !== inicio) return `${inicio} — ${fin}`;
+    return inicio;
+  };
+
+  const tiposDisponibles = formData.categoria ? CATEGORIAS_TIPOS[formData.categoria] : [];
+
+  return (
+    <div className="space-y-6">
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-green-700">
+        <div className="bg-green-50 border border-green-200 rounded p-4 text-green-700">
           ✓ Evento creado correctamente
         </div>
       )}
 
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Nombre del Evento
-          </label>
-          <input
-            type="text"
-            name="nombre"
-            value={formData.nombre}
-            onChange={handleChange}
-            required
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            placeholder="Ej: Festival de Gastronomía 2024"
-          />
+      {/* Lista de eventos existentes */}
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-terracota">
+            Tus Eventos ({eventos.length})
+          </h3>
+          <button
+            onClick={() => setMostrarForm(!mostrarForm)}
+            className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg hover:bg-terracota-dark transition"
+          >
+            {mostrarForm ? 'Cancelar' : '+ Nuevo Evento'}
+          </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              Categoría
-            </label>
-            <select
-              name="categoria"
-              value={formData.categoria}
-              onChange={handleChange}
-              required
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            >
-              <option value="">Selecciona...</option>
-              {categorias.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+        {eventos.length === 0 && !mostrarForm && (
+          <p className="text-gris text-sm">Aún no has creado ningún evento.</p>
+        )}
 
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              Tipo
-            </label>
-            <select
-              name="tipo"
-              value={formData.tipo}
-              onChange={handleChange}
-              required
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            >
-              <option value="">Selecciona...</option>
-              {tipos.map(tipo => (
-                <option key={tipo} value={tipo}>{tipo}</option>
-              ))}
-            </select>
-          </div>
+        <div className="space-y-3">
+          {eventos.map((evento) => (
+            <div key={evento.id} className="flex justify-between items-center border border-gris/20 rounded-lg p-4">
+              <div className="flex items-center gap-4">
+                {evento.imagen && (
+                  <img src={evento.imagen} alt={evento.nombre} className="w-16 h-16 object-cover rounded-lg" />
+                )}
+                <div>
+                  <p className="font-semibold text-marron">{evento.nombre}</p>
+                <div className="flex items-center gap-4 text-sm text-gris mt-1 flex-wrap">
+                  <span className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    {formatRangoFechas(evento)}
+                  </span>
+                  {(evento.municipio || evento.lugar) && (
+                    <span className="flex items-center gap-1">
+                      <MapPin size={14} />
+                      {[evento.lugar, evento.municipio].filter(Boolean).join(', ')}
+                    </span>
+                  )}
+                  {evento.categoria && (
+                    <span className="bg-crema text-terracota px-2 py-0.5 rounded text-xs font-semibold">
+                      {evento.categoria}{evento.tipo ? ` · ${evento.tipo}` : ''}
+                    </span>
+                  )}
+                  {evento.modalidad && (
+                    <span className="text-xs text-gris">{evento.modalidad}</span>
+                  )}
+                </div>
+              </div>
+              </div>
+              <button
+                onClick={() => handleDelete(evento.id)}
+                className="text-gris hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Descripción (máx 200 caracteres)
-          </label>
-          <textarea
-            name="descripcion"
-            value={formData.descripcion}
-            onChange={handleChange}
-            maxLength={200}
-            rows={3}
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota resize-none"
-            placeholder="Detalles del evento..."
-          />
-        </div>
+      {/* Formulario para crear nuevo evento */}
+      {mostrarForm && (
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8">
+          <h2 className="text-xl font-bold text-terracota mb-6">Crear Evento</h2>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              📅 Fecha
-            </label>
-            <input
-              type="date"
-              name="fecha"
-              value={formData.fecha}
-              onChange={handleChange}
-              required
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-marron mb-2">
-                Hora inicio
+                Nombre del Evento
               </label>
               <input
-                type="time"
-                name="horaInicio"
-                value={formData.horaInicio}
+                type="text"
+                name="nombre"
+                value={formData.nombre}
                 onChange={handleChange}
+                required
                 className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                placeholder="Ej: Festival de Gastronomía 2024"
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Categoría
+                </label>
+                <select
+                  name="categoria"
+                  value={formData.categoria}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                >
+                  <option value="">Selecciona...</option>
+                  {CATEGORIAS.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Tipo
+                </label>
+                {formData.categoria === 'Otros' ? (
+                  <input
+                    type="text"
+                    name="tipoOtro"
+                    value={formData.tipoOtro}
+                    onChange={handleChange}
+                    required
+                    placeholder="Especifica el tipo"
+                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                  />
+                ) : (
+                  <select
+                    name="tipo"
+                    value={formData.tipo}
+                    onChange={handleChange}
+                    required
+                    disabled={!formData.categoria}
+                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota disabled:opacity-50 disabled:bg-gray-50"
+                  >
+                    <option value="">
+                      {formData.categoria ? 'Selecciona...' : 'Elige una categoría primero'}
+                    </option>
+                    {tiposDisponibles.map(tipo => (
+                      <option key={tipo} value={tipo}>{tipo}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-marron mb-2">
-                Hora fin
+                Descripción (máx 200 caracteres)
               </label>
-              <input
-                type="time"
-                name="horaFin"
-                value={formData.horaFin}
+              <textarea
+                name="descripcion"
+                value={formData.descripcion}
                 onChange={handleChange}
-                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                maxLength={200}
+                rows={3}
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota resize-none"
+                placeholder="Detalles del evento..."
               />
             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              Lugar
-            </label>
-            <input
-              type="text"
-              name="lugar"
-              value={formData.lugar}
-              onChange={handleChange}
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-              placeholder="Ej: Parque Central"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              Capacidad
-            </label>
-            <input
-              type="number"
-              name="capacidad"
-              value={formData.capacidad}
-              onChange={handleChange}
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-              placeholder="Cantidad de personas"
-            />
-          </div>
-        </div>
-
-        {/* Detalles */}
-        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                name="publico"
-                checked={formData.publico}
-                onChange={handleChange}
-              />
-              <span className="text-sm font-semibold text-marron">Evento público</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                name="parqueo"
-                checked={formData.parqueo}
-                onChange={handleChange}
-              />
-              <span className="text-sm font-semibold text-marron">Parqueo habilitado</span>
-            </label>
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer mb-2">
-              <input
-                type="checkbox"
-                name="cobro"
-                checked={formData.cobro}
-                onChange={handleChange}
-              />
-              <span className="text-sm font-semibold text-marron">¿Tiene cobro?</span>
-            </label>
-            {formData.cobro && (
-              <div className="ml-6 space-y-2">
+<div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Cartel / eCard del evento
+              </label>
+              {formData.imagen ? (
+                <div className="relative inline-block">
+                  <img src={formData.imagen} alt="Cartel del evento" className="h-40 rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, imagen: '' }))}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ) : (
+                <label htmlFor="imagen-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-terracota rounded-lg p-6 cursor-pointer hover:bg-crema transition">
+                  <Upload className="text-terracota mb-1" size={24} />
+                  <span className="text-terracota text-sm font-semibold">
+                    {subiendoImagen ? 'Subiendo...' : 'Subir cartel (JPG/PNG)'}
+                  </span>
+                  <input
+                    id="imagen-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImagenUpload}
+                    disabled={subiendoImagen}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Fecha inicio
+                </label>
                 <input
-                  type="number"
-                  name="precio"
-                  value={formData.precio}
+                  type="date"
+                  name="fechaInicio"
+                  value={formData.fechaInicio}
                   onChange={handleChange}
-                  placeholder="Precio en COP"
-                  className="w-full border border-gris/30 rounded px-4 py-2 text-sm"
-                />
-                <input
-                  type="url"
-                  name="boleteria"
-                  value={formData.boleteria}
-                  onChange={handleChange}
-                  placeholder="URL de boletería"
-                  className="w-full border border-gris/30 rounded px-4 py-2 text-sm"
+                  required
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
                 />
               </div>
-            )}
-          </div>
 
-          <div>
-            <p className="text-sm font-semibold text-marron mb-2">Alimentación incluida:</p>
-            <div className="flex flex-wrap gap-2">
-              {alimentacionOpciones.map(opcion => (
-                <button
-                  key={opcion}
-                  type="button"
-                  onClick={() => toggleAlimentacion(opcion)}
-                  className={`px-3 py-1 rounded text-sm transition ${
-                    formData.alimentacion.includes(opcion)
-                      ? 'bg-terracota text-white'
-                      : 'bg-gray-200 text-gris hover:bg-gray-300'
-                  }`}
-                >
-                  {opcion}
-                </button>
-              ))}
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Fecha fin <span className="text-gris font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="date"
+                  name="fechaFin"
+                  value={formData.fechaFin}
+                  onChange={handleChange}
+                  min={formData.fechaInicio}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                />
+              </div>
             </div>
-          </div>
-        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
-        >
-          {loading ? 'Creando evento...' : 'Crear Evento'}
-        </button>
-      </div>
-    </form>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Hora inicio
+                </label>
+                <input
+                  type="time"
+                  name="horaInicio"
+                  value={formData.horaInicio}
+                  onChange={handleChange}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Hora fin
+                </label>
+                <input
+                  type="time"
+                  name="horaFin"
+                  value={formData.horaFin}
+                  onChange={handleChange}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Modalidad
+                </label>
+                <select
+                  name="modalidad"
+                  value={formData.modalidad}
+                  onChange={handleChange}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                >
+                  <option value="Presencial">Presencial</option>
+                  <option value="Virtual">Virtual</option>
+                  <option value="Híbrido">Híbrido</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Capacidad
+                </label>
+                <input
+                  type="number"
+                  name="capacidad"
+                  value={formData.capacidad}
+                  onChange={handleChange}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                  placeholder="Cantidad de personas"
+                />
+              </div>
+            </div>
+
+            {formData.modalidad !== 'Virtual' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-marron mb-2">
+                    Municipio del evento
+                  </label>
+                  <select
+                    name="municipio"
+                    value={formData.municipio}
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                  >
+                    <option value="">Selecciona...</option>
+                    {MUNICIPIOS.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-marron mb-2">
+                    Lugar
+                  </label>
+                  <input
+                    type="text"
+                    name="lugar"
+                    value={formData.lugar}
+                    onChange={handleChange}
+                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                    placeholder="Ej: Parque Central"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Inscripción */}
+            <div className="bg-crema p-4 rounded-lg space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="requiereInscripcion"
+                  checked={formData.requiereInscripcion}
+                  onChange={handleChange}
+                />
+                <span className="text-sm font-semibold text-marron">¿Requiere inscripción?</span>
+              </label>
+              {formData.requiereInscripcion && (
+                <input
+                  type="url"
+                  name="linkInscripcion"
+                  value={formData.linkInscripcion}
+                  onChange={handleChange}
+                  placeholder="Enlace de inscripción"
+                  required
+                  className="w-full border border-gris/30 rounded px-4 py-2 text-sm"
+                />
+              )}
+            </div>
+
+            {/* Detalles */}
+            <div className="bg-crema p-4 rounded-lg space-y-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="publico"
+                    checked={formData.publico}
+                    onChange={handleChange}
+                  />
+                  <span className="text-sm font-semibold text-marron">Evento público</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="parqueo"
+                    checked={formData.parqueo}
+                    onChange={handleChange}
+                  />
+                  <span className="text-sm font-semibold text-marron">Parqueo habilitado</span>
+                </label>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                  <input
+                    type="checkbox"
+                    name="cobro"
+                    checked={formData.cobro}
+                    onChange={handleChange}
+                  />
+                  <span className="text-sm font-semibold text-marron">¿Tiene cobro?</span>
+                </label>
+                {formData.cobro && (
+                  <div className="ml-6 space-y-2">
+                    <input
+                      type="number"
+                      name="precio"
+                      value={formData.precio}
+                      onChange={handleChange}
+                      placeholder="Precio en COP"
+                      className="w-full border border-gris/30 rounded px-4 py-2 text-sm"
+                    />
+                    <input
+                      type="url"
+                      name="boleteria"
+                      value={formData.boleteria}
+                      onChange={handleChange}
+                      placeholder="URL de boletería"
+                      className="w-full border border-gris/30 rounded px-4 py-2 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-marron mb-2">Alimentación incluida:</p>
+                <div className="flex flex-wrap gap-2">
+                  {alimentacionOpciones.map(opcion => (
+                    <button
+                      key={opcion}
+                      type="button"
+                      onClick={() => toggleAlimentacion(opcion)}
+                      className={`px-3 py-1 rounded text-sm transition ${
+                        formData.alimentacion.includes(opcion)
+                          ? 'bg-terracota text-white'
+                          : 'bg-white text-gris hover:bg-gray-100 border border-gris/30'
+                      }`}
+                    >
+                      {opcion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
+            >
+              {loading ? 'Creando evento...' : 'Crear Evento'}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
