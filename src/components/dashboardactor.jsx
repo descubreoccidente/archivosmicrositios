@@ -59,8 +59,9 @@ export default function DashboardActor({ actorId }) {
         </div>
         <div className="flex gap-3">
           {micrositio && (
-            <a
-              href={`/micrositio/${actorId}`}
+            
+             <a
+              href={`/micrositio/${micrositio?.actor?.basicInfo?.slug || actorId}`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 bg-white text-terracota px-4 py-2 rounded-lg font-semibold hover:bg-crema transition"

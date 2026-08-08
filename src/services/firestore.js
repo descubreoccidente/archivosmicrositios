@@ -217,3 +217,43 @@ export const guardarSostenibilidad = async (actorId, datos) => {
     throw error;
   }
 };
+// Generar slug único a partir del nombre
+export const generarSlugUnico = async (nombre, actorIdActual) => {
+  const base = nombre
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+
+  let slug = base;
+  let contador = 1;
+
+  while (true) {
+    const q = query(collection(db, 'actors'), where('basicInfo.slug', '==', slug));
+    const snap = await getDocs(q);
+    const enUso = snap.docs.some(d => d.id !== actorIdActual);
+    if (!enUso) break;
+    contador++;
+    slug = `${base}-${contador}`;
+  }
+
+  return slug;
+};
+
+// Obtener micrositio publico por slug
+export const obtenerMicrositioPorSlug = async (slug) => {
+  try {
+    const q = query(collection(db, 'actors'), where('basicInfo.slug', '==', slug));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+
+    const actorDoc = snap.docs[0];
+    const actorId = actorDoc.id;
+
+    return await obtenerMicrositio(actorId);
+  } catch (error) {
+    console.error('Error obteniendo micrositio por slug:', error);
+    throw error;
+  }
+};

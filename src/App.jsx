@@ -2,10 +2,16 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
 import Login from './components/Login';
 import DashboardActor from './components/dashboardactor';
+import MicrositioPublico from './components/micrositiopublico';
 
 function DashboardWrapper() {
   const { actorId } = useParams();
   return <DashboardActor actorId={actorId} />;
+}
+
+function MicrositioPublicoWrapper() {
+  const { slug } = useParams();
+  return <MicrositioPublico slug={slug} />;
 }
 
 export default function App() {
@@ -14,6 +20,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard/:actorId" element={<DashboardWrapper />} />
+        <Route path="/micrositio/:slug" element={<MicrositioPublicoWrapper />} />
       </Routes>
     </BrowserRouter>
   );

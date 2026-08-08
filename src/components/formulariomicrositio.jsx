@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { crearMicrositio } from '../services/firestore';
+import { crearMicrositio, generarSlugUnico } from '../services/firestore';
 import { db, storage } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -154,7 +154,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await crearMicrositio(actorId, formData);
+      const slug = await generarSlugUnico(formData.nombre, actorId);
+      await crearMicrositio(actorId, { ...formData, slug });
       setSuccess(true);
       if (onSave) onSave();
       setTimeout(() => setSuccess(false), 3000);
