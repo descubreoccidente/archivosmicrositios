@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db, storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, FileText, Download } from 'lucide-react';
 
 function obtenerEmbedUrl(url) {
   const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
@@ -17,7 +17,9 @@ function obtenerEmbedUrl(url) {
 export default function GaleriaFotos({ actorId, onUpdate }) {
   const [fotos, setFotos] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [subiendoDoc, setSubiendoDoc] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [videoError, setVideoError] = useState('');
 
@@ -32,15 +34,18 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
       );
       const fotosData = [];
       const videosData = [];
+      const documentosData = [];
 
       mediaSnap.docs.forEach(docSnap => {
         const data = { id: docSnap.id, ...docSnap.data() };
         if (data.tipo === 'foto') fotosData.push(data);
+        else if (data.tipo === 'documento') documentosData.push(data);
         else videosData.push(data);
       });
 
       setFotos(fotosData);
       setVideos(videosData);
+      setDocumentos(documentosData);
     } catch (error) {
       console.error('Error cargando media:', error);
     }
@@ -84,6 +89,47 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error eliminando foto:', error);
+    }
+  };
+
+  const handleDocumentoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (documentos.length + files.length > 5) {
+      alert('Máximo 5 documentos permitidos');
+      return;
+    }
+
+    setSubiendoDoc(true);
+    for (let file of files) {
+      try {
+        const storageRef = ref(storage, `actors/${actorId}/documentos/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+
+        await addDoc(collection(db, 'actors', actorId, 'media'), {
+          url,
+          tipo: 'documento',
+          titulo: file.name,
+          order: documentos.length + 1,
+          createdAt: new Date()
+        });
+      } catch (error) {
+        console.error('Error subiendo documento:', error);
+      }
+    }
+    setSubiendoDoc(false);
+    cargarMedia();
+    if (onUpdate) onUpdate();
+  };
+
+  const handleDeleteDocumento = async (docId) => {
+    if (!confirm('¿Eliminar este documento?')) return;
+    try {
+      await deleteDoc(doc(db, 'actors', actorId, 'media', docId));
+      cargarMedia();
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error eliminando documento:', error);
     }
   };
 
@@ -167,6 +213,58 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
                   className="text-white hover:bg-red-600 p-2 rounded-full transition"
                 >
                   <X size={20} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Documentos */}
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        <h3 className="text-xl font-bold text-terracota mb-6">
+          Documentos ({documentos.length}/5)
+        </h3>
+
+        <div className="border-2 border-dashed border-terracota rounded-lg p-8 text-center mb-6 cursor-pointer hover:bg-crema transition">
+          <label htmlFor="doc-upload" className="cursor-pointer">
+            <FileText className="mx-auto mb-2 text-terracota" size={32} />
+            <p className="text-terracota font-semibold">Sube tus documentos aquí</p>
+            <p className="text-gris text-sm">Máximo 5 documentos, formato PDF</p>
+            <input
+              id="doc-upload"
+              type="file"
+              multiple
+              accept="application/pdf"
+              onChange={handleDocumentoUpload}
+              disabled={subiendoDoc || documentos.length >= 5}
+              className="hidden"
+            />
+          </label>
+          {subiendoDoc && <p className="text-terracota text-sm mt-3">Subiendo...</p>}
+        </div>
+
+        <div className="space-y-2">
+          {documentos.map((docItem) => (
+            <div key={docItem.id} className="flex items-center justify-between border border-gris/20 rounded-lg p-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <FileText className="text-terracota flex-shrink-0" size={20} />
+                <span className="text-sm text-marron truncate">{docItem.titulo}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <a
+                  href={docItem.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gris hover:text-terracota p-2 transition"
+                >
+                  <Download size={18} />
+                </a>
+                <button
+                  onClick={() => handleDeleteDocumento(docItem.id)}
+                  className="text-gris hover:text-red-600 p-2 transition"
+                >
+                  <X size={18} />
                 </button>
               </div>
             </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { crearMicrositio, obtenerMicrositio } from '../services/firestore';
-import { db } from '../services/firebase';
+import { crearMicrositio } from '../services/firestore';
+import { db, storage } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Upload, Trash2, Plus, X, Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon } from 'lucide-react';
 
 const CATEGORIAS_SUBCATEGORIAS = {
   'Hotel': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca'],
@@ -15,6 +17,7 @@ const CATEGORIAS_SUBCATEGORIAS = {
 };
 
 const CATEGORIAS = Object.keys(CATEGORIAS_SUBCATEGORIAS);
+const CATEGORIAS_CON_ENLACES = ['Institución', 'Ente territorial'];
 
 const MUNICIPIOS = [
   'Abriaquí', 'Anzá', 'Armenia', 'Buriticá', 'Caicedo', 'Cañasgordas',
@@ -22,6 +25,22 @@ const MUNICIPIOS = [
   'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
   'Sopetrán', 'Uramita'
 ];
+
+const RED_ICONOS = {
+  facebook: Facebook,
+  instagram: Instagram,
+  whatsapp: MessageCircle,
+  tiktok: Music2,
+  youtube: Youtube,
+};
+
+const RED_LABELS = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  whatsapp: 'WhatsApp (número o link)',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+};
 
 export default function FormularioMicrositio({ actorId, onSave }) {
   const [formData, setFormData] = useState({
@@ -34,9 +53,14 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     paginaWeb: '',
     descripcion: '',
     logo: '',
+    rntVigente: false,
+    numeroRnt: '',
+    enlacesInteres: [],
+    redesSociales: { facebook: '', instagram: '', whatsapp: '', tiktok: '', youtube: '' },
     ubicacion: { lat: '', lng: '' }
   });
   const [loading, setLoading] = useState(false);
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
@@ -47,7 +71,12 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     try {
       const actorDoc = await getDoc(doc(db, 'actors', actorId));
       if (actorDoc.exists() && actorDoc.data().basicInfo) {
-        setFormData(prev => ({ ...prev, ...actorDoc.data().basicInfo }));
+        setFormData(prev => ({
+          ...prev,
+          ...actorDoc.data().basicInfo,
+          redesSociales: { ...prev.redesSociales, ...(actorDoc.data().basicInfo.redesSociales || {}) },
+          enlacesInteres: actorDoc.data().basicInfo.enlacesInteres || []
+        }));
       }
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -55,14 +84,17 @@ export default function FormularioMicrositio({ actorId, onSave }) {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
     if (name === 'categoria') {
       setFormData(prev => ({ ...prev, categoria: value, subcategoria: '' }));
       return;
     }
 
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleUbicacionChange = (e) => {
@@ -70,6 +102,51 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     setFormData(prev => ({
       ...prev,
       ubicacion: { ...prev.ubicacion, [name]: value }
+    }));
+  };
+
+  const handleRedSocialChange = (red, value) => {
+    setFormData(prev => ({
+      ...prev,
+      redesSociales: { ...prev.redesSociales, [red]: value }
+    }));
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSubiendoLogo(true);
+    try {
+      const storageRef = ref(storage, `actors/${actorId}/logo/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setFormData(prev => ({ ...prev, logo: url }));
+    } catch (error) {
+      console.error('Error subiendo logo:', error);
+    }
+    setSubiendoLogo(false);
+  };
+
+  const agregarEnlace = () => {
+    if (formData.enlacesInteres.length >= 5) return;
+    setFormData(prev => ({
+      ...prev,
+      enlacesInteres: [...prev.enlacesInteres, { etiqueta: '', url: '' }]
+    }));
+  };
+
+  const actualizarEnlace = (idx, campo, valor) => {
+    setFormData(prev => ({
+      ...prev,
+      enlacesInteres: prev.enlacesInteres.map((en, i) => i === idx ? { ...en, [campo]: valor } : en)
+    }));
+  };
+
+  const eliminarEnlace = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      enlacesInteres: prev.enlacesInteres.filter((_, i) => i !== idx)
     }));
   };
 
@@ -88,6 +165,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
   };
 
   const subcategoriasDisponibles = formData.categoria ? CATEGORIAS_SUBCATEGORIAS[formData.categoria] : [];
+  const mostrarEnlacesInteres = CATEGORIAS_CON_ENLACES.includes(formData.categoria);
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 max-w-2xl">
@@ -100,6 +178,40 @@ export default function FormularioMicrositio({ actorId, onSave }) {
       )}
 
       <div className="space-y-6">
+        {/* Logo */}
+        <div>
+          <label className="block text-sm font-semibold text-marron mb-2">
+            Logo del negocio
+          </label>
+          {formData.logo ? (
+            <div className="relative inline-block">
+              <img src={formData.logo} alt="Logo" className="h-24 w-24 object-cover rounded-lg border border-gris/20" />
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, logo: '' }))}
+                className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <label htmlFor="logo-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-terracota rounded-lg p-6 w-40 cursor-pointer hover:bg-crema transition">
+              <Upload className="text-terracota mb-1" size={22} />
+              <span className="text-terracota text-xs font-semibold text-center">
+                {subiendoLogo ? 'Subiendo...' : 'Subir logo'}
+              </span>
+              <input
+                id="logo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                disabled={subiendoLogo}
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-semibold text-marron mb-2">
             Nombre del Negocio
@@ -216,6 +328,90 @@ export default function FormularioMicrositio({ actorId, onSave }) {
             className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
             placeholder="https://tunegocio.com"
           />
+        </div>
+
+        {/* RNT */}
+        <div className="bg-crema p-4 rounded-lg space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              name="rntVigente"
+              checked={formData.rntVigente}
+              onChange={handleChange}
+            />
+            <span className="text-sm font-semibold text-marron">RNT vigente (Registro Nacional de Turismo)</span>
+          </label>
+          {formData.rntVigente && (
+            <input
+              type="text"
+              name="numeroRnt"
+              value={formData.numeroRnt}
+              onChange={handleChange}
+              placeholder="Número de RNT"
+              className="w-full border border-gris/30 rounded px-4 py-2 text-sm"
+            />
+          )}
+        </div>
+
+        {/* Enlaces de interés (solo Institución / Ente territorial) */}
+        {mostrarEnlacesInteres && (
+          <div className="bg-crema p-4 rounded-lg space-y-3">
+            <p className="text-sm font-semibold text-marron">Enlaces de interés para el público (máx 5)</p>
+            {formData.enlacesInteres.map((enlace, idx) => (
+              <div key={idx} className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={enlace.etiqueta}
+                  onChange={(e) => actualizarEnlace(idx, 'etiqueta', e.target.value)}
+                  placeholder="Nombre (ej: Trámites municipales)"
+                  className="w-1/3 border border-gris/30 rounded px-3 py-2 text-sm"
+                />
+                <input
+                  type="url"
+                  value={enlace.url}
+                  onChange={(e) => actualizarEnlace(idx, 'url', e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => eliminarEnlace(idx)}
+                  className="text-gris hover:text-red-600 p-2 transition"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            {formData.enlacesInteres.length < 5 && (
+              <button
+                type="button"
+                onClick={agregarEnlace}
+                className="flex items-center gap-1 text-terracota text-sm font-semibold hover:underline"
+              >
+                <Plus size={16} /> Agregar enlace
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Redes sociales */}
+        <div className="bg-crema p-4 rounded-lg space-y-3">
+          <p className="text-sm font-semibold text-marron mb-1">Redes sociales <span className="text-gris font-normal">(opcional)</span></p>
+          {Object.keys(RED_ICONOS).map(red => {
+            const Icono = RED_ICONOS[red];
+            return (
+              <div key={red} className="flex items-center gap-2">
+                <Icono size={18} className="text-terracota flex-shrink-0" />
+                <input
+                  type="text"
+                  value={formData.redesSociales[red]}
+                  onChange={(e) => handleRedSocialChange(red, e.target.value)}
+                  placeholder={RED_LABELS[red]}
+                  className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm"
+                />
+              </div>
+            );
+          })}
         </div>
 
         <div className="bg-crema p-4 rounded-lg">
