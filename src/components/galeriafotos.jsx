@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Upload, X, FileText, Download } from 'lucide-react';
+import { Upload, X, FileText, Download, Star } from 'lucide-react';
 
 function obtenerEmbedUrl(url) {
   const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
@@ -79,6 +79,19 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
     setLoading(false);
     cargarMedia();
     if (onUpdate) onUpdate();
+  };
+
+  const marcarPortada = async (fotoId) => {
+    try {
+      const promesas = fotos.map(f =>
+        updateDoc(doc(db, 'actors', actorId, 'media', f.id), { esPortada: f.id === fotoId })
+      );
+      await Promise.all(promesas);
+      cargarMedia();
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error marcando portada:', error);
+    }
   };
 
   const handleDeleteFoto = async (fotoId) => {
@@ -199,6 +212,8 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
           {loading && <p className="text-terracota text-sm mt-3">Subiendo...</p>}
         </div>
 
+        <p className="text-xs text-gris mb-2">Pasa el mouse sobre una foto y haz clic en la estrella para marcarla como portada de tu micrositio público.</p>
+
         <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
           {fotos.map((foto) => (
             <div key={foto.id} className="relative group">
@@ -207,7 +222,19 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
                 alt={foto.titulo || 'Foto del micrositio'}
                 className="w-full h-24 object-cover rounded-lg"
               />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded-lg flex items-center justify-center">
+              {foto.esPortada && (
+                <div className="absolute top-1 left-1 bg-terracota text-white p-1 rounded-full">
+                  <Star size={12} fill="white" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded-lg flex items-center justify-center gap-1">
+                <button
+                  onClick={() => marcarPortada(foto.id)}
+                  title="Marcar como portada"
+                  className="text-white hover:bg-terracota p-2 rounded-full transition"
+                >
+                  <Star size={18} />
+                </button>
                 <button
                   onClick={() => handleDeleteFoto(foto.id)}
                   className="text-white hover:bg-red-600 p-2 rounded-full transition"
