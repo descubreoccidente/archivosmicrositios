@@ -85,7 +85,7 @@ export default function TurismoResponsable({ actorId }) {
         )}
       </div>
       <p className="text-gris text-sm mb-6">
-        Marca las prácticas que ya implementas en tu negocio. Al alcanzar el 80% obtienes la insignia "Hoja Verde", visible en tu micrositio público.
+        Marca las prácticas que ya implementas en tu empresa. Al alcanzar el 80% obtienes la insignia "Hoja Verde", visible en tu micrositio público.
       </p>
 
       {success && (

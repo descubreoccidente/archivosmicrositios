@@ -169,7 +169,10 @@ export default function FormularioMicrositio({ actorId, onSave }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 max-w-2xl">
-      <h2 className="text-2xl font-bold text-terracota mb-6">Información del Micrositio</h2>
+      <h2 className="text-2xl font-bold text-terracota mb-2">Información para su Micrositio</h2>
+      <p className="text-sm text-gris mb-6">
+        Usted es un Actor importante para la región occidente de Antioquia. Recuerde llenar toda la información posible para que su contenido sea interesante y cumpla su función. Actualícelo y solicite soporte de ser necesario.
+      </p>
 
       {success && (
         <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-green-700">
@@ -181,7 +184,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
         {/* Logo */}
         <div>
           <label className="block text-sm font-semibold text-marron mb-2">
-            Logo del negocio
+            Logo del Actor
           </label>
           {formData.logo ? (
             <div className="relative inline-block">
@@ -214,7 +217,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
 
         <div>
           <label className="block text-sm font-semibold text-marron mb-2">
-            Nombre del Negocio
+            Nombre o razón Social del Actor
           </label>
           <input
             type="text"
@@ -419,7 +422,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
             Ubicación (coordenadas)
           </label>
           <p className="text-xs text-gris mb-3">
-            Puedes obtener tus coordenadas buscando tu negocio en Google Maps, clic derecho sobre el punto exacto y copiar los números que aparecen primero.
+            Puedes obtener tus coordenadas buscando tu perfil de negocio en Google Maps, clic derecho sobre el punto exacto y copiar los números que aparecen primero.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <input
