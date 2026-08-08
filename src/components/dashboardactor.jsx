@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import FormularioMicrositio from './formulariomicrositio';
 import GaleriaFotos from './galeriafotos';
 import CrearEvento from './crearevento';
-import { LogOut, Eye, Info, Image, Calendar } from 'lucide-react';
+import TurismoResponsable from './turismoresponsable';
+import { LogOut, Eye, Info, Image, Calendar, Leaf } from 'lucide-react';
 
 export default function DashboardActor({ actorId }) {
   const [micrositio, setMicrositio] = useState(null);
@@ -45,6 +46,7 @@ export default function DashboardActor({ actorId }) {
     { id: 'info', label: 'Información', icon: Info },
     { id: 'fotos', label: 'Galería', icon: Image },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
+    { id: 'sostenibilidad', label: 'Turismo Responsable', icon: Leaf },
   ];
 
   return (
@@ -107,6 +109,9 @@ export default function DashboardActor({ actorId }) {
         )}
         {activeTab === 'eventos' && (
           <CrearEvento actorId={actorId} onEventCreated={cargarMicrositio} />
+        )}
+        {activeTab === 'sostenibilidad' && (
+          <TurismoResponsable actorId={actorId} />
         )}
       </div>
     </div>

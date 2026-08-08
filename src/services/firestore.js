@@ -201,3 +201,19 @@ export const obtenerAgendaRegional = async (filtros) => {
     throw error;
   }
 };
+// Guardar autoevaluación de turismo responsable
+export const guardarSostenibilidad = async (actorId, datos) => {
+  try {
+    const actorRef = doc(db, 'actors', actorId);
+    await setDoc(actorRef, {
+      sostenibilidad: {
+        ...datos,
+        actualizadoEn: new Date()
+      }
+    }, { merge: true });
+    return { success: true };
+  } catch (error) {
+    console.error('Error guardando sostenibilidad:', error);
+    throw error;
+  }
+};
