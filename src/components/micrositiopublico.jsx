@@ -230,6 +230,11 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
                     )}
                     <div>
                       <p className="font-semibold text-marron text-sm">{evento.nombre}</p>
+                      <p className="text-xs text-terracota font-semibold">
+                        {formatFechaEvento(evento.fechaInicio || evento.fecha)}
+                        {evento.fechaFin && formatFechaEvento(evento.fechaFin) !== formatFechaEvento(evento.fechaInicio || evento.fecha) &&
+                          ` — ${formatFechaEvento(evento.fechaFin)}`}
+                      </p>
                       <p className="text-xs text-gris">{evento.lugar}{evento.municipio ? `, ${evento.municipio}` : ''}</p>
                     </div>
                   </button>

@@ -30,7 +30,11 @@ const FORM_VACIO = {
   publico: true, cobro: false, precio: 0, boleteria: '',
   parqueo: false, alimentacion: [], capacidad: 0
 };
-
+function parseLocalDate(dateString) {
+  if (!dateString) return null;
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 function fechaAInput(fecha) {
   if (!fecha) return '';
   const date = fecha.toDate ? fecha.toDate() : new Date(fecha);
@@ -149,9 +153,9 @@ export default function CrearEvento({ actorId, onEventCreated }) {
       const datosEvento = {
         ...formData,
         tipo: tipoFinal,
-        fechaInicio: new Date(formData.fechaInicio),
-        fechaFin: formData.fechaFin ? new Date(formData.fechaFin) : new Date(formData.fechaInicio),
-        fecha: new Date(formData.fechaInicio)
+        fechaInicio: parseLocalDate(formData.fechaInicio),
+        fechaFin: formData.fechaFin ? parseLocalDate(formData.fechaFin) : parseLocalDate(formData.fechaInicio),
+        fecha: parseLocalDate(formData.fechaInicio)
       };
 
       if (eventoEditandoId) {
@@ -369,15 +373,25 @@ export default function CrearEvento({ actorId, onEventCreated }) {
                 Cartel / eCard del evento
               </label>
               {formData.imagen ? (
-                <div className="relative inline-block">
-                  <img src={formData.imagen} alt="Cartel del evento" className="h-40 rounded-lg object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, imagen: '' }))}
-                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                <div>
+                  <div className="relative inline-block">
+                    <img src={formData.imagen} alt="Cartel del evento" className="h-40 rounded-lg object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, imagen: '' }))}
+                      className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  {formData.fechaInicio && (
+                    <p className="text-sm text-gris mt-2 flex items-center gap-1">
+                      <Calendar size={14} className="text-terracota" />
+                      {formatFecha(parseLocalDate(formData.fechaInicio))}
+                      {formData.fechaFin && formData.fechaFin !== formData.fechaInicio &&
+                        ` — ${formatFecha(parseLocalDate(formData.fechaFin))}`}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <label htmlFor="imagen-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-terracota rounded-lg p-6 cursor-pointer hover:bg-crema transition">
