@@ -183,6 +183,19 @@ export const eliminarEvento = async (eventId) => {
     throw error;
   }
 };
+// Actualizar evento existente
+export const actualizarEvento = async (eventId, datosEvento) => {
+  try {
+    await updateDoc(doc(db, 'events', eventId), {
+      ...datosEvento,
+      'metadata.updatedAt': new Date()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error actualizando evento:', error);
+    throw error;
+  }
+};
 // Obtener agenda regional filtrada
 export const obtenerAgendaRegional = async (filtros) => {
   try {

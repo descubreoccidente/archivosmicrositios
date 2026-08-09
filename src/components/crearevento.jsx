@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { crearEvento, obtenerEventosActor, eliminarEvento } from '../services/firestore';
+import { crearEvento, actualizarEvento, obtenerEventosActor, eliminarEvento } from '../services/firestore';
 import { storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Calendar, MapPin, Trash2, Upload } from 'lucide-react';
+import { Calendar, MapPin, Trash2, Upload, Pencil } from 'lucide-react';
+
 const CATEGORIAS_TIPOS = {
   'Cultural': ['Cine', 'Musical', 'Artes plásticas', 'Teatro', 'Artesanal', 'Danza', 'Literario'],
   'Normativo': ['Turismo', 'Agroalimentario', 'Municipal', 'Judicial', 'Salud'],
@@ -21,37 +22,33 @@ const MUNICIPIOS = [
   'Sopetrán', 'Uramita'
 ];
 
+const FORM_VACIO = {
+  nombre: '', descripcion: '', categoria: '', tipo: '', tipoOtro: '',
+  modalidad: 'Presencial', requiereInscripcion: false, linkInscripcion: '',
+  fechaInicio: '', fechaFin: '', horaInicio: '', horaFin: '', municipio: '', lugar: '',
+  ubicacion: { lat: 6.4, lng: -75.5 }, imagen: '',
+  publico: true, cobro: false, precio: 0, boleteria: '',
+  parqueo: false, alimentacion: [], capacidad: 0
+};
+
+function fechaAInput(fecha) {
+  if (!fecha) return '';
+  const date = fecha.toDate ? fecha.toDate() : new Date(fecha);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function CrearEvento({ actorId, onEventCreated }) {
-  const [formData, setFormData] = useState({
-    nombre: '',
-    descripcion: '',
-    categoria: '',
-    tipo: '',
-    tipoOtro: '',
-    modalidad: 'Presencial',
-    requiereInscripcion: false,
-    linkInscripcion: '',
-    fechaInicio: '',
-    fechaFin: '',
-    horaInicio: '',
-    horaFin: '',
-    municipio: '',
-    lugar: '',
-    ubicacion: { lat: 6.4, lng: -75.5 },
-    imagen: '',
-    publico: true,
-    cobro: false,
-    precio: 0,
-    boleteria: '',
-    parqueo: false,
-    alimentacion: [],
-    capacidad: 0
-  });
+  const [formData, setFormData] = useState(FORM_VACIO);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [eventos, setEventos] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
-const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [eventoEditandoId, setEventoEditandoId] = useState(null);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+
   const alimentacionOpciones = [
     'Refrigerio', 'Estación de café', 'Almuerzo', 'Cena', 'Cóctel'
   ];
@@ -91,7 +88,8 @@ const [subiendoImagen, setSubiendoImagen] = useState(false);
         : [...prev.alimentacion, opcion]
     }));
   };
-const handleImagenUpload = async (e) => {
+
+  const handleImagenUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -106,33 +104,69 @@ const handleImagenUpload = async (e) => {
     }
     setSubiendoImagen(false);
   };
+
+  const iniciarEdicion = (evento) => {
+    setFormData({
+      nombre: evento.nombre || '',
+      descripcion: evento.descripcion || '',
+      categoria: evento.categoria || '',
+      tipo: evento.categoria === 'Otros' ? '' : (evento.tipo || ''),
+      tipoOtro: evento.categoria === 'Otros' ? (evento.tipo || '') : '',
+      modalidad: evento.modalidad || 'Presencial',
+      requiereInscripcion: evento.requiereInscripcion || false,
+      linkInscripcion: evento.linkInscripcion || '',
+      fechaInicio: fechaAInput(evento.fechaInicio || evento.fecha),
+      fechaFin: evento.fechaFin ? fechaAInput(evento.fechaFin) : '',
+      horaInicio: evento.horaInicio || '',
+      horaFin: evento.horaFin || '',
+      municipio: evento.municipio || '',
+      lugar: evento.lugar || '',
+      ubicacion: evento.ubicacion || { lat: 6.4, lng: -75.5 },
+      imagen: evento.imagen || '',
+      publico: evento.publico !== undefined ? evento.publico : true,
+      cobro: evento.cobro || false,
+      precio: evento.precio || 0,
+      boleteria: evento.boleteria || '',
+      parqueo: evento.parqueo || false,
+      alimentacion: evento.alimentacion || [],
+      capacidad: evento.capacidad || 0
+    });
+    setEventoEditandoId(evento.id);
+    setMostrarForm(true);
+  };
+
+  const cancelarFormulario = () => {
+    setMostrarForm(false);
+    setEventoEditandoId(null);
+    setFormData(FORM_VACIO);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const tipoFinal = formData.categoria === 'Otros' ? formData.tipoOtro : formData.tipo;
-      await crearEvento(actorId, {
+      const datosEvento = {
         ...formData,
         tipo: tipoFinal,
         fechaInicio: new Date(formData.fechaInicio),
         fechaFin: formData.fechaFin ? new Date(formData.fechaFin) : new Date(formData.fechaInicio),
-        fecha: new Date(formData.fechaInicio) // se mantiene por compatibilidad con Agenda Regional
-      });
+        fecha: new Date(formData.fechaInicio)
+      };
+
+      if (eventoEditandoId) {
+        await actualizarEvento(eventoEditandoId, datosEvento);
+      } else {
+        await crearEvento(actorId, datosEvento);
+      }
+
       setSuccess(true);
-      setFormData({
-        nombre: '', descripcion: '', categoria: '', tipo: '', tipoOtro: '',
-        modalidad: 'Presencial', requiereInscripcion: false, linkInscripcion: '',
-        fechaInicio: '', fechaFin: '', horaInicio: '', horaFin: '', municipio: '', lugar: '',
-        ubicacion: { lat: 6.4, lng: -75.5 }, imagen: '',
-        publico: true, cobro: false, precio: 0, boleteria: '',
-        parqueo: false, alimentacion: [], capacidad: 0
-      });
+      cancelarFormulario();
       cargarEventos();
-      setMostrarForm(false);
       if (onEventCreated) onEventCreated();
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
-      console.error('Error creando evento:', error);
+      console.error('Error guardando evento:', error);
     }
     setLoading(false);
   };
@@ -167,7 +201,7 @@ const handleImagenUpload = async (e) => {
     <div className="space-y-6">
       {success && (
         <div className="bg-green-50 border border-green-200 rounded p-4 text-green-700">
-          ✓ Evento creado correctamente
+          ✓ Evento guardado correctamente
         </div>
       )}
 
@@ -178,7 +212,7 @@ const handleImagenUpload = async (e) => {
             Tus Eventos ({eventos.length})
           </h3>
           <button
-            onClick={() => setMostrarForm(!mostrarForm)}
+            onClick={() => mostrarForm ? cancelarFormulario() : setMostrarForm(true)}
             className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg hover:bg-terracota-dark transition"
           >
             {mostrarForm ? 'Cancelar' : '+ Nuevo Evento'}
@@ -198,43 +232,53 @@ const handleImagenUpload = async (e) => {
                 )}
                 <div>
                   <p className="font-semibold text-marron">{evento.nombre}</p>
-                <div className="flex items-center gap-4 text-sm text-gris mt-1 flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    {formatRangoFechas(evento)}
-                  </span>
-                  {(evento.municipio || evento.lugar) && (
+                  <div className="flex items-center gap-4 text-sm text-gris mt-1 flex-wrap">
                     <span className="flex items-center gap-1">
-                      <MapPin size={14} />
-                      {[evento.lugar, evento.municipio].filter(Boolean).join(', ')}
+                      <Calendar size={14} />
+                      {formatRangoFechas(evento)}
                     </span>
-                  )}
-                  {evento.categoria && (
-                    <span className="bg-crema text-terracota px-2 py-0.5 rounded text-xs font-semibold">
-                      {evento.categoria}{evento.tipo ? ` · ${evento.tipo}` : ''}
-                    </span>
-                  )}
-                  {evento.modalidad && (
-                    <span className="text-xs text-gris">{evento.modalidad}</span>
-                  )}
+                    {(evento.municipio || evento.lugar) && (
+                      <span className="flex items-center gap-1">
+                        <MapPin size={14} />
+                        {[evento.lugar, evento.municipio].filter(Boolean).join(', ')}
+                      </span>
+                    )}
+                    {evento.categoria && (
+                      <span className="bg-crema text-terracota px-2 py-0.5 rounded text-xs font-semibold">
+                        {evento.categoria}{evento.tipo ? ` · ${evento.tipo}` : ''}
+                      </span>
+                    )}
+                    {evento.modalidad && (
+                      <span className="text-xs text-gris">{evento.modalidad}</span>
+                    )}
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => iniciarEdicion(evento)}
+                  className="text-gris hover:text-terracota p-2 rounded-lg hover:bg-crema transition"
+                >
+                  <Pencil size={18} />
+                </button>
+                <button
+                  onClick={() => handleDelete(evento.id)}
+                  className="text-gris hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
-              <button
-                onClick={() => handleDelete(evento.id)}
-                className="text-gris hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"
-              >
-                <Trash2 size={18} />
-              </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Formulario para crear nuevo evento */}
+      {/* Formulario para crear/editar evento */}
       {mostrarForm && (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-xl font-bold text-terracota mb-6">Crear Evento</h2>
+          <h2 className="text-xl font-bold text-terracota mb-6">
+            {eventoEditandoId ? 'Editar Evento' : 'Crear Evento'}
+          </h2>
 
           <div className="space-y-6">
             <div>
@@ -319,7 +363,8 @@ const handleImagenUpload = async (e) => {
                 placeholder="Detalles del evento..."
               />
             </div>
-<div>
+
+            <div>
               <label className="block text-sm font-semibold text-marron mb-2">
                 Cartel / eCard del evento
               </label>
@@ -351,6 +396,7 @@ const handleImagenUpload = async (e) => {
                 </label>
               )}
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-marron mb-2">
@@ -580,7 +626,7 @@ const handleImagenUpload = async (e) => {
               disabled={loading}
               className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
             >
-              {loading ? 'Creando evento...' : 'Crear Evento'}
+              {loading ? 'Guardando...' : (eventoEditandoId ? 'Guardar Cambios' : 'Crear Evento')}
             </button>
           </div>
         </form>

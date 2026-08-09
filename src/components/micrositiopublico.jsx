@@ -100,9 +100,10 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
               )}
               {info.rntVigente && (
                 <span className="bg-white/20 text-xs font-semibold px-2 py-1 rounded-full">
-                  RNT vigente
+                  RNT vigente{info.numeroRnt ? ` · N° ${info.numeroRnt}` : ''}
                 </span>
               )}
+              
             </div>
           </div>
         </div>
