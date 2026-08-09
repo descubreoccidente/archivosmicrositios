@@ -320,7 +320,16 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
                   </p>
                 )}
               </div>
-
+{eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${eventoSeleccionado.ubicacion.lat},${eventoSeleccionado.ubicacion.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 w-full flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold py-2.5 rounded-lg hover:bg-crema transition text-sm"
+                >
+                  <MapPin size={16} /> Cómo llegar
+                </a>
+              )}
               {eventoSeleccionado.requiereInscripcion && eventoSeleccionado.linkInscripcion && (
                 <a
                   href={eventoSeleccionado.linkInscripcion}
