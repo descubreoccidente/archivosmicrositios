@@ -25,7 +25,11 @@ const MUNICIPIOS = [
   'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
   'Sopetrán', 'Uramita'
 ];
-
+const AMENITIES_POR_CATEGORIA = {
+  'Hotel': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación'],
+  'Gastronomía': ['Patio al aire libre', 'Música en vivo', 'Galería de arte', 'Agenda de talleres', 'WiFi gratis', 'Parqueadero', 'Zona de fumadores', 'Terraza', 'Menú infantil', 'Opciones vegetarianas/veganas', 'Domicilios', 'Accesible para discapacitados', 'Mascotas permitidas'],
+  'Bares y pubs': ['Zona de fumadores', 'Música en vivo', 'Terraza/patio al aire libre', 'Karaoke', 'Mesa de billar', 'Pantallas deportivas', 'WiFi gratis', 'Parqueadero', 'Mascotas permitidas', 'Happy hour'],
+};
 const RED_ICONOS = {
   facebook: Facebook,
   instagram: Instagram,
@@ -57,7 +61,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     numeroRnt: '',
     enlacesInteres: [],
     redesSociales: { facebook: '', instagram: '', whatsapp: '', tiktok: '', youtube: '' },
-    ubicacion: { lat: '', lng: '' }
+    ubicacion: { lat: '', lng: '' },
+    amenities: []
   });
   const [loading, setLoading] = useState(false);
   const [subiendoLogo, setSubiendoLogo] = useState(false);
@@ -94,6 +99,15 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const toggleAmenity = (amenity) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
     }));
   };
 
@@ -444,6 +458,30 @@ export default function FormularioMicrositio({ actorId, onSave }) {
             />
           </div>
         </div>
+
+        {AMENITIES_POR_CATEGORIA[formData.categoria] && (
+          <div className="bg-crema p-4 rounded-lg">
+            <p className="text-sm font-semibold text-marron mb-3">
+              Amenities y servicios <span className="text-gris font-normal">(selecciona los que apliquen)</span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {AMENITIES_POR_CATEGORIA[formData.categoria].map(amenity => (
+                <button
+                  key={amenity}
+                  type="button"
+                  onClick={() => toggleAmenity(amenity)}
+                  className={`px-3 py-1 rounded-full text-sm transition ${
+                    formData.amenities.includes(amenity)
+                      ? 'bg-terracota text-white'
+                      : 'bg-white text-gris hover:bg-gray-100 border border-gris/30'
+                  }`}
+                >
+                  {amenity}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-semibold text-marron mb-2">

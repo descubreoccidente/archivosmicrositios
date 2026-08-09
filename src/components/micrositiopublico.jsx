@@ -118,6 +118,19 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
             </div>
           )}
 
+          {info.amenities && info.amenities.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-bold text-terracota mb-4">Amenities y servicios</h2>
+              <div className="flex flex-wrap gap-2">
+                {info.amenities.map((amenity, idx) => (
+                  <span key={idx} className="bg-crema text-terracota px-3 py-1 rounded-full text-sm font-semibold">
+                    {amenity}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-bold text-terracota mb-4">Contacto</h2>
             <div className="space-y-2 text-sm">
