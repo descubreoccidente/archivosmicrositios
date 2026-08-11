@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { obtenerMicrositioPorSlug } from '../services/firestore';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
-  Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink
+  Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin
 } from 'lucide-react';
 
 const RED_ICONOS = {
@@ -11,6 +11,7 @@ const RED_ICONOS = {
   whatsapp: MessageCircle,
   tiktok: Music2,
   youtube: Youtube,
+  linkedin: Linkedin,
 };
 function formatFechaEvento(fecha) {
   if (!fecha) return '';
