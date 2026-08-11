@@ -74,6 +74,22 @@ export const obtenerMicrositio = async (actorId) => {
         limit(3)
       )
     );
+
+    const promocionesSnap = await getDocs(
+      query(collection(db, 'promociones'), where('actorId', '==', actorId))
+    );
+    const ahora = new Date();
+    const promociones = promocionesSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => !p.fechaVencimiento || p.fechaVencimiento.toDate() > ahora);
+
+    return {
+      actor: { id: actorDoc.id, ...actorDoc.data() },
+      fotos: fotosSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+      resenas: resenas.docs.map(d => ({ id: d.id, ...d.data() })),
+      eventos: eventos.docs.map(d => ({ id: d.id, ...d.data() })),
+      promociones
+    };
     
     return {
       actor: { id: actorDoc.id, ...actorDoc.data() },

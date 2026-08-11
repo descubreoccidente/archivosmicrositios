@@ -7,8 +7,8 @@ import FormularioMicrositio from './formulariomicrositio';
 import GaleriaFotos from './galeriafotos';
 import CrearEvento from './crearevento';
 import TurismoResponsable from './turismoresponsable';
-import { LogOut, Eye, Info, Image, Calendar, Leaf } from 'lucide-react';
-
+import CrearPromocion from './CrearPromocion';
+import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag } from 'lucide-react';
 export default function DashboardActor({ actorId }) {
   const [micrositio, setMicrositio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,10 +42,11 @@ export default function DashboardActor({ actorId }) {
     );
   }
 
-  const tabs = [
+ const tabs = [
     { id: 'info', label: 'Información', icon: Info },
     { id: 'fotos', label: 'Galería', icon: Image },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
+    { id: 'promociones', label: 'Promociones', icon: Tag },
     { id: 'sostenibilidad', label: 'Turismo Responsable', icon: Leaf },
   ];
 
@@ -110,6 +111,13 @@ export default function DashboardActor({ actorId }) {
         )}
         {activeTab === 'eventos' && (
           <CrearEvento actorId={actorId} onEventCreated={cargarMicrositio} />
+        )}
+        {activeTab === 'promociones' && (
+          <CrearPromocion
+            actorId={actorId}
+            nombreNegocio={micrositio?.actor?.basicInfo?.nombre || ''}
+            onPromoCreated={cargarMicrositio}
+          />
         )}
         {activeTab === 'sostenibilidad' && (
           <TurismoResponsable actorId={actorId} />

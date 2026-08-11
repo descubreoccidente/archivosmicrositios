@@ -61,7 +61,7 @@ export default function MicrositioPublico({ slug }) {
     );
   }
 
-  const { actor, fotos, resenas, eventos } = data;
+  const { actor, fotos, resenas, eventos, promociones } = data;
   const info = actor.basicInfo || {};
   const sostenibilidad = actor.sostenibilidad || {};
   const tieneInsignia = sostenibilidad.insignia;
@@ -267,7 +267,44 @@ export default function MicrositioPublico({ slug }) {
               </div>
             </div>
           )}
-
+{promociones && promociones.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-bold text-terracota mb-4">Promociones activas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {promociones.map((promo) => (
+                  <div key={promo.id} className="border border-gris/20 rounded-lg overflow-hidden">
+                    {promo.imagen && (
+                      <img src={promo.imagen} alt={promo.titulo} className="w-full h-28 object-cover" />
+                    )}
+                    <div className="p-3">
+                      <p className="font-semibold text-marron text-sm">{promo.titulo}</p>
+                      <p className="text-xs text-gris mt-1">{promo.descripcion}</p>
+                      {promo.precioOriginal && promo.precioDescuento && (
+                        <div className="mt-2">
+                          <span className="text-gris line-through text-xs mr-2">
+                            ${promo.precioOriginal.toLocaleString()}
+                          </span>
+                          <span className="text-terracota font-bold text-sm">
+                            ${promo.precioDescuento.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {promo.enlace && (
+                        <a
+                          href={promo.enlace}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block mt-2 text-terracota hover:underline text-xs font-semibold"
+                        >
+                          Ver más →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {eventos && eventos.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-bold text-terracota mb-4">Próximos eventos</h2>

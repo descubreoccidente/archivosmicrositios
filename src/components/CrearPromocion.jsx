@@ -1,304 +1,378 @@
-import React, { useState } from 'react';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { loadStripe } from '@stripe/stripe-js';
-import { Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { db, storage } from '../services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Upload, Trash2, Clock } from 'lucide-react';
 
-const PRECIO_PROMOCION = 10000; // COP
+const CATEGORIAS = [
+  'Hotel',
+  'Gastronomía',
+  'Tour operador',
+  'Ente territorial',
+  'Institución',
+  'Microempresa',
+  'Bares y pubs',
+  'Recuperadora de residuos'
+];
+
+const FORM_VACIO = {
+  titulo: '', descripcion: '', categoria: '', imagen: '',
+  descuento: '', precioOriginal: '', precioDescuento: '', enlace: '', fechaVencimiento: ''
+};
 
 export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated }) {
-  const [formData, setFormData] = useState({
-    titulo: '',
-    descripcion: '',
-    categoria: '',
-    imagen: '',
-    descuento: '',
-    precioOriginal: '',
-    precioDescuento: '',
-    enlace: ''
-  });
+  const [formData, setFormData] = useState(FORM_VACIO);
+  const [promociones, setPromociones] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [procesandoPago, setProcesandoPago] = useState(false);
+  const [mostrarForm, setMostrarForm] = useState(false);
 
-  const categorias = [
-    'Hotel',
-    'Gastronomía',
-    'Tour operador',
-    'Ente territorial',
-    'Institución',
-    'Corporación',
-    'Microempresa',
-    'Bar lounge',
-    'Pub-cervecería',
-    'Recuperadora de residuos'
-  ];
+  useEffect(() => {
+    cargarPromociones();
+  }, [actorId]);
+
+  const cargarPromociones = async () => {
+    try {
+      const ahora = Timestamp.now();
+      const q = query(
+        collection(db, 'promociones'),
+        where('actorId', '==', actorId)
+      );
+      const snap = await getDocs(q);
+      const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      const vencidas = todas.filter(p => p.fechaVencimiento && p.fechaVencimiento.toMillis() <= ahora.toMillis());
+      for (const promo of vencidas) {
+        await deleteDoc(doc(db, 'promociones', promo.id));
+      }
+
+      const vigentes = todas.filter(p => !p.fechaVencimiento || p.fechaVencimiento.toMillis() > ahora.toMillis());
+      vigentes.sort((a, b) => (b.fechaCreacion?.toMillis?.() || 0) - (a.fechaCreacion?.toMillis?.() || 0));
+      setPromociones(vigentes);
+    } catch (err) {
+      console.error('Error cargando promociones:', err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const procesarPago = async () => {
-    setProcesandoPago(true);
+  const handleImagenUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSubiendoImagen(true);
+    try {
+      const storageRef = ref(storage, `promociones/${actorId}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setFormData(prev => ({ ...prev, imagen: url }));
+    } catch (err) {
+      console.error('Error subiendo imagen:', err);
+    }
+    setSubiendoImagen(false);
+  };
+
+  const handleDelete = async (promoId) => {
+    if (!confirm('¿Eliminar esta promoción?')) return;
+    try {
+      await deleteDoc(doc(db, 'promociones', promoId));
+      cargarPromociones();
+      if (onPromoCreated) onPromoCreated();
+    } catch (err) {
+      console.error('Error eliminando promoción:', err);
+    }
+  };
+
+  const formatVencimiento = (timestamp) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleString('es-CO', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError(null);
 
+    if (!formData.titulo || !formData.descripcion || !formData.categoria || !formData.fechaVencimiento) {
+      setError('Completa todos los campos obligatorios, incluyendo la fecha de vencimiento');
+      return;
+    }
+
+    const fechaVencimiento = new Date(formData.fechaVencimiento);
+    if (fechaVencimiento <= new Date()) {
+      setError('La fecha de vencimiento debe ser posterior a ahora');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Aquí iría la integración con Stripe/PayU
-      // Por ahora simulamos el pago exitoso
-      
-      // Crear promoción en Firestore
       const promocionData = {
         actorId,
         nombreNegocio,
-        ...formData,
+        titulo: formData.titulo,
+        descripcion: formData.descripcion,
+        categoria: formData.categoria,
+        imagen: formData.imagen,
+        enlace: formData.enlace,
         precioOriginal: formData.precioOriginal ? parseInt(formData.precioOriginal) : null,
         precioDescuento: formData.precioDescuento ? parseInt(formData.precioDescuento) : null,
         descuento: formData.descuento ? parseInt(formData.descuento) : null,
         activa: true,
         fechaCreacion: Timestamp.now(),
-        pago: {
-          monto: PRECIO_PROMOCION,
-          moneda: 'COP',
-          estado: 'completado',
-          fechaPago: Timestamp.now()
-        }
+        fechaVencimiento: Timestamp.fromDate(fechaVencimiento)
       };
 
-      const docRef = await addDoc(collection(db, 'promociones'), promocionData);
+      await addDoc(collection(db, 'promociones'), promocionData);
 
       setSuccess(true);
-      setFormData({
-        titulo: '', descripcion: '', categoria: '', imagen: '',
-        descuento: '', precioOriginal: '', precioDescuento: '', enlace: ''
-      });
-
+      setFormData(FORM_VACIO);
+      setMostrarForm(false);
+      cargarPromociones();
       if (onPromoCreated) onPromoCreated();
-
-      setTimeout(() => setSuccess(false), 5000);
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
-      setError(err.message);
+      setError('Ocurrió un error al crear la promoción');
+      console.error(err);
     }
-    setProcesandoPago(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.titulo || !formData.descripcion || !formData.categoria) {
-      setError('Completa todos los campos obligatorios');
-      return;
-    }
-
-    setLoading(true);
-    await procesarPago();
     setLoading(false);
   };
 
   return (
-    <div className="bg-white rounded-lg p-8 max-w-2xl">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-terracota mb-2">
-          Crear Promoción del Día
-        </h2>
-        <p className="text-gris">
-          💰 Costo: ${PRECIO_PROMOCION.toLocaleString()} COP por 24 horas
-        </p>
-        <p className="text-gris text-sm mt-1">
-          Tu promoción aparecerá en la página de Promociones del Día y será visible para todos los visitantes
-        </p>
+    <div className="space-y-6">
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded p-4 text-green-700">
+          ✓ Promoción creada correctamente
+        </div>
+      )}
+
+      {/* Lista de promociones existentes */}
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-terracota">
+            Tus Promociones ({promociones.length})
+          </h3>
+          <button
+            onClick={() => setMostrarForm(!mostrarForm)}
+            className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg hover:bg-terracota-dark transition"
+          >
+            {mostrarForm ? 'Cancelar' : '+ Nueva Promoción'}
+          </button>
+        </div>
+
+        {promociones.length === 0 && !mostrarForm && (
+          <p className="text-gris text-sm">Aún no tienes promociones activas.</p>
+        )}
+
+        <div className="space-y-3">
+          {promociones.map((promo) => (
+            <div key={promo.id} className="flex justify-between items-center border border-gris/20 rounded-lg p-4">
+              <div className="flex items-center gap-4">
+                {promo.imagen && (
+                  <img src={promo.imagen} alt={promo.titulo} className="w-16 h-16 object-cover rounded-lg" />
+                )}
+                <div>
+                  <p className="font-semibold text-marron">{promo.titulo}</p>
+                  <p className="text-xs text-gris flex items-center gap-1 mt-1">
+                    <Clock size={12} /> Vence: {formatVencimiento(promo.fechaVencimiento)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleDelete(promo.id)}
+                className="text-gris hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded p-4 mb-6 text-red-700">
-          ✗ {error}
-        </div>
-      )}
+      {/* Formulario */}
+      {mostrarForm && (
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8">
+          <h2 className="text-xl font-bold text-terracota mb-6">Crear Promoción</h2>
 
-      {success && (
-        <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-green-700">
-          ✓ ¡Promoción creada y pagada exitosamente! Aparecerá en la página en minutos.
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Título */}
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Título de la Promoción *
-          </label>
-          <input
-            type="text"
-            name="titulo"
-            value={formData.titulo}
-            onChange={handleChange}
-            required
-            maxLength={60}
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            placeholder="Ej: 50% descuento en comida"
-          />
-          <p className="text-xs text-gris mt-1">{formData.titulo.length}/60</p>
-        </div>
-
-        {/* Descripción */}
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Descripción *
-          </label>
-          <textarea
-            name="descripcion"
-            value={formData.descripcion}
-            onChange={handleChange}
-            required
-            maxLength={150}
-            rows={3}
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota resize-none"
-            placeholder="Describe tu oferta..."
-          />
-          <p className="text-xs text-gris mt-1">{formData.descripcion.length}/150</p>
-        </div>
-
-        {/* Categoría */}
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Categoría *
-          </label>
-          <select
-            name="categoria"
-            value={formData.categoria}
-            onChange={handleChange}
-            required
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-          >
-            <option value="">Selecciona...</option>
-            {categorias.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Imagen */}
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Imagen
-          </label>
-          <div className="border-2 border-dashed border-terracota rounded p-6 text-center cursor-pointer hover:bg-crema transition">
-            <label htmlFor="imagen" className="cursor-pointer">
-              <Upload className="mx-auto mb-2 text-terracota" size={32} />
-              <p className="text-terracota font-semibold">Sube una imagen</p>
-              <p className="text-gris text-sm">JPG o PNG, máx 5MB</p>
-              <input
-                id="imagen"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      setFormData(prev => ({ ...prev, imagen: event.target.result }));
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
-                  }
-                }}
-                className="hidden"
-              />
-            </label>
-          </div>
-          {formData.imagen && (
-            <p className="text-xs text-green-600 mt-2">✓ Imagen cargada</p>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded p-4 mb-6 text-red-700 text-sm">
+              {error}
+            </div>
           )}
-        </div>
 
-        {/* Descuento */}
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Porcentaje de Descuento (%)
-          </label>
-          <input
-            type="number"
-            name="descuento"
-            value={formData.descuento}
-            onChange={handleChange}
-            min="0"
-            max="100"
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            placeholder="Ej: 50"
-          />
-        </div>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Título de la Promoción *
+              </label>
+              <input
+                type="text"
+                name="titulo"
+                value={formData.titulo}
+                onChange={handleChange}
+                required
+                maxLength={60}
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                placeholder="Ej: 50% descuento en comida"
+              />
+              <p className="text-xs text-gris mt-1">{formData.titulo.length}/60</p>
+            </div>
 
-        {/* Precios */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              Precio Original
-            </label>
-            <input
-              type="number"
-              name="precioOriginal"
-              value={formData.precioOriginal}
-              onChange={handleChange}
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-              placeholder="Ej: 100000"
-            />
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Descripción *
+              </label>
+              <textarea
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                required
+                maxLength={150}
+                rows={3}
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota resize-none"
+                placeholder="Describe tu oferta..."
+              />
+              <p className="text-xs text-gris mt-1">{formData.descripcion.length}/150</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Categoría *
+              </label>
+              <select
+                name="categoria"
+                value={formData.categoria}
+                onChange={handleChange}
+                required
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+              >
+                <option value="">Selecciona...</option>
+                {CATEGORIAS.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Vence el * <span className="text-gris font-normal">(fecha y hora)</span>
+              </label>
+              <input
+                type="datetime-local"
+                name="fechaVencimiento"
+                value={formData.fechaVencimiento}
+                onChange={handleChange}
+                required
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Imagen
+              </label>
+              {formData.imagen ? (
+                <div className="relative inline-block">
+                  <img src={formData.imagen} alt="Promoción" className="h-32 rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, imagen: '' }))}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ) : (
+                <label htmlFor="imagen-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-terracota rounded-lg p-6 cursor-pointer hover:bg-crema transition">
+                  <Upload className="text-terracota mb-1" size={24} />
+                  <span className="text-terracota text-sm font-semibold">
+                    {subiendoImagen ? 'Subiendo...' : 'Subir imagen (JPG/PNG)'}
+                  </span>
+                  <input
+                    id="imagen-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImagenUpload}
+                    disabled={subiendoImagen}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Porcentaje de Descuento (%)
+              </label>
+              <input
+                type="number"
+                name="descuento"
+                value={formData.descuento}
+                onChange={handleChange}
+                min="0"
+                max="100"
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                placeholder="Ej: 50"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Precio Original
+                </label>
+                <input
+                  type="number"
+                  name="precioOriginal"
+                  value={formData.precioOriginal}
+                  onChange={handleChange}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                  placeholder="Ej: 100000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  Precio con Descuento
+                </label>
+                <input
+                  type="number"
+                  name="precioDescuento"
+                  value={formData.precioDescuento}
+                  onChange={handleChange}
+                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                  placeholder="Ej: 50000"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                Enlace (opcional)
+              </label>
+              <input
+                type="url"
+                name="enlace"
+                value={formData.enlace}
+                onChange={handleChange}
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                placeholder="https://ejemplo.com"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
+            >
+              {loading ? 'Creando...' : 'Crear Promoción'}
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-marron mb-2">
-              Precio con Descuento
-            </label>
-            <input
-              type="number"
-              name="precioDescuento"
-              value={formData.precioDescuento}
-              onChange={handleChange}
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-              placeholder="Ej: 50000"
-            />
-          </div>
-        </div>
-
-        {/* Enlace */}
-        <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
-            Enlace (opcional)
-          </label>
-          <input
-            type="url"
-            name="enlace"
-            value={formData.enlace}
-            onChange={handleChange}
-            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-            placeholder="https://ejemplo.com"
-          />
-        </div>
-
-        {/* Resumen de pago */}
-        <div className="bg-terracota/10 border border-terracota rounded p-4">
-          <p className="text-sm text-marron font-semibold mb-2">Resumen del pago:</p>
-          <div className="flex justify-between mb-2">
-            <span className="text-gris">Promoción 24 horas:</span>
-            <span className="font-bold text-terracota">${PRECIO_PROMOCION.toLocaleString()} COP</span>
-          </div>
-          <div className="flex justify-between pt-2 border-t border-terracota/30">
-            <span className="font-bold text-marron">Total a pagar:</span>
-            <span className="font-bold text-terracota text-lg">${PRECIO_PROMOCION.toLocaleString()} COP</span>
-          </div>
-        </div>
-
-        {/* Botón de pago */}
-        <button
-          type="submit"
-          disabled={loading || procesandoPago}
-          className="w-full bg-terracota text-white font-bold py-4 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {procesandoPago ? 'Procesando pago...' : `Crear Promoción y Pagar $${PRECIO_PROMOCION.toLocaleString()}`}
-        </button>
-
-        <p className="text-xs text-gris text-center">
-          Al crear tu promoción aceptas que será cobrada de inmediato.
-          Promoción válida por 24 horas desde su creación.
-        </p>
-      </form>
+        </form>
+      )}
     </div>
   );
 }
