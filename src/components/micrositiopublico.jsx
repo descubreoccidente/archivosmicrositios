@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { obtenerMicrositioPorSlug } from '../services/firestore';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
-  Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin
+  Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award
 } from 'lucide-react';
 
 const RED_ICONOS = {
@@ -13,16 +13,19 @@ const RED_ICONOS = {
   youtube: Youtube,
   linkedin: Linkedin,
 };
+
 function formatFechaEvento(fecha) {
   if (!fecha) return '';
   const date = fecha.toDate ? fecha.toDate() : new Date(fecha);
   return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
 }
+
 export default function MicrositioPublico({ slug }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+
   useEffect(() => {
     cargar();
   }, [slug]);
@@ -66,6 +69,8 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const imagenes = fotos.filter(f => !f.tipo || f.tipo === 'foto');
   const fotoPortada = imagenes.find(f => f.esPortada) || imagenes[0];
   const redesConValor = Object.entries(info.redesSociales || {}).filter(([_, v]) => v);
+  const tieneColumnaExtra = (info.enlacesInteres && info.enlacesInteres.length > 0) ||
+    (info.certificaciones && info.certificaciones.length > 0);
 
   return (
     <div className="min-h-screen bg-crema">
@@ -79,7 +84,7 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
 
       {/* Header con info principal */}
       <div className={`bg-terracota text-white p-6 md:p-8 ${fotoPortada ? '-mt-16 relative mx-4 md:mx-8 rounded-lg shadow-lg' : ''}`}>
-        <div className="max-w-5xl mx-auto flex items-center gap-6">
+        <div className="max-w-6xl mx-auto flex items-center gap-6">
           {info.logo && (
             <div className="h-24 w-24 rounded-full bg-white border-4 border-white flex-shrink-0 flex items-center justify-center overflow-hidden">
               <img src={info.logo} alt={info.nombre} className="h-full w-full object-contain" />
@@ -104,14 +109,13 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
                   RNT vigente{info.numeroRnt ? ` · N° ${info.numeroRnt}` : ''}
                 </span>
               )}
-              
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-6 grid grid-cols-1 md:grid-cols-5 gap-6">
-        {/* Columna izquierda: info */}
+      <div className={`max-w-6xl mx-auto p-6 grid grid-cols-1 ${tieneColumnaExtra ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-6`}>
+        {/* Columna izquierda: info principal */}
         <div className="md:col-span-2 space-y-6">
           {info.descripcion && (
             <div className="bg-white rounded-lg shadow-sm p-6">
@@ -156,6 +160,7 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
               <div className="flex gap-3 mt-4">
                 {redesConValor.map(([red, valor]) => {
                   const Icono = RED_ICONOS[red];
+                  if (!Icono) return null;
                   const href = red === 'whatsapp'
                     ? `https://wa.me/${valor.replace(/\D/g, '')}`
                     : valor;
@@ -173,27 +178,63 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
                 })}
               </div>
             )}
-          </div>
 
-          {info.enlacesInteres && info.enlacesInteres.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Enlaces de interés</h2>
-              <div className="space-y-2">
-                {info.enlacesInteres.map((en, idx) => (
-                  <a
-                    key={idx}
-                    href={en.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-terracota hover:underline text-sm"
-                  >
-                    <LinkIcon size={14} /> {en.etiqueta || en.url}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+            {info.ubicacion?.lat && info.ubicacion?.lng && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${info.ubicacion.lat},${info.ubicacion.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-terracota text-white font-semibold py-2.5 rounded-lg hover:bg-terracota-dark transition text-sm"
+              >
+                <MapPin size={16} /> Cómo llegar
+              </a>
+            )}
+          </div>
         </div>
+
+        {/* Columna central: enlaces de interés y certificaciones */}
+        {tieneColumnaExtra && (
+          <div className="md:col-span-1 space-y-6">
+            {info.enlacesInteres && info.enlacesInteres.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold text-terracota mb-4">Enlaces de interés</h2>
+                <div className="space-y-2">
+                  {info.enlacesInteres.map((en, idx) => (
+                    <a
+                      key={idx}
+                      href={en.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 text-terracota hover:underline text-sm"
+                    >
+                      <LinkIcon size={14} className="flex-shrink-0" /> {en.etiqueta || en.url}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {info.certificaciones && info.certificaciones.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold text-terracota mb-4">Certificaciones</h2>
+                <div className="space-y-3">
+                  {info.certificaciones.map((cert, idx) => (
+                    <div key={idx} className="flex items-start gap-2 border-b border-gris/10 pb-3 last:border-0">
+                      <Award size={16} className="text-terracota flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-marron text-sm">{cert.nombre}</p>
+                        <p className="text-xs text-gris">
+                          {cert.entidad}
+                          {cert.fecha && ` · ${new Date(cert.fecha + 'T00:00:00').toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Columna derecha: galería, documentos, eventos, reseñas */}
         <div className="md:col-span-3 space-y-6">
@@ -334,7 +375,8 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
                   </p>
                 )}
               </div>
-{eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
+
+              {eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${eventoSeleccionado.ubicacion.lat},${eventoSeleccionado.ubicacion.lng}`}
                   target="_blank"
@@ -361,4 +403,3 @@ const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
     </div>
   );
 }
-    

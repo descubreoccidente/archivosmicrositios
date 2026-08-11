@@ -62,6 +62,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     rntVigente: false,
     numeroRnt: '',
     enlacesInteres: [],
+    certificaciones: [],
     redesSociales: { facebook: '', instagram: '', whatsapp: '', tiktok: '', youtube: '', linkedin: '' },
     ubicacion: { lat: '', lng: '' },
     amenities: []
@@ -82,7 +83,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
           ...prev,
           ...actorDoc.data().basicInfo,
           redesSociales: { ...prev.redesSociales, ...(actorDoc.data().basicInfo.redesSociales || {}) },
-          enlacesInteres: actorDoc.data().basicInfo.enlacesInteres || []
+          enlacesInteres: actorDoc.data().basicInfo.enlacesInteres || [],
+          certificaciones: actorDoc.data().basicInfo.certificaciones || []
         }));
       }
     } catch (error) {
@@ -165,7 +167,27 @@ export default function FormularioMicrositio({ actorId, onSave }) {
       enlacesInteres: prev.enlacesInteres.filter((_, i) => i !== idx)
     }));
   };
+const agregarCertificacion = () => {
+    if (formData.certificaciones.length >= MAX_CERTIFICACIONES) return;
+    setFormData(prev => ({
+      ...prev,
+      certificaciones: [...prev.certificaciones, { nombre: '', entidad: '', fecha: '' }]
+    }));
+  };
 
+  const actualizarCertificacion = (idx, campo, valor) => {
+    setFormData(prev => ({
+      ...prev,
+      certificaciones: prev.certificaciones.map((c, i) => i === idx ? { ...c, [campo]: valor } : c)
+    }));
+  };
+
+  const eliminarCertificacion = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      certificaciones: prev.certificaciones.filter((_, i) => i !== idx)
+    }));
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -183,7 +205,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
 
   const subcategoriasDisponibles = formData.categoria ? CATEGORIAS_SUBCATEGORIAS[formData.categoria] : [];
   const MAX_ENLACES_INSTITUCIONAL = 10;
-const MAX_ENLACES_GENERAL = 2;  
+const MAX_ENLACES_GENERAL = 2;
+const MAX_CERTIFICACIONES = 5;  
   const esInstitucional = CATEGORIAS_CON_ENLACES.includes(formData.categoria);
   const maxEnlaces = esInstitucional ? MAX_ENLACES_INSTITUCIONAL : MAX_ENLACES_GENERAL;
   
@@ -413,6 +436,53 @@ const MAX_ENLACES_GENERAL = 2;
               className="flex items-center gap-1 text-terracota text-sm font-semibold hover:underline"
             >
               <Plus size={16} /> Agregar enlace
+            </button>
+          )}
+        </div>
+
+        {/* Certificaciones */}
+        <div className="bg-crema p-4 rounded-lg space-y-3">
+          <p className="text-sm font-semibold text-marron">
+            Certificaciones logradas (máx {MAX_CERTIFICACIONES})
+          </p>
+          {formData.certificaciones.map((cert, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={cert.nombre}
+                onChange={(e) => actualizarCertificacion(idx, 'nombre', e.target.value)}
+                placeholder="Nombre de la certificación"
+                className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                value={cert.entidad}
+                onChange={(e) => actualizarCertificacion(idx, 'entidad', e.target.value)}
+                placeholder="Entidad certificadora"
+                className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm"
+              />
+              <input
+                type="date"
+                value={cert.fecha}
+                onChange={(e) => actualizarCertificacion(idx, 'fecha', e.target.value)}
+                className="w-40 border border-gris/30 rounded px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => eliminarCertificacion(idx)}
+                className="text-gris hover:text-red-600 p-2 transition"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          {formData.certificaciones.length < MAX_CERTIFICACIONES && (
+            <button
+              type="button"
+              onClick={agregarCertificacion}
+              className="flex items-center gap-1 text-terracota text-sm font-semibold hover:underline"
+            >
+              <Plus size={16} /> Agregar certificación
             </button>
           )}
         </div>
