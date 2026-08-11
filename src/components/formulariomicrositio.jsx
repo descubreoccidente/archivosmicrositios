@@ -3,7 +3,7 @@ import { crearMicrositio, generarSlugUnico } from '../services/firestore';
 import { db, storage } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Upload, Trash2, Plus, X, Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon } from 'lucide-react';
+import { Upload, Trash2, Plus, X, Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Linkedin } from 'lucide-react';
 
 const CATEGORIAS_SUBCATEGORIAS = {
   'Hotel': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca'],
@@ -36,6 +36,7 @@ const RED_ICONOS = {
   whatsapp: MessageCircle,
   tiktok: Music2,
   youtube: Youtube,
+  linkedin: Linkedin,
 };
 
 const RED_LABELS = {
@@ -44,6 +45,7 @@ const RED_LABELS = {
   whatsapp: 'WhatsApp (número o link)',
   tiktok: 'TikTok',
   youtube: 'YouTube',
+  linkedin: 'LinkedIn',
 };
 
 export default function FormularioMicrositio({ actorId, onSave }) {
@@ -60,7 +62,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     rntVigente: false,
     numeroRnt: '',
     enlacesInteres: [],
-    redesSociales: { facebook: '', instagram: '', whatsapp: '', tiktok: '', youtube: '' },
+    redesSociales: { facebook: '', instagram: '', whatsapp: '', tiktok: '', youtube: '', linkedin: '' },
     ubicacion: { lat: '', lng: '' },
     amenities: []
   });
@@ -143,7 +145,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
   };
 
   const agregarEnlace = () => {
-    if (formData.enlacesInteres.length >= 5) return;
+    if (formData.enlacesInteres.length >= maxEnlaces) return;
     setFormData(prev => ({
       ...prev,
       enlacesInteres: [...prev.enlacesInteres, { etiqueta: '', url: '' }]
@@ -180,8 +182,11 @@ export default function FormularioMicrositio({ actorId, onSave }) {
   };
 
   const subcategoriasDisponibles = formData.categoria ? CATEGORIAS_SUBCATEGORIAS[formData.categoria] : [];
-  const mostrarEnlacesInteres = CATEGORIAS_CON_ENLACES.includes(formData.categoria);
-
+  const MAX_ENLACES_INSTITUCIONAL = 10;
+const MAX_ENLACES_GENERAL = 2;  
+  const esInstitucional = CATEGORIAS_CON_ENLACES.includes(formData.categoria);
+  const maxEnlaces = esInstitucional ? MAX_ENLACES_INSTITUCIONAL : MAX_ENLACES_GENERAL;
+  
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 max-w-2xl">
       <h2 className="text-2xl font-bold text-terracota mb-2">Información para su Micrositio</h2>
@@ -372,45 +377,45 @@ export default function FormularioMicrositio({ actorId, onSave }) {
         </div>
 
         {/* Enlaces de interés (solo Institución / Ente territorial) */}
-        {mostrarEnlacesInteres && (
-          <div className="bg-crema p-4 rounded-lg space-y-3">
-            <p className="text-sm font-semibold text-marron">Enlaces de interés para el público (máx 5)</p>
-            {formData.enlacesInteres.map((enlace, idx) => (
-              <div key={idx} className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  value={enlace.etiqueta}
-                  onChange={(e) => actualizarEnlace(idx, 'etiqueta', e.target.value)}
-                  placeholder="Nombre (ej: Trámites municipales)"
-                  className="w-1/3 border border-gris/30 rounded px-3 py-2 text-sm"
-                />
-                <input
-                  type="url"
-                  value={enlace.url}
-                  onChange={(e) => actualizarEnlace(idx, 'url', e.target.value)}
-                  placeholder="https://..."
-                  className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => eliminarEnlace(idx)}
-                  className="text-gris hover:text-red-600 p-2 transition"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-            {formData.enlacesInteres.length < 5 && (
+        <div className="bg-crema p-4 rounded-lg space-y-3">
+          <p className="text-sm font-semibold text-marron">
+            Enlaces de interés para el público (máx {maxEnlaces})
+          </p>
+          {formData.enlacesInteres.map((enlace, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={enlace.etiqueta}
+                onChange={(e) => actualizarEnlace(idx, 'etiqueta', e.target.value)}
+                placeholder="Nombre (ej: Trámites municipales)"
+                className="w-1/3 border border-gris/30 rounded px-3 py-2 text-sm"
+              />
+              <input
+                type="url"
+                value={enlace.url}
+                onChange={(e) => actualizarEnlace(idx, 'url', e.target.value)}
+                placeholder="https://..."
+                className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm"
+              />
               <button
                 type="button"
-                onClick={agregarEnlace}
-                className="flex items-center gap-1 text-terracota text-sm font-semibold hover:underline"
+                onClick={() => eliminarEnlace(idx)}
+                className="text-gris hover:text-red-600 p-2 transition"
               >
-                <Plus size={16} /> Agregar enlace
+                <Trash2 size={16} />
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          ))}
+          {formData.enlacesInteres.length < maxEnlaces && (
+            <button
+              type="button"
+              onClick={agregarEnlace}
+              className="flex items-center gap-1 text-terracota text-sm font-semibold hover:underline"
+            >
+              <Plus size={16} /> Agregar enlace
+            </button>
+          )}
+        </div>
 
         {/* Redes sociales */}
         <div className="bg-crema p-4 rounded-lg space-y-3">
