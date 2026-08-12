@@ -1,24 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, deleteDoc, doc, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { db, storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Upload, Trash2, Clock } from 'lucide-react';
+import { actualizarPromocion } from '../services/firestore';
+import { Upload, Trash2, Clock, Pencil } from 'lucide-react';
 
 const CATEGORIAS = [
-  'Hotel',
-  'Gastronomía',
-  'Tour operador',
-  'Ente territorial',
-  'Institución',
-  'Microempresa',
-  'Bares y pubs',
-  'Recuperadora de residuos'
+  'Alojamiento', 'Comidas rápidas', 'Comida Gourmet', 'Tours', 'Entrada a show',
+  'Bebidas y licores', 'Paquetes turísticos', 'Joyería en filigrana', 'Dulces y postres',
+  'Happy hour', 'Día de sol', 'Noche de luna', 'Lunas de miel', 'Escapadas', 'Karaoke',
+  'Entrada a museo', 'Afiliación', 'Formación', 'Gimnasio', 'Clases y talleres',
+  'Oportunidad tributaria', 'Asesoría profesional'
 ];
 
 const FORM_VACIO = {
   titulo: '', descripcion: '', categoria: '', imagen: '',
   descuento: '', precioOriginal: '', precioDescuento: '', enlace: '', fechaVencimiento: ''
 };
+
+function timestampAInput(timestamp) {
+  if (!timestamp) return '';
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
 
 export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated }) {
   const [formData, setFormData] = useState(FORM_VACIO);
@@ -28,6 +37,7 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [promoEditandoId, setPromoEditandoId] = useState(null);
 
   useEffect(() => {
     cargarPromociones();
@@ -77,6 +87,29 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
     setSubiendoImagen(false);
   };
 
+  const iniciarEdicion = (promo) => {
+    setFormData({
+      titulo: promo.titulo || '',
+      descripcion: promo.descripcion || '',
+      categoria: promo.categoria || '',
+      imagen: promo.imagen || '',
+      descuento: promo.descuento || '',
+      precioOriginal: promo.precioOriginal || '',
+      precioDescuento: promo.precioDescuento || '',
+      enlace: promo.enlace || '',
+      fechaVencimiento: timestampAInput(promo.fechaVencimiento)
+    });
+    setPromoEditandoId(promo.id);
+    setMostrarForm(true);
+  };
+
+  const cancelarFormulario = () => {
+    setMostrarForm(false);
+    setPromoEditandoId(null);
+    setFormData(FORM_VACIO);
+    setError(null);
+  };
+
   const handleDelete = async (promoId) => {
     if (!confirm('¿Eliminar esta promoción?')) return;
     try {
@@ -111,9 +144,7 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
 
     setLoading(true);
     try {
-      const promocionData = {
-        actorId,
-        nombreNegocio,
+      const datosPromo = {
         titulo: formData.titulo,
         descripcion: formData.descripcion,
         categoria: formData.categoria,
@@ -122,21 +153,28 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
         precioOriginal: formData.precioOriginal ? parseInt(formData.precioOriginal) : null,
         precioDescuento: formData.precioDescuento ? parseInt(formData.precioDescuento) : null,
         descuento: formData.descuento ? parseInt(formData.descuento) : null,
-        activa: true,
-        fechaCreacion: Timestamp.now(),
         fechaVencimiento: Timestamp.fromDate(fechaVencimiento)
       };
 
-      await addDoc(collection(db, 'promociones'), promocionData);
+      if (promoEditandoId) {
+        await actualizarPromocion(promoEditandoId, datosPromo);
+      } else {
+        await addDoc(collection(db, 'promociones'), {
+          actorId,
+          nombreNegocio,
+          ...datosPromo,
+          activa: true,
+          fechaCreacion: Timestamp.now()
+        });
+      }
 
       setSuccess(true);
-      setFormData(FORM_VACIO);
-      setMostrarForm(false);
+      cancelarFormulario();
       cargarPromociones();
       if (onPromoCreated) onPromoCreated();
       setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
-      setError('Ocurrió un error al crear la promoción');
+      setError('Ocurrió un error al guardar la promoción');
       console.error(err);
     }
     setLoading(false);
@@ -146,7 +184,7 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
     <div className="space-y-6">
       {success && (
         <div className="bg-green-50 border border-green-200 rounded p-4 text-green-700">
-          ✓ Promoción creada correctamente
+          ✓ Promoción guardada correctamente
         </div>
       )}
 
@@ -157,7 +195,7 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
             Tus Promociones ({promociones.length})
           </h3>
           <button
-            onClick={() => setMostrarForm(!mostrarForm)}
+            onClick={() => mostrarForm ? cancelarFormulario() : setMostrarForm(true)}
             className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg hover:bg-terracota-dark transition"
           >
             {mostrarForm ? 'Cancelar' : '+ Nueva Promoción'}
@@ -182,12 +220,20 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(promo.id)}
-                className="text-gris hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"
-              >
-                <Trash2 size={18} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => iniciarEdicion(promo)}
+                  className="text-gris hover:text-terracota p-2 rounded-lg hover:bg-crema transition"
+                >
+                  <Pencil size={18} />
+                </button>
+                <button
+                  onClick={() => handleDelete(promo.id)}
+                  className="text-gris hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -196,7 +242,9 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
       {/* Formulario */}
       {mostrarForm && (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-xl font-bold text-terracota mb-6">Crear Promoción</h2>
+          <h2 className="text-xl font-bold text-terracota mb-6">
+            {promoEditandoId ? 'Editar Promoción' : 'Crear Promoción'}
+          </h2>
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded p-4 mb-6 text-red-700 text-sm">
@@ -368,7 +416,7 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
               disabled={loading}
               className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
             >
-              {loading ? 'Creando...' : 'Crear Promoción'}
+              {loading ? 'Guardando...' : (promoEditandoId ? 'Guardar Cambios' : 'Crear Promoción')}
             </button>
           </div>
         </form>

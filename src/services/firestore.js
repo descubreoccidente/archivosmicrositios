@@ -1,11 +1,11 @@
 import { db } from './firebase';
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
-  collection, 
-  query, 
-  where, 
+import {
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  query,
+  where,
   getDocs,
   orderBy,
   limit,
@@ -45,16 +45,16 @@ export const crearMicrositio = async (actorId, datos) => {
 export const obtenerMicrositio = async (actorId) => {
   try {
     const actorDoc = await getDoc(doc(db, 'actors', actorId));
-    
+
     if (!actorDoc.exists()) return null;
-    
+
     const fotosSnap = await getDocs(
       query(
         collection(db, 'actors', actorId, 'media'),
         orderBy('order')
       )
     );
-    
+
     const resenas = await getDocs(
       query(
         collection(db, 'reviews'),
@@ -64,7 +64,7 @@ export const obtenerMicrositio = async (actorId) => {
         limit(50)
       )
     );
-    
+
     const eventos = await getDocs(
       query(
         collection(db, 'events'),
@@ -89,13 +89,6 @@ export const obtenerMicrositio = async (actorId) => {
       resenas: resenas.docs.map(d => ({ id: d.id, ...d.data() })),
       eventos: eventos.docs.map(d => ({ id: d.id, ...d.data() })),
       promociones
-    };
-    
-    return {
-      actor: { id: actorDoc.id, ...actorDoc.data() },
-      fotos: fotosSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-      resenas: resenas.docs.map(d => ({ id: d.id, ...d.data() })),
-      eventos: eventos.docs.map(d => ({ id: d.id, ...d.data() }))
     };
   } catch (error) {
     console.error('Error obteniendo micrositio:', error);
@@ -137,10 +130,10 @@ export const crearResena = async (actorId, userId, datosResena) => {
       reportes: 0,
       activa: true
     });
-    
+
     // Actualizar rating promedio
     await actualizarRatingActor(actorId);
-    
+
     return { success: true, reviewId: docRef.id };
   } catch (error) {
     console.error('Error creando reseña:', error);
@@ -158,11 +151,11 @@ const actualizarRatingActor = async (actorId) => {
         where('activa', '==', true)
       )
     );
-    
+
     if (resenas.empty) return;
-    
+
     const ratingPromedio = resenas.docs.reduce((sum, doc) => sum + doc.data().rating, 0) / resenas.size;
-    
+
     await updateDoc(doc(db, 'actors', actorId), {
       'stats.ratingPromedio': ratingPromedio,
       'stats.totalResenas': resenas.size,
@@ -172,6 +165,7 @@ const actualizarRatingActor = async (actorId) => {
     console.error('Error actualizando rating:', error);
   }
 };
+
 // Obtener todos los eventos de un actor (para gestión en su dashboard)
 export const obtenerEventosActor = async (actorId) => {
   try {
@@ -199,6 +193,7 @@ export const eliminarEvento = async (eventId) => {
     throw error;
   }
 };
+
 // Actualizar evento existente
 export const actualizarEvento = async (eventId, datosEvento) => {
   try {
@@ -212,6 +207,18 @@ export const actualizarEvento = async (eventId, datosEvento) => {
     throw error;
   }
 };
+
+// Actualizar promoción existente
+export const actualizarPromocion = async (promoId, datos) => {
+  try {
+    await updateDoc(doc(db, 'promociones', promoId), datos);
+    return { success: true };
+  } catch (error) {
+    console.error('Error actualizando promoción:', error);
+    throw error;
+  }
+};
+
 // Obtener agenda regional filtrada
 export const obtenerAgendaRegional = async (filtros) => {
   try {
@@ -222,7 +229,7 @@ export const obtenerAgendaRegional = async (filtros) => {
       where('fecha', '<=', filtros.fechaFin || new Date(Date.now() + 30*24*60*60*1000)),
       orderBy('fecha')
     );
-    
+
     const eventos = await getDocs(q);
     return eventos.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (error) {
@@ -230,6 +237,7 @@ export const obtenerAgendaRegional = async (filtros) => {
     throw error;
   }
 };
+
 // Guardar autoevaluación de turismo responsable
 export const guardarSostenibilidad = async (actorId, datos) => {
   try {
@@ -246,6 +254,7 @@ export const guardarSostenibilidad = async (actorId, datos) => {
     throw error;
   }
 };
+
 // Generar slug único a partir del nombre
 export const generarSlugUnico = async (nombre, actorIdActual) => {
   const base = nombre
