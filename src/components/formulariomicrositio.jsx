@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Upload, Trash2, Plus, X, Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Linkedin } from 'lucide-react';
 
 const CATEGORIAS_SUBCATEGORIAS = {
-  'Hotel': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca'],
+  'Alojamiento': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca'],
   'Gastronomía': ['Típica/Tradicional', 'Gourmet', 'Rápida', 'Vegetariana/Vegana', 'Cafetería', 'Repostería', 'Comida internacional', 'Parrilla', 'Nikkei'],
   'Tour operador': ['Tours de un día', 'Paquetes multidía', 'Aventura/Extremo', 'Cultural/Patrimonial', 'Ecoturismo'],
   'Ente territorial': ['Alcaldía', 'Secretaría de Turismo', 'Casa de Cultura', 'Oficina de Turismo'],
@@ -25,8 +25,10 @@ const MUNICIPIOS = [
   'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
   'Sopetrán', 'Uramita'
 ];
+
+const CIUDADES_SEDE = ['Medellín', 'Bogotá', 'Barranquilla', 'Cartagena'];
 const AMENITIES_POR_CATEGORIA = {
-  'Hotel': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación'],
+  'Alojamiento': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación'],
   'Gastronomía': ['Patio al aire libre', 'Música en vivo', 'Galería de arte', 'Agenda de talleres', 'WiFi gratis', 'Parqueadero', 'Zona de fumadores', 'Terraza', 'Menú infantil', 'Opciones vegetarianas/veganas', 'Domicilios', 'Accesible para discapacitados', 'Mascotas permitidas'],
   'Bares y pubs': ['Zona de fumadores', 'Música en vivo', 'Terraza/patio al aire libre', 'Karaoke', 'Mesa de billar', 'Pantallas deportivas', 'WiFi gratis', 'Parqueadero', 'Mascotas permitidas', 'Happy hour'],
 };
@@ -329,6 +331,14 @@ const MAX_CERTIFICACIONES = 5;
             {MUNICIPIOS.map(mun => (
               <option key={mun} value={mun}>{mun}</option>
             ))}
+            {esInstitucional && (
+              <>
+                <option disabled>── Sede fuera del territorio ──</option>
+                {CIUDADES_SEDE.map(ciudad => (
+                  <option key={ciudad} value={ciudad}>{ciudad}</option>
+                ))}
+              </>
+            )}
           </select>
         </div>
 
