@@ -2,17 +2,62 @@ import React, { useState, useEffect } from 'react';
 import { obtenerMicrositioPorSlug } from '../services/firestore';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
-  Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award
+  Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag
 } from 'lucide-react';
+
+function WhatsAppIcon({ size = 18, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+      <path d="M12.001 2C6.478 2 2 6.478 2 12c0 2.096.639 4.06 1.732 5.688L2 22l4.436-1.694A9.955 9.955 0 0012.001 22C17.523 22 22 17.522 22 12S17.523 2 12.001 2zm0 18.148c-1.792 0-3.457-.535-4.85-1.454l-.348-.219-3.607 1.377 1.394-3.514-.227-.36a8.132 8.132 0 01-1.315-4.478c0-4.509 3.669-8.177 8.178-8.177 2.186 0 4.24.851 5.784 2.396a8.116 8.116 0 012.396 5.784c0 4.509-3.668 8.177-8.177 8.177z"/>
+    </svg>
+  );
+}
 
 const RED_ICONOS = {
   facebook: Facebook,
   instagram: Instagram,
-  whatsapp: MessageCircle,
+  whatsapp: WhatsAppIcon,
   tiktok: Music2,
   youtube: Youtube,
   linkedin: Linkedin,
 };
+
+const CATEGORIA_COLORES = {
+  'Comidas rápidas': { badge: 'bg-red-500', accent: 'border-red-500', tag: 'bg-red-50 text-red-600' },
+  'Comida Gourmet': { badge: 'bg-red-500', accent: 'border-red-500', tag: 'bg-red-50 text-red-600' },
+  'Bebidas y licores': { badge: 'bg-orange-500', accent: 'border-orange-500', tag: 'bg-orange-50 text-orange-600' },
+  'Dulces y postres': { badge: 'bg-pink-500', accent: 'border-pink-500', tag: 'bg-pink-50 text-pink-600' },
+  'Happy hour': { badge: 'bg-orange-500', accent: 'border-orange-500', tag: 'bg-orange-50 text-orange-600' },
+  'Alojamiento': { badge: 'bg-blue-500', accent: 'border-blue-500', tag: 'bg-blue-50 text-blue-600' },
+  'Tours': { badge: 'bg-teal-500', accent: 'border-teal-500', tag: 'bg-teal-50 text-teal-600' },
+  'Paquetes turísticos': { badge: 'bg-teal-500', accent: 'border-teal-500', tag: 'bg-teal-50 text-teal-600' },
+  'Escapadas': { badge: 'bg-teal-500', accent: 'border-teal-500', tag: 'bg-teal-50 text-teal-600' },
+  'Día de sol': { badge: 'bg-yellow-500', accent: 'border-yellow-500', tag: 'bg-yellow-50 text-yellow-600' },
+  'Noche de luna': { badge: 'bg-indigo-500', accent: 'border-indigo-500', tag: 'bg-indigo-50 text-indigo-600' },
+  'Lunas de miel': { badge: 'bg-pink-500', accent: 'border-pink-500', tag: 'bg-pink-50 text-pink-600' },
+  'Entrada a show': { badge: 'bg-purple-500', accent: 'border-purple-500', tag: 'bg-purple-50 text-purple-600' },
+  'Karaoke': { badge: 'bg-purple-500', accent: 'border-purple-500', tag: 'bg-purple-50 text-purple-600' },
+  'Entrada a museo': { badge: 'bg-amber-600', accent: 'border-amber-600', tag: 'bg-amber-50 text-amber-700' },
+  'Joyería en filigrana': { badge: 'bg-amber-600', accent: 'border-amber-600', tag: 'bg-amber-50 text-amber-700' },
+  'Afiliación': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Formación': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Gimnasio': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Clases y talleres': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Oportunidad tributaria': { badge: 'bg-slate-600', accent: 'border-slate-600', tag: 'bg-slate-50 text-slate-700' },
+  'Asesoría profesional': { badge: 'bg-slate-600', accent: 'border-slate-600', tag: 'bg-slate-50 text-slate-700' },
+};
+
+function colorPromo(categoria) {
+  return CATEGORIA_COLORES[categoria] || { badge: 'bg-terracota', accent: 'border-terracota', tag: 'bg-crema text-terracota' };
+}
+
+function formatearNumeroWhatsApp(numero) {
+  const digitos = numero.replace(/\D/g, '');
+  if (digitos.startsWith('57') && digitos.length >= 12) return digitos;
+  if (digitos.length === 10) return `57${digitos}`;
+  return digitos;
+}
 
 function formatFechaEvento(fecha) {
   if (!fecha) return '';
@@ -25,6 +70,8 @@ export default function MicrositioPublico({ slug }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [promoSeleccionada, setPromoSeleccionada] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -69,8 +116,6 @@ export default function MicrositioPublico({ slug }) {
   const imagenes = fotos.filter(f => !f.tipo || f.tipo === 'foto');
   const fotoPortada = imagenes.find(f => f.esPortada) || imagenes[0];
   const redesConValor = Object.entries(info.redesSociales || {}).filter(([_, v]) => v);
-  const tieneColumnaExtra = (info.enlacesInteres && info.enlacesInteres.length > 0) ||
-    (info.certificaciones && info.certificaciones.length > 0);
 
   return (
     <div className="min-h-screen bg-crema">
@@ -114,87 +159,204 @@ export default function MicrositioPublico({ slug }) {
         </div>
       </div>
 
-      <div className={`max-w-6xl mx-auto p-6 grid grid-cols-1 ${tieneColumnaExtra ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-6`}>
-        {/* Columna izquierda: info principal */}
-        <div className="md:col-span-2 space-y-6">
-          {info.descripcion && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <p className="text-marron">{info.descripcion}</p>
-            </div>
-          )}
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
 
-          {info.amenities && info.amenities.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Amenities y servicios</h2>
-              <div className="flex flex-wrap gap-2">
-                {info.amenities.map((amenity, idx) => (
-                  <span key={idx} className="bg-crema text-terracota px-3 py-1 rounded-full text-sm font-semibold">
-                    {amenity}
-                  </span>
+        {/* FILA SUPERIOR: Galería | Promociones | Eventos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Galería */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-bold text-terracota mb-4">Galería</h2>
+            {imagenes.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {imagenes.map((foto) => (
+                  <button
+                    key={foto.id}
+                    onClick={() => setFotoAmpliada(foto)}
+                    className="block"
+                  >
+                    <img
+                      src={foto.url}
+                      alt={foto.titulo}
+                      className="w-full h-20 object-cover rounded-lg hover:opacity-80 transition cursor-pointer"
+                    />
+                  </button>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gris text-sm">Sin fotos disponibles.</p>
+            )}
+          </div>
 
+          {/* Promociones */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-bold text-terracota mb-4">Contacto</h2>
-            <div className="space-y-2 text-sm">
-              {info.telefono && (
-                <a href={`tel:${info.telefono.replace(/\s/g, '')}`} className="flex items-center gap-2 text-marron hover:text-terracota transition">
-                  <Phone size={16} className="text-terracota" /> {info.telefono}
-                </a>
-              )}
-              {info.email && (
-                <a href={`mailto:${info.email}`} className="flex items-center gap-2 text-marron hover:text-terracota transition">
-                  <Mail size={16} className="text-terracota" /> {info.email}
-                </a>
-              )}
-              {info.paginaWeb && (
-                <a href={info.paginaWeb} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-marron hover:text-terracota transition">
-                  <Globe size={16} className="text-terracota" /> {info.paginaWeb}
-                </a>
-              )}
-            </div>
-
-            {redesConValor.length > 0 && (
-              <div className="flex gap-3 mt-4">
-                {redesConValor.map(([red, valor]) => {
-                  const Icono = RED_ICONOS[red];
-                  if (!Icono) return null;
-                  const href = red === 'whatsapp'
-                    ? `https://wa.me/${valor.replace(/\D/g, '')}`
-                    : valor;
+            <h2 className="text-lg font-bold text-terracota mb-4">🔥 Promociones activas</h2>
+            {promociones && promociones.length > 0 ? (
+              <div className="space-y-4">
+                {promociones.map((promo) => {
+                  const color = colorPromo(promo.categoria);
                   return (
-                    <a
-                      key={red}
-                      href={href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="bg-terracota text-white p-2 rounded-full hover:bg-terracota-dark transition"
+                    <button
+                      key={promo.id}
+                      onClick={() => setPromoSeleccionada(promo)}
+                      className={`w-full text-left rounded-lg overflow-hidden border-t-4 ${color.accent} shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all bg-white`}
                     >
-                      <Icono size={18} />
-                    </a>
+                      <div className="relative aspect-video bg-gray-100">
+                        {promo.imagen ? (
+                          <img src={promo.imagen} alt={promo.titulo} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className={`w-full h-full flex items-center justify-center ${color.tag}`}>
+                            <Tag size={28} />
+                          </div>
+                        )}
+                        {promo.descuento && (
+                          <span className={`absolute top-2 left-2 ${color.badge} text-white text-xs font-bold px-2 py-1 rounded-full`}>
+                            -{promo.descuento}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <span className={`inline-block ${color.tag} text-xs font-semibold px-2 py-0.5 rounded-full mb-2`}>
+                          {promo.categoria}
+                        </span>
+                        <p className="font-bold text-marron text-base leading-snug">{promo.titulo}</p>
+                        <p className="text-xs text-gris mt-1 line-clamp-2">{promo.descripcion}</p>
+                        {promo.precioOriginal && promo.precioDescuento && (
+                          <div className="mt-2 flex items-baseline gap-2">
+                            <span className="text-gris line-through text-xs">
+                              ${promo.precioOriginal.toLocaleString()}
+                            </span>
+                            <span className="text-terracota font-bold text-lg">
+                              ${promo.precioDescuento.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                        <div className={`mt-3 ${color.badge} text-white text-center text-sm font-semibold py-2 rounded-lg`}>
+                          Ver oferta →
+                        </div>
+                      </div>
+                    </button>
                   );
                 })}
               </div>
+            ) : (
+              <p className="text-gris text-sm">Sin promociones activas.</p>
             )}
+          </div>
 
-            {info.ubicacion?.lat && info.ubicacion?.lng && (
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${info.ubicacion.lat},${info.ubicacion.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-terracota text-white font-semibold py-2.5 rounded-lg hover:bg-terracota-dark transition text-sm"
-              >
-                <MapPin size={16} /> Cómo llegar
-              </a>
+          {/* Eventos */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-bold text-terracota mb-4">Próximos eventos</h2>
+            {eventos && eventos.length > 0 ? (
+              <div className="space-y-3">
+                {eventos.map((evento) => (
+                  <button
+                    key={evento.id}
+                    onClick={() => setEventoSeleccionado(evento)}
+                    className="w-full flex items-center gap-3 border border-gris/20 rounded-lg p-3 hover:border-terracota hover:bg-crema/50 transition text-left"
+                  >
+                    {evento.imagen ? (
+                      <img src={evento.imagen} alt={evento.nombre} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                    ) : (
+                      <Calendar size={18} className="text-terracota flex-shrink-0" />
+                    )}
+                    <div>
+                      <p className="font-semibold text-marron text-sm">{evento.nombre}</p>
+                      <p className="text-xs text-terracota font-semibold">
+                        {formatFechaEvento(evento.fechaInicio || evento.fecha)}
+                      </p>
+                      <p className="text-xs text-gris">{evento.lugar}{evento.municipio ? `, ${evento.municipio}` : ''}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gris text-sm">Sin eventos próximos.</p>
             )}
           </div>
         </div>
 
-        {/* Columna central: enlaces de interés y certificaciones */}
-        {tieneColumnaExtra && (
-          <div className="md:col-span-1 space-y-6">
+        {/* FILA INFERIOR: Contacto+Amenities | Descripción+Enlaces | Documentos+Certificaciones */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Columna izquierda: Contacto + Amenities */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-bold text-terracota mb-4">Contacto</h2>
+              <div className="space-y-2 text-sm">
+                {info.telefono && (
+                  <a href={`tel:${info.telefono.replace(/\s/g, '')}`} className="flex items-center gap-2 text-marron hover:text-terracota transition">
+                    <Phone size={16} className="text-terracota" /> {info.telefono}
+                  </a>
+                )}
+                {info.email && (
+                  <a href={`mailto:${info.email}`} className="flex items-center gap-2 text-marron hover:text-terracota transition">
+                    <Mail size={16} className="text-terracota" /> {info.email}
+                  </a>
+                )}
+                {info.paginaWeb && (
+                  <a href={info.paginaWeb} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-marron hover:text-terracota transition">
+                    <Globe size={16} className="text-terracota" /> {info.paginaWeb}
+                  </a>
+                )}
+              </div>
+
+              {redesConValor.length > 0 && (
+                <div className="flex gap-3 mt-4">
+                  {redesConValor.map(([red, valor]) => {
+                    const Icono = RED_ICONOS[red];
+                    if (!Icono) return null;
+                    const href = red === 'whatsapp'
+                      ? `https://wa.me/${formatearNumeroWhatsApp(valor)}`
+                      : valor;
+                    return (
+                      <a
+                        key={red}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-terracota text-white p-2 rounded-full hover:bg-terracota-dark transition"
+                      >
+                        <Icono size={18} />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
+
+              {info.ubicacion?.lat && info.ubicacion?.lng && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${info.ubicacion.lat},${info.ubicacion.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 w-full flex items-center justify-center gap-2 bg-terracota text-white font-semibold py-2.5 rounded-lg hover:bg-terracota-dark transition text-sm"
+                >
+                  <MapPin size={16} /> Cómo llegar
+                </a>
+              )}
+            </div>
+
+            {info.amenities && info.amenities.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold text-terracota mb-4">Amenities y servicios</h2>
+                <div className="flex flex-wrap gap-2">
+                  {info.amenities.map((amenity, idx) => (
+                    <span key={idx} className="bg-crema text-terracota px-3 py-1 rounded-full text-sm font-semibold">
+                      {amenity}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Columna central: Descripción + Enlaces de interés */}
+          <div className="space-y-6">
+            {info.descripcion && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold text-terracota mb-4">Sobre nosotros</h2>
+                <p className="text-marron">{info.descripcion}</p>
+              </div>
+            )}
+
             {info.enlacesInteres && info.enlacesInteres.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-lg font-bold text-terracota mb-4">Enlaces de interés</h2>
@@ -208,6 +370,28 @@ export default function MicrositioPublico({ slug }) {
                       className="flex items-center gap-2 text-terracota hover:underline text-sm"
                     >
                       <LinkIcon size={14} className="flex-shrink-0" /> {en.etiqueta || en.url}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Columna derecha: Documentos + Certificaciones */}
+          <div className="space-y-6">
+            {documentos.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold text-terracota mb-4">Documentos</h2>
+                <div className="space-y-2">
+                  {documentos.map((docItem) => (
+                    <a
+                      key={docItem.id}
+                      href={docItem.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 text-terracota hover:underline text-sm"
+                    >
+                      <FileText size={16} /> {docItem.titulo} <Download size={14} />
                     </a>
                   ))}
                 </div>
@@ -234,126 +418,154 @@ export default function MicrositioPublico({ slug }) {
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Columna derecha: galería, documentos, eventos, reseñas */}
-        <div className="md:col-span-3 space-y-6">
-          {imagenes.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Galería</h2>
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                {imagenes.map((foto) => (
-                  <img key={foto.id} src={foto.url} alt={foto.titulo} className="w-full h-28 object-cover rounded-lg" />
-                ))}
-              </div>
+        {/* Reseñas (ancho completo) */}
+        {resenas && resenas.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-bold text-terracota mb-4">Reseñas de visitantes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {resenas.map((resena) => (
+                <div key={resena.id} className="border-b border-gris/10 pb-3 last:border-0">
+                  <div className="flex items-center gap-1 mb-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={14} className={i < resena.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-marron">{resena.comentario}</p>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
+      </div>
 
-          {documentos.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Documentos</h2>
+      {/* Botón flotante de WhatsApp */}
+      {info.redesSociales?.whatsapp && (
+        <a
+          href={`https://wa.me/${formatearNumeroWhatsApp(info.redesSociales.whatsapp)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="fixed bottom-6 right-6 bg-[#25D366] hover:bg-[#20BD5A] text-white p-4 rounded-full shadow-lg transition z-40"
+          title="Escríbenos por WhatsApp"
+        >
+          <WhatsAppIcon size={28} />
+        </a>
+      )}
+
+      {/* Modal de foto ampliada */}
+      {fotoAmpliada && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+          onClick={() => setFotoAmpliada(null)}
+        >
+          <button
+            onClick={() => setFotoAmpliada(null)}
+            className="absolute top-6 right-6 text-white hover:text-gray-300 transition"
+          >
+            <X size={32} />
+          </button>
+          <img
+            src={fotoAmpliada.url}
+            alt={fotoAmpliada.titulo}
+            className="max-w-full max-h-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Modal de promoción */}
+      {promoSeleccionada && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+          onClick={() => setPromoSeleccionada(null)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {promoSeleccionada.imagen && (
+              <div className="aspect-video bg-gray-100">
+                <img src={promoSeleccionada.imagen} alt={promoSeleccionada.titulo} className="w-full h-full object-cover rounded-t-lg" />
+              </div>
+            )}
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-xl font-bold text-terracota">{promoSeleccionada.titulo}</h3>
+                <button onClick={() => setPromoSeleccionada(null)} className="text-gris hover:text-terracota p-1">
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-3">
+                {promoSeleccionada.categoria && (
+                  <span className={`inline-flex items-center gap-1 ${colorPromo(promoSeleccionada.categoria).tag} px-3 py-1 rounded-full text-xs font-semibold`}>
+                    <Tag size={12} /> {promoSeleccionada.categoria}
+                  </span>
+                )}
+                {promoSeleccionada.modalidadEntrega && (
+                  <span className="inline-block bg-gray-100 text-gris px-3 py-1 rounded-full text-xs font-semibold">
+                    {promoSeleccionada.modalidadEntrega}
+                  </span>
+                )}
+              </div>
+
+              {promoSeleccionada.descripcion && (
+                <p className="text-marron text-sm mb-4">{promoSeleccionada.descripcion}</p>
+              )}
+
+              {promoSeleccionada.precioOriginal && promoSeleccionada.precioDescuento && (
+                <div className="mb-4">
+                  <span className="text-gris line-through text-sm mr-2">
+                    ${promoSeleccionada.precioOriginal.toLocaleString()}
+                  </span>
+                  <span className="text-terracota font-bold text-2xl">
+                    ${promoSeleccionada.precioDescuento.toLocaleString()}
+                  </span>
+                </div>
+              )}
+
+              {promoSeleccionada.fechaVencimiento && (
+                <p className="flex items-center gap-2 text-sm text-marron mb-4">
+                  <Clock size={16} className="text-terracota" />
+                  Vence: {formatFechaEvento(promoSeleccionada.fechaVencimiento)}
+                </p>
+              )}
+
               <div className="space-y-2">
-                {documentos.map((docItem) => (
+                {info.redesSociales?.whatsapp && (
                   <a
-                    key={docItem.id}
-                    href={docItem.url}
+                    href={`https://wa.me/${formatearNumeroWhatsApp(info.redesSociales.whatsapp)}?text=${encodeURIComponent(`Hola, quiero más información sobre la promoción "${promoSeleccionada.titulo}"`)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2 text-terracota hover:underline text-sm"
+                    className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold py-3 rounded-lg hover:bg-[#20BD5A] transition"
                   >
-                    <FileText size={16} /> {docItem.titulo} <Download size={14} />
+                    <WhatsAppIcon size={18} /> Escribir por WhatsApp
                   </a>
-                ))}
-              </div>
-            </div>
-          )}
-{promociones && promociones.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Promociones activas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {promociones.map((promo) => (
-                  <div key={promo.id} className="border border-gris/20 rounded-lg overflow-hidden">
-                    {promo.imagen && (
-                      <img src={promo.imagen} alt={promo.titulo} className="w-full h-28 object-cover" />
-                    )}
-                    <div className="p-3">
-                      <p className="font-semibold text-marron text-sm">{promo.titulo}</p>
-                      <p className="text-xs text-gris mt-1">{promo.descripcion}</p>
-                      {promo.precioOriginal && promo.precioDescuento && (
-                        <div className="mt-2">
-                          <span className="text-gris line-through text-xs mr-2">
-                            ${promo.precioOriginal.toLocaleString()}
-                          </span>
-                          <span className="text-terracota font-bold text-sm">
-                            ${promo.precioDescuento.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {promo.enlace && (
-                        <a
-                          href={promo.enlace}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block mt-2 text-terracota hover:underline text-xs font-semibold"
-                        >
-                          Ver más →
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {eventos && eventos.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Próximos eventos</h2>
-              <div className="space-y-3">
-                {eventos.map((evento) => (
-                  <button
-                    key={evento.id}
-                    onClick={() => setEventoSeleccionado(evento)}
-                    className="w-full flex items-center gap-3 border border-gris/20 rounded-lg p-3 hover:border-terracota hover:bg-crema/50 transition text-left"
+                )}
+                {info.telefono && (
+                  <a
+                    href={`tel:${info.telefono.replace(/\s/g, '')}`}
+                    className="w-full flex items-center justify-center gap-2 bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition"
                   >
-                    {evento.imagen ? (
-                      <img src={evento.imagen} alt={evento.nombre} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
-                    ) : (
-                      <Calendar size={18} className="text-terracota flex-shrink-0" />
-                    )}
-                    <div>
-                      <p className="font-semibold text-marron text-sm">{evento.nombre}</p>
-                      <p className="text-xs text-terracota font-semibold">
-                        {formatFechaEvento(evento.fechaInicio || evento.fecha)}
-                        {evento.fechaFin && formatFechaEvento(evento.fechaFin) !== formatFechaEvento(evento.fechaInicio || evento.fecha) &&
-                          ` — ${formatFechaEvento(evento.fechaFin)}`}
-                      </p>
-                      <p className="text-xs text-gris">{evento.lugar}{evento.municipio ? `, ${evento.municipio}` : ''}</p>
-                    </div>
-                  </button>
-                ))}
+                    <Phone size={18} /> Llamar ahora
+                  </a>
+                )}
+                {promoSeleccionada.enlace && (
+                  <a
+                    href={promoSeleccionada.enlace}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold py-3 rounded-lg hover:bg-crema transition"
+                  >
+                    Ver más <ExternalLink size={16} />
+                  </a>
+                )}
               </div>
             </div>
-          )}
-
-          {resenas && resenas.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-bold text-terracota mb-4">Reseñas de visitantes</h2>
-              <div className="space-y-4">
-                {resenas.map((resena) => (
-                  <div key={resena.id} className="border-b border-gris/10 pb-3 last:border-0">
-                    <div className="flex items-center gap-1 mb-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className={i < resena.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'} />
-                      ))}
-                    </div>
-                    <p className="text-sm text-marron">{resena.comentario}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Modal de evento */}
       {eventoSeleccionado && (

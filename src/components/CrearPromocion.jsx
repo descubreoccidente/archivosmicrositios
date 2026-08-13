@@ -15,7 +15,8 @@ const CATEGORIAS = [
 
 const FORM_VACIO = {
   titulo: '', descripcion: '', categoria: '', imagen: '',
-  descuento: '', precioOriginal: '', precioDescuento: '', enlace: '', fechaVencimiento: ''
+  descuento: '', precioOriginal: '', precioDescuento: '', enlace: '', fechaVencimiento: '',
+  modalidadEntrega: 'Presencial o domicilio'
 };
 
 function timestampAInput(timestamp) {
@@ -97,7 +98,8 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
       precioOriginal: promo.precioOriginal || '',
       precioDescuento: promo.precioDescuento || '',
       enlace: promo.enlace || '',
-      fechaVencimiento: timestampAInput(promo.fechaVencimiento)
+      fechaVencimiento: timestampAInput(promo.fechaVencimiento),
+      modalidadEntrega: promo.modalidadEntrega || 'Presencial o domicilio'
     });
     setPromoEditandoId(promo.id);
     setMostrarForm(true);
@@ -153,7 +155,8 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
         precioOriginal: formData.precioOriginal ? parseInt(formData.precioOriginal) : null,
         precioDescuento: formData.precioDescuento ? parseInt(formData.precioDescuento) : null,
         descuento: formData.descuento ? parseInt(formData.descuento) : null,
-        fechaVencimiento: Timestamp.fromDate(fechaVencimiento)
+        fechaVencimiento: Timestamp.fromDate(fechaVencimiento),
+        modalidadEntrega: formData.modalidadEntrega
       };
 
       if (promoEditandoId) {
@@ -304,7 +307,21 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
                 ))}
               </select>
             </div>
-
+<div>
+              <label className="block text-sm font-semibold text-marron mb-2">
+                ¿Cómo se accede a la promoción?
+              </label>
+              <select
+                name="modalidadEntrega"
+                value={formData.modalidadEntrega}
+                onChange={handleChange}
+                className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+              >
+                <option value="Solo presencial">Solo presencial</option>
+                <option value="Solo domicilio">Solo domicilio</option>
+                <option value="Presencial o domicilio">Presencial o domicilio</option>
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-semibold text-marron mb-2">
                 Vence el * <span className="text-gris font-normal">(fecha y hora)</span>
