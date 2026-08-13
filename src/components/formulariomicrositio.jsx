@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Upload, Trash2, Plus, X, Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Linkedin } from 'lucide-react';
 
 const CATEGORIAS_SUBCATEGORIAS = {
-  'Alojamiento': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca'],
+  'Alojamiento': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca', 'All inclusive', 'Apartamento', 'Resort', 'Glamping', 'Camping'],
   'Gastronomía': ['Típica/Tradicional', 'Gourmet', 'Rápida', 'Vegetariana/Vegana', 'Cafetería', 'Repostería', 'Comida internacional', 'Parrilla', 'Nikkei'],
   'Tour operador': ['Tours de un día', 'Paquetes multidía', 'Aventura/Extremo', 'Cultural/Patrimonial', 'Ecoturismo'],
   'Ente territorial': ['Alcaldía', 'Secretaría de Turismo', 'Casa de Cultura', 'Oficina de Turismo'],
@@ -14,6 +14,13 @@ const CATEGORIAS_SUBCATEGORIAS = {
   'Microempresa': ['Artesanías', 'Souvenirs', 'Productos agroalimentarios', 'Confecciones'],
   'Bares y pubs': ['Coctelería', 'Vinos', 'Música en vivo', 'Ambiente chill', 'Cerveza artesanal', 'Deportivo', 'Karaoke', 'Ambiente familiar'],
   'Recuperadora de residuos': ['Reciclaje', 'Compostaje', 'Educación ambiental'],
+  'Joyería en filigrana': [],
+  'Actor cultural': ['Música', 'Pintura', 'Actuación', 'Stand up', 'Danza'],
+  'Eventos': ['Wedding planner', 'Locación para eventos', 'Catering', 'Alquiler de objetos', 'Alquiler de equipos audiovisuales', 'Alquiler de carpas y montajes', 'Decoración', 'Maquillaje y peinado', 'Personal logístico'],
+  'Lavandería': ['Presencial', 'Domicilio'],
+  'Cambio de moneda': ['Dólares', 'Euros', 'Yuanes', 'Otros'],
+  'Transporte': ['Alquiler de vehículos', 'Público urbano', 'Intermunicipal', 'Especial', 'Náutico', 'Aéreo'],
+  'Comunicaciones': ['Telefonía móvil', 'Televisión', 'Internet', 'Telefonía fija', 'Alquiler de equipos de comunicación'],
 };
 
 const CATEGORIAS = Object.keys(CATEGORIAS_SUBCATEGORIAS);
@@ -28,9 +35,10 @@ const MUNICIPIOS = [
 
 const CIUDADES_SEDE = ['Medellín', 'Bogotá', 'Barranquilla', 'Cartagena'];
 const AMENITIES_POR_CATEGORIA = {
-  'Alojamiento': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación'],
+  'Alojamiento': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación', 'Spa', 'Restaurante', 'Recepción 24h', 'Conserje', 'Snacks', 'Parqueadero sin cobro', 'Parqueadero de pago', 'Dispositivos contra incendios', 'Plancha', 'Billar', 'Mesa de pingpong', 'Senderos', 'Portería 24h', 'Misa dominical', 'Enfermería', 'Auditorio', 'Juegos infantiles', 'Piscina niños'],
   'Gastronomía': ['Patio al aire libre', 'Música en vivo', 'Galería de arte', 'Agenda de talleres', 'WiFi gratis', 'Parqueadero', 'Zona de fumadores', 'Terraza', 'Menú infantil', 'Opciones vegetarianas/veganas', 'Domicilios', 'Accesible para discapacitados', 'Mascotas permitidas'],
   'Bares y pubs': ['Zona de fumadores', 'Música en vivo', 'Terraza/patio al aire libre', 'Karaoke', 'Mesa de billar', 'Pantallas deportivas', 'WiFi gratis', 'Parqueadero', 'Mascotas permitidas', 'Happy hour'],
+  'Eventos': ['Wedding planner', 'Salón', 'Lago', 'Capilla', 'Zona verde', 'Campestre', 'Jupa', 'Gazebo', 'Decoración', 'Alimentación', 'Mobiliario', 'Pasabocas', 'Meseros', 'Bartender', 'Transporte'],
 };
 const RED_ICONOS = {
   facebook: Facebook,
@@ -98,7 +106,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     const { name, value, type, checked } = e.target;
 
     if (name === 'categoria') {
-      setFormData(prev => ({ ...prev, categoria: value, subcategoria: '' }));
+      setFormData(prev => ({ ...prev, categoria: value, subcategoria: '', amenities: [] }));
       return;
     }
 
@@ -205,7 +213,7 @@ const agregarCertificacion = () => {
     setLoading(false);
   };
 
-  const subcategoriasDisponibles = formData.categoria ? CATEGORIAS_SUBCATEGORIAS[formData.categoria] : [];
+  const subcategoriasDisponibles = formData.categoria ? (CATEGORIAS_SUBCATEGORIAS[formData.categoria] || []) : [];
   const MAX_ENLACES_INSTITUCIONAL = 10;
 const MAX_ENLACES_GENERAL = 2;
 const MAX_CERTIFICACIONES = 5;  
