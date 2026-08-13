@@ -46,7 +46,7 @@ function fechaAInput(fecha) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export default function CrearEvento({ actorId, onEventCreated }) {
+export default function CrearEvento({ actorId, nombreNegocio, onEventCreated }) {
   const [formData, setFormData] = useState(FORM_VACIO);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -155,6 +155,7 @@ export default function CrearEvento({ actorId, onEventCreated }) {
       const datosEvento = {
         ...formData,
         tipo: tipoFinal,
+        nombreNegocio,
         fechaInicio: parseLocalDate(formData.fechaInicio),
         fechaFin: formData.fechaFin ? parseLocalDate(formData.fechaFin) : parseLocalDate(formData.fechaInicio),
         fecha: parseLocalDate(formData.fechaInicio)

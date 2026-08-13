@@ -110,7 +110,11 @@ export default function DashboardActor({ actorId }) {
           <GaleriaFotos actorId={actorId} onUpdate={cargarMicrositio} />
         )}
         {activeTab === 'eventos' && (
-          <CrearEvento actorId={actorId} onEventCreated={cargarMicrositio} />
+          <CrearEvento
+            actorId={actorId}
+            nombreNegocio={micrositio?.actor?.basicInfo?.nombre || ''}
+            onEventCreated={cargarMicrositio}
+          />
         )}
         {activeTab === 'promociones' && (
           <CrearPromocion

@@ -222,16 +222,27 @@ export const actualizarPromocion = async (promoId, datos) => {
 // Obtener agenda regional filtrada
 export const obtenerAgendaRegional = async (filtros) => {
   try {
-    let q = query(
+    const fechaInicio = filtros.fechaInicio instanceof Date ? filtros.fechaInicio : new Date(filtros.fechaInicio || new Date());
+    const fechaFin = filtros.fechaFin instanceof Date ? filtros.fechaFin : new Date(filtros.fechaFin || new Date(Date.now() + 30*24*60*60*1000));
+
+    const q = query(
       collection(db, 'events'),
-      where('metadata.publicado', '==', true),
-      where('fecha', '>=', filtros.fechaInicio || new Date()),
-      where('fecha', '<=', filtros.fechaFin || new Date(Date.now() + 30*24*60*60*1000)),
+      where('fecha', '>=', fechaInicio),
+      where('fecha', '<=', fechaFin),
       orderBy('fecha')
     );
 
     const eventos = await getDocs(q);
-    return eventos.docs.map(d => ({ id: d.id, ...d.data() }));
+    let resultado = eventos.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (filtros.categoria) {
+      resultado = resultado.filter(e => e.categoria === filtros.categoria);
+    }
+    if (filtros.municipio) {
+      resultado = resultado.filter(e => e.municipio === filtros.municipio);
+    }
+
+    return resultado;
   } catch (error) {
     console.error('Error obteniendo agenda:', error);
     throw error;
