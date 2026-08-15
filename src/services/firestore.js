@@ -396,3 +396,38 @@ export const obtenerPromedioTerritorio = async (categoria, subcategoria) => {
     throw error;
   }
 };
+// Marcar/quitar asistencia a un evento
+export const toggleAsistenciaEvento = async (eventId, userId, datosUsuario) => {
+  try {
+    const asistenciaRef = doc(db, 'events', eventId, 'asistentes', userId);
+    const asistenciaDoc = await getDoc(asistenciaRef);
+
+    if (asistenciaDoc.exists()) {
+      await deleteDoc(asistenciaRef);
+      return { asistira: false };
+    } else {
+      await setDoc(asistenciaRef, {
+        userId,
+        ...datosUsuario,
+        fecha: new Date()
+      });
+      return { asistira: true };
+    }
+  } catch (error) {
+    console.error('Error actualizando asistencia:', error);
+    throw error;
+  }
+};
+
+// Obtener conteo de asistentes y si el usuario actual ya marcó asistencia
+export const obtenerAsistenciaEvento = async (eventId, userId) => {
+  try {
+    const snap = await getDocs(collection(db, 'events', eventId, 'asistentes'));
+    const total = snap.size;
+    const yaAsiste = userId ? snap.docs.some(d => d.id === userId) : false;
+    return { total, yaAsiste };
+  } catch (error) {
+    console.error('Error obteniendo asistencia:', error);
+    return { total: 0, yaAsiste: false };
+  }
+};

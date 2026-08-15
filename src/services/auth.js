@@ -1,5 +1,5 @@
-import { 
-  signInWithPopup, 
+import {
+  signInWithPopup,
   GoogleAuthProvider,
   FacebookAuthProvider,
   signOut,
@@ -11,25 +11,25 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
-export const loginConGoogle = async () => {
+export const loginConGoogle = async (origen = 'actor') => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    
-    // Crear/actualizar usuario en Firestore
+
     const userRef = doc(db, 'users', result.user.uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (!userSnap.exists()) {
       await setDoc(userRef, {
         uid: result.user.uid,
         email: result.user.email,
         nombre: result.user.displayName,
         proveedor: 'google',
+        tipo: origen,
         createdAt: new Date(),
         datosCaracterizacion: {}
       });
     }
-    
+
     return result.user;
   } catch (error) {
     console.error('Error Google:', error);
@@ -37,24 +37,25 @@ export const loginConGoogle = async () => {
   }
 };
 
-export const loginConFacebook = async () => {
+export const loginConFacebook = async (origen = 'actor') => {
   try {
     const result = await signInWithPopup(auth, facebookProvider);
-    
+
     const userRef = doc(db, 'users', result.user.uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (!userSnap.exists()) {
       await setDoc(userRef, {
         uid: result.user.uid,
         email: result.user.email,
         nombre: result.user.displayName,
         proveedor: 'facebook',
+        tipo: origen,
         createdAt: new Date(),
         datosCaracterizacion: {}
       });
     }
-    
+
     return result.user;
   } catch (error) {
     console.error('Error Facebook:', error);

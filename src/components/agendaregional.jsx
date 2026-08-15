@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerAgendaRegional } from '../services/firestore';
+import { obtenerAgendaRegional, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
+import { onAuthChange } from '../services/auth';
+import ModalLoginVisitante from './modallogivisitante';
 import { Calendar, MapPin, Users, Clock, X, ExternalLink } from 'lucide-react';
 
 const CATEGORIAS_TIPOS = {
@@ -38,6 +40,10 @@ export default function AgendaRegional() {
   const [todosEventos, setTodosEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+  const [usuario, setUsuario] = useState(null);
+  const [mostrarLoginVisitante, setMostrarLoginVisitante] = useState(false);
+  const [asistencia, setAsistencia] = useState({ total: 0, yaAsiste: false });
+  const [accionPendiente, setAccionPendiente] = useState(null);
   const [filtros, setFiltros] = useState({
     categoria: '',
     tipo: '',
@@ -50,6 +56,48 @@ export default function AgendaRegional() {
   useEffect(() => {
     cargarEventos();
   }, [filtros]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => setUsuario(user));
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (eventoSeleccionado) {
+      cargarAsistencia(eventoSeleccionado.id);
+    }
+  }, [eventoSeleccionado, usuario]);
+
+  const cargarAsistencia = async (eventId) => {
+    const data = await obtenerAsistenciaEvento(eventId, usuario?.uid);
+    setAsistencia(data);
+  };
+
+  const handleAsistire = async (eventId) => {
+    if (!usuario) {
+      setAccionPendiente(() => () => handleAsistire(eventId));
+      setMostrarLoginVisitante(true);
+      return;
+    }
+    try {
+      await toggleAsistenciaEvento(eventId, usuario.uid, {
+        nombre: usuario.displayName,
+        email: usuario.email
+      });
+      cargarAsistencia(eventId);
+    } catch (error) {
+      console.error('Error marcando asistencia:', error);
+    }
+  };
+
+  const handleLoginExitoso = (user) => {
+    setUsuario(user);
+    setMostrarLoginVisitante(false);
+    if (accionPendiente) {
+      accionPendiente();
+      setAccionPendiente(null);
+    }
+  };
 
   const cargarEventos = async () => {
     setLoading(true);
@@ -301,6 +349,13 @@ export default function AgendaRegional() {
         )}
       </div>
 
+      {mostrarLoginVisitante && (
+        <ModalLoginVisitante
+          onClose={() => setMostrarLoginVisitante(false)}
+          onSuccess={handleLoginExitoso}
+        />
+      )}
+
       {/* Modal de detalle */}
       {eventoSeleccionado && (
         <div
@@ -362,6 +417,20 @@ export default function AgendaRegional() {
                     {eventoSeleccionado.modalidad}
                   </p>
                 )}
+              </div>
+
+              <button
+                onClick={() => handleAsistire(eventoSeleccionado.id)}
+                className={`mt-4 w-full flex items-center justify-center gap-2 font-semibold py-3 rounded-lg transition ${
+                  asistencia.yaAsiste
+                    ? 'bg-green-100 text-green-700 border-2 border-green-400'
+                    : 'border-2 border-terracota text-terracota hover:bg-crema'
+                }`}
+              >
+                {asistencia.yaAsiste ? '✓ Asistiré' : 'Asistiré'} {asistencia.total > 0 && `· ${asistencia.total} interesados`}
+              </button>
+
+              <div className="space-y-2 text-sm text-marron mt-4">
                 {eventoSeleccionado.cobro && (
                   <p className="flex items-center gap-2 font-semibold">
                     💰 ${eventoSeleccionado.precio ? eventoSeleccionado.precio.toLocaleString() : ''} COP

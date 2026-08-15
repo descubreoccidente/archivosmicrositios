@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerMicrositioPorSlug } from '../services/firestore';
+import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
+import { onAuthChange } from '../services/auth';
+import ModalLoginVisitante from './modallogivisitante';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
   Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag
@@ -72,10 +74,53 @@ export default function MicrositioPublico({ slug }) {
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [promoSeleccionada, setPromoSeleccionada] = useState(null);
+  const [usuario, setUsuario] = useState(null);
+  const [mostrarLoginVisitante, setMostrarLoginVisitante] = useState(false);
+  const [asistencia, setAsistencia] = useState({ total: 0, yaAsiste: false });
+  const [accionPendiente, setAccionPendiente] = useState(null);
 
   useEffect(() => {
     cargar();
+    const unsubscribe = onAuthChange((user) => setUsuario(user));
+    return () => unsubscribe();
   }, [slug]);
+
+  useEffect(() => {
+    if (eventoSeleccionado) {
+      cargarAsistencia(eventoSeleccionado.id);
+    }
+  }, [eventoSeleccionado, usuario]);
+
+  const cargarAsistencia = async (eventId) => {
+    const data = await obtenerAsistenciaEvento(eventId, usuario?.uid);
+    setAsistencia(data);
+  };
+
+  const handleAsistire = async (eventId) => {
+    if (!usuario) {
+      setAccionPendiente(() => () => handleAsistire(eventId));
+      setMostrarLoginVisitante(true);
+      return;
+    }
+    try {
+      await toggleAsistenciaEvento(eventId, usuario.uid, {
+        nombre: usuario.displayName,
+        email: usuario.email
+      });
+      cargarAsistencia(eventId);
+    } catch (error) {
+      console.error('Error marcando asistencia:', error);
+    }
+  };
+
+  const handleLoginExitoso = (user) => {
+    setUsuario(user);
+    setMostrarLoginVisitante(false);
+    if (accionPendiente) {
+      accionPendiente();
+      setAccionPendiente(null);
+    }
+  };
 
   const cargar = async () => {
     try {
@@ -566,6 +611,12 @@ export default function MicrositioPublico({ slug }) {
           </div>
         </div>
       )}
+{mostrarLoginVisitante && (
+        <ModalLoginVisitante
+          onClose={() => setMostrarLoginVisitante(false)}
+          onSuccess={handleLoginExitoso}
+        />
+      )}
 
       {/* Modal de evento */}
       {eventoSeleccionado && (
@@ -624,6 +675,17 @@ export default function MicrositioPublico({ slug }) {
                   </p>
                 )}
               </div>
+
+              <button
+                onClick={() => handleAsistire(eventoSeleccionado.id)}
+                className={`mt-4 w-full flex items-center justify-center gap-2 font-semibold py-3 rounded-lg transition ${
+                  asistencia.yaAsiste
+                    ? 'bg-green-100 text-green-700 border-2 border-green-400'
+                    : 'border-2 border-terracota text-terracota hover:bg-crema'
+                }`}
+              >
+                {asistencia.yaAsiste ? '✓ Asistiré' : 'Asistiré'} {asistencia.total > 0 && `· ${asistencia.total} interesados`}
+              </button>
 
               {eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
                 <a
