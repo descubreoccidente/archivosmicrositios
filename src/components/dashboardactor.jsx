@@ -146,7 +146,11 @@ export default function DashboardActor({ actorId }) {
           <TurismoResponsable actorId={actorId} />
         )}
         {activeTab === 'datos' && (
-          <MisDatosActor actorId={actorId} categoria={micrositio?.actor?.basicInfo?.categoria} />
+          <MisDatosActor
+            actorId={actorId}
+            categoria={micrositio?.actor?.basicInfo?.categoria}
+            subcategoria={micrositio?.actor?.basicInfo?.subcategoria}
+          />
         )}
       </div>
     </div>

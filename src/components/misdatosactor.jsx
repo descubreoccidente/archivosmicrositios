@@ -11,10 +11,148 @@ const MOTIVOS_CONSULTA_PIT = [
   'Transportes', 'Agenda', 'Promociones', 'Temas ambientales', 'Consultas oficiales'
 ];
 
-const GRUPO_A = ['Alojamiento', 'Gastronomía', 'Tour operador', 'Bares y pubs', 'Eventos', 'Actor cultural', 'Joyería en filigrana', 'Microempresa', 'Institución'];
-const GRUPO_B = ['Transporte', 'Lavandería', 'Cambio de moneda', 'Comunicaciones'];
+const LABELS = {
+  huespedesRecibidos: 'Huéspedes recibidos',
+  diasSol: 'Visitantes de día de sol (piscina + almuerzo, sin hospedaje)',
+  visitantesNacionales: 'Nacionales',
+  visitantesExtranjeros: 'Extranjeros',
+  actividadPrincipal: 'Motivo de viaje',
+  totalComensales: 'Total comensales',
+  eventosAtendidos: 'Eventos atendidos',
+  clientesAtendidos: 'Clientes atendidos',
+  cantidadMaterial: 'Material recolectado',
+  unidadMaterial: 'Unidad',
+  eventosAsistio: 'Eventos en los que participó',
+  personasAsistieron: 'Personas en sus presentaciones',
+  recorridosRealizados: 'Recorridos realizados',
+  personasAsistentes: 'Personas asistentes a tours',
+  municipiosImpactados: 'Municipios impactados',
+  pasajerosAtendidos: 'Pasajeros atendidos',
+  asistentes: 'Asistentes',
+  eventosRealizados: 'Eventos realizados',
+  totalAsistentes: 'Total asistentes a eventos',
+  eventosAcademico: 'Eventos académicos',
+  eventosSocial: 'Eventos sociales',
+  eventosCorporativo: 'Eventos corporativos',
+  eventosReligioso: 'Eventos religiosos',
+  eventosDeportivo: 'Eventos deportivos',
+  personasAtendidas: 'Personas atendidas',
+  visitantesParques: 'Visitantes en parques/recreación',
+  visitantesSedesAdmin: 'Visitantes sedes administrativas',
+  asistentesEventosPropios: 'Asistentes a eventos propios',
+  personasAtendidasSedes: 'Personas atendidas en sedes',
+  nuevasEmpresasCreadas: 'Nuevas empresas creadas',
+  numeroVisitantes: 'Número de visitantes',
+};
 
-export default function MisDatosActor({ actorId, categoria }) {
+const CONFIG_REPORTE = {
+  'Alojamiento': {
+    campos: [
+      { name: 'huespedesRecibidos', type: 'number' },
+      { name: 'diasSol', type: 'number' },
+      { name: 'visitantesNacionales', type: 'number' },
+      { name: 'visitantesExtranjeros', type: 'number' },
+      { name: 'actividadPrincipal', type: 'select', options: ACTIVIDADES_VISITANTE },
+    ]
+  },
+  'Gastronomía': {
+    campos: [
+      { name: 'totalComensales', type: 'number' },
+      { name: 'eventosAtendidos', type: 'number' },
+    ]
+  },
+  'Microempresa': {
+    campos: [
+      { name: 'clientesAtendidos', type: 'number' },
+    ]
+  },
+  'Recuperadora de residuos': {
+    campos: [
+      { name: 'cantidadMaterial', type: 'number' },
+      { name: 'unidadMaterial', type: 'select', options: ['kg', 'm³'] },
+    ]
+  },
+  'Joyería en filigrana': {
+    campos: [
+      { name: 'clientesAtendidos', type: 'number' },
+      { name: 'visitantesNacionales', type: 'number' },
+      { name: 'visitantesExtranjeros', type: 'number' },
+    ]
+  },
+  'Actor cultural': {
+    campos: [
+      { name: 'eventosAsistio', type: 'number' },
+      { name: 'personasAsistieron', type: 'number' },
+    ]
+  },
+  'Tour operador': {
+    campos: [
+      { name: 'recorridosRealizados', type: 'number' },
+      { name: 'personasAsistentes', type: 'number' },
+      { name: 'municipiosImpactados', type: 'number' },
+    ]
+  },
+  'Transporte': {
+    campos: [
+      { name: 'pasajerosAtendidos', type: 'number' },
+    ]
+  },
+  'Bares y pubs': {
+    campos: [
+      { name: 'asistentes', type: 'number' },
+      { name: 'eventosRealizados', type: 'number' },
+    ]
+  },
+  'Eventos': {
+    campos: [
+      { name: 'totalAsistentes', type: 'number' },
+      { name: 'eventosAcademico', type: 'number' },
+      { name: 'eventosSocial', type: 'number' },
+      { name: 'eventosCorporativo', type: 'number' },
+      { name: 'eventosReligioso', type: 'number' },
+      { name: 'eventosDeportivo', type: 'number' },
+    ]
+  },
+  'Comunicaciones': { campos: [{ name: 'personasAtendidas', type: 'number' }] },
+  'Lavandería': { campos: [{ name: 'personasAtendidas', type: 'number' }] },
+  'Cambio de moneda': { campos: [{ name: 'personasAtendidas', type: 'number' }] },
+  'Otros': { campos: [{ name: 'personasAtendidas', type: 'number' }] },
+};
+
+const CONFIG_INSTITUCION = {
+  'Caja de compensación': {
+    campos: [
+      { name: 'visitantesParques', type: 'number' },
+      { name: 'visitantesSedesAdmin', type: 'number' },
+      { name: 'asistentesEventosPropios', type: 'number' },
+    ]
+  },
+  'Cámara de comercio': {
+    campos: [
+      { name: 'personasAtendidasSedes', type: 'number' },
+      { name: 'asistentesEventosPropios', type: 'number' },
+      { name: 'nuevasEmpresasCreadas', type: 'number' },
+    ]
+  },
+  'Museo': {
+    campos: [
+      { name: 'numeroVisitantes', type: 'number' },
+      { name: 'asistentesEventosPropios', type: 'number' },
+    ]
+  },
+};
+
+const INSTITUCION_SIN_REPORTE = ['Religiosa'];
+
+function getConfig(categoria, subcategoria) {
+  if (categoria === 'Institución') {
+    if (INSTITUCION_SIN_REPORTE.includes(subcategoria)) return null;
+    return CONFIG_INSTITUCION[subcategoria] || { campos: [{ name: 'personasAtendidas', type: 'number' }] };
+  }
+  return CONFIG_REPORTE[categoria] || null;
+}
+
+export default function MisDatosActor({ actorId, categoria, subcategoria }) {
   const [reporteActual, setReporteActual] = useState(null);
   const [promedio, setPromedio] = useState(null);
   const [historial, setHistorial] = useState([]);
@@ -22,40 +160,37 @@ export default function MisDatosActor({ actorId, categoria }) {
   const [guardando, setGuardando] = useState(false);
   const [success, setSuccess] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [formData, setFormData] = useState({});
 
-  const [formData, setFormData] = useState({
-    visitantesNacionales: '',
-    visitantesExtranjeros: '',
-    nochesPromedio: '',
-    actividadPrincipal: ''
-  });
-
-  const esGrupoA = GRUPO_A.includes(categoria);
-  const esGrupoB = GRUPO_B.includes(categoria);
   const esGrupoC = categoria === 'Ente territorial';
-  const sinReporte = categoria === 'Recuperadora de residuos' || (!esGrupoA && !esGrupoB && !esGrupoC);
+  const config = esGrupoC ? null : getConfig(categoria, subcategoria);
+  const sinReporte = !esGrupoC && !config;
 
   useEffect(() => {
     if (!sinReporte) cargarDatos();
     else setLoading(false);
-  }, [actorId, categoria]);
+  }, [actorId, categoria, subcategoria]);
 
   const cargarDatos = async () => {
     setLoading(true);
     try {
       const reporte = await obtenerReporteSemanaActual(actorId);
       setReporteActual(reporte);
-      if (reporte) {
-        setFormData({
-          visitantesNacionales: reporte.visitantesNacionales ?? '',
-          visitantesExtranjeros: reporte.visitantesExtranjeros ?? '',
-          nochesPromedio: reporte.nochesPromedio ?? '',
-          actividadPrincipal: reporte.actividadPrincipal ?? ''
-        });
-      }
+
+      const campos = esGrupoC
+        ? [{ name: 'visitantesNacionales' }, { name: 'visitantesExtranjeros' }, { name: 'actividadPrincipal' }]
+        : config.campos;
+
+      const inicial = {};
+      campos.forEach(c => {
+        inicial[c.name] = reporte?.[c.name] ?? '';
+      });
+      setFormData(inicial);
+
       const hist = await obtenerHistorialReportes(actorId);
       setHistorial(hist);
-      const prom = await obtenerPromedioTerritorio(categoria);
+
+      const prom = await obtenerPromedioTerritorio(categoria, categoria === 'Institución' ? subcategoria : undefined);
       setPromedio(prom);
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -72,23 +207,17 @@ export default function MisDatosActor({ actorId, categoria }) {
     e.preventDefault();
     setGuardando(true);
     try {
-      const nacionales = parseInt(formData.visitantesNacionales) || 0;
-      const extranjeros = parseInt(formData.visitantesExtranjeros) || 0;
+      const datos = {};
+      const campos = esGrupoC
+        ? [{ name: 'visitantesNacionales', type: 'number' }, { name: 'visitantesExtranjeros', type: 'number' }, { name: 'actividadPrincipal', type: 'select' }]
+        : config.campos;
 
-      const datos = {
-        visitantesNacionales: nacionales,
-        visitantesExtranjeros: extranjeros,
-        totalVisitantes: nacionales + extranjeros
-      };
+      campos.forEach(c => {
+        const valor = formData[c.name];
+        datos[c.name] = c.type === 'number' ? (parseFloat(valor) || 0) : valor;
+      });
 
-      if (esGrupoA || esGrupoB || esGrupoC) {
-        datos.actividadPrincipal = formData.actividadPrincipal;
-      }
-      if (categoria === 'Alojamiento' && formData.nochesPromedio) {
-        datos.nochesPromedio = parseFloat(formData.nochesPromedio);
-      }
-
-      await guardarReporteSemanal(actorId, categoria, datos);
+      await guardarReporteSemanal(actorId, categoria, categoria === 'Institución' ? subcategoria : null, datos);
       setSuccess(true);
       setEditando(false);
       cargarDatos();
@@ -114,7 +243,14 @@ export default function MisDatosActor({ actorId, categoria }) {
     );
   }
 
-  const opcionesActividad = esGrupoC ? MOTIVOS_CONSULTA_PIT : ACTIVIDADES_VISITANTE;
+  const camposFormulario = esGrupoC
+    ? [
+        { name: 'visitantesNacionales', type: 'number' },
+        { name: 'visitantesExtranjeros', type: 'number' },
+        { name: 'actividadPrincipal', type: 'select', options: MOTIVOS_CONSULTA_PIT },
+      ]
+    : config.campos;
+
   const mostrarFormulario = !reporteActual || editando;
 
   return (
@@ -141,13 +277,13 @@ export default function MisDatosActor({ actorId, categoria }) {
             <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="flex-1">
               <p className="text-sm font-semibold text-green-800">Ya reportaste esta semana</p>
-              <p className="text-xs text-green-700 mt-1">
-                {esGrupoC || esGrupoA
-                  ? `Nacionales: ${reporteActual.visitantesNacionales} · Extranjeros: ${reporteActual.visitantesExtranjeros}`
-                  : `Total atendidos: ${reporteActual.totalVisitantes}`}
-                {reporteActual.nochesPromedio && ` · Noches promedio: ${reporteActual.nochesPromedio}`}
-                {reporteActual.actividadPrincipal && ` · Actividad: ${reporteActual.actividadPrincipal}`}
-              </p>
+              <div className="text-xs text-green-700 mt-1 space-y-0.5">
+                {camposFormulario.map(c => (
+                  reporteActual[c.name] !== undefined && reporteActual[c.name] !== '' && (
+                    <p key={c.name}>{LABELS[c.name] || c.name}: {reporteActual[c.name]}</p>
+                  )
+                ))}
+              </div>
               <button
                 onClick={() => setEditando(true)}
                 className="text-terracota text-xs font-semibold hover:underline mt-2"
@@ -160,114 +296,39 @@ export default function MisDatosActor({ actorId, categoria }) {
 
         {mostrarFormulario && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {(esGrupoA || esGrupoC) && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-marron mb-2">
-                    {esGrupoC ? 'Nacionales atendidos en el PIT' : 'Visitantes nacionales'}
-                  </label>
+            {camposFormulario.map(campo => (
+              <div key={campo.name}>
+                <label className="block text-sm font-semibold text-marron mb-2">
+                  {LABELS[campo.name] || campo.name}
+                  {esGrupoC && campo.name === 'actividadPrincipal' ? ' (motivo de consulta más recurrente)' : ''}
+                </label>
+                {campo.type === 'select' ? (
+                  <select
+                    name={campo.name}
+                    value={formData[campo.name] || ''}
+                    onChange={handleChange}
+                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+                  >
+                    <option value="">Selecciona...</option>
+                    {campo.options.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
                   <input
                     type="number"
-                    name="visitantesNacionales"
-                    value={formData.visitantesNacionales}
+                    name={campo.name}
+                    value={formData[campo.name] || ''}
                     onChange={handleChange}
-                    min="0"
+                    min={campo.min ?? 0}
+                    max={campo.max}
                     required
                     className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
                     placeholder="0"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-marron mb-2">
-                    {esGrupoC ? 'Extranjeros atendidos en el PIT' : 'Visitantes extranjeros'}
-                  </label>
-                  <input
-                    type="number"
-                    name="visitantesExtranjeros"
-                    value={formData.visitantesExtranjeros}
-                    onChange={handleChange}
-                    min="0"
-                    required
-                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                    placeholder="0"
-                  />
-                </div>
+                )}
               </div>
-            )}
-
-            {esGrupoB && (
-              <div>
-                <label className="block text-sm font-semibold text-marron mb-2">
-                  Personas atendidas esta semana
-                </label>
-                <input
-                  type="number"
-                  name="visitantesNacionales"
-                  value={formData.visitantesNacionales}
-                  onChange={handleChange}
-                  min="0"
-                  required
-                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                  placeholder="0"
-                />
-              </div>
-            )}
-
-            {categoria === 'Alojamiento' && (
-              <div>
-                <label className="block text-sm font-semibold text-marron mb-2">
-                  Noches promedio de estadía
-                </label>
-                <input
-                  type="number"
-                  name="nochesPromedio"
-                  value={formData.nochesPromedio}
-                  onChange={handleChange}
-                  min="0"
-                  step="0.1"
-                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                  placeholder="Ej: 2.5"
-                />
-              </div>
-            )}
-
-            {(esGrupoA || esGrupoB) && (
-              <div>
-                <label className="block text-sm font-semibold text-marron mb-2">
-                  Motivo de viaje más frecuente esta semana
-                </label>
-                <select
-                  name="actividadPrincipal"
-                  value={formData.actividadPrincipal}
-                  onChange={handleChange}
-                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                >
-                  <option value="">Selecciona...</option>
-                  {opcionesActividad.map(act => (
-                    <option key={act} value={act}>{act}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {esGrupoC && (
-              <div>
-                <label className="block text-sm font-semibold text-marron mb-2">
-                  Motivo de consulta más recurrente
-                </label>
-                <select
-                  name="actividadPrincipal"
-                  value={formData.actividadPrincipal}
-                  onChange={handleChange}
-                  className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                >
-                  <option value="">Selecciona...</option>
-                  {opcionesActividad.map(act => (
-                    <option key={act} value={act}>{act}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            ))}
 
             <div className="flex gap-2">
               <button
@@ -302,20 +363,12 @@ export default function MisDatosActor({ actorId, categoria }) {
             Basado en {promedio.totalReportantes} actor{promedio.totalReportantes !== 1 ? 'es' : ''} de tu misma categoría que ya reportaron.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-crema rounded-lg p-4">
-              <p className="text-2xl font-bold text-terracota">{promedio.promedioNacionales}</p>
-              <p className="text-xs text-gris mt-1">Nacionales (prom.)</p>
-            </div>
-            <div className="bg-crema rounded-lg p-4">
-              <p className="text-2xl font-bold text-terracota">{promedio.promedioExtranjeros}</p>
-              <p className="text-xs text-gris mt-1">Extranjeros (prom.)</p>
-            </div>
-            {promedio.promedioNoches && (
-              <div className="bg-crema rounded-lg p-4">
-                <p className="text-2xl font-bold text-terracota">{promedio.promedioNoches}</p>
-                <p className="text-xs text-gris mt-1">Noches (prom.)</p>
+            {Object.entries(promedio.promedios).map(([campo, valor]) => (
+              <div key={campo} className="bg-crema rounded-lg p-4">
+                <p className="text-2xl font-bold text-terracota">{valor}</p>
+                <p className="text-xs text-gris mt-1">{LABELS[campo] || campo}</p>
               </div>
-            )}
+            ))}
           </div>
         </div>
       )}
@@ -325,12 +378,14 @@ export default function MisDatosActor({ actorId, categoria }) {
           <h3 className="text-lg font-bold text-terracota mb-4">Historial reciente</h3>
           <div className="space-y-2">
             {historial.map((rep) => (
-              <div key={rep.id} className="flex justify-between items-center border border-gris/20 rounded-lg p-3 text-sm">
-                <span className="font-semibold text-marron">{rep.semana}</span>
-                <span className="text-gris">
-                  {rep.visitantesNacionales !== undefined && `Nac: ${rep.visitantesNacionales} · Ext: ${rep.visitantesExtranjeros}`}
-                  {rep.actividadPrincipal && ` · ${rep.actividadPrincipal}`}
-                </span>
+              <div key={rep.id} className="border border-gris/20 rounded-lg p-3 text-sm">
+                <p className="font-semibold text-marron mb-1">{rep.semana}</p>
+                <p className="text-gris text-xs">
+                  {camposFormulario
+                    .filter(c => rep[c.name] !== undefined && rep[c.name] !== '')
+                    .map(c => `${LABELS[c.name] || c.name}: ${rep[c.name]}`)
+                    .join(' · ')}
+                </p>
               </div>
             ))}
           </div>

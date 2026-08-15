@@ -318,13 +318,14 @@ function getWeekId(date = new Date()) {
 }
 
 // Guardar reporte semanal de datos de un actor
-export const guardarReporteSemanal = async (actorId, categoria, datos) => {
+export const guardarReporteSemanal = async (actorId, categoria, subcategoria, datos) => {
   try {
     const weekId = getWeekId();
     const reporteRef = doc(db, 'actors', actorId, 'reportesSemanales', weekId);
     await setDoc(reporteRef, {
       ...datos,
       categoria,
+      subcategoria: subcategoria || null,
       semana: weekId,
       actualizadoEn: new Date()
     }, { merge: true });
@@ -334,7 +335,6 @@ export const guardarReporteSemanal = async (actorId, categoria, datos) => {
     throw error;
   }
 };
-
 // Obtener el reporte de la semana actual de un actor (o null si no existe)
 export const obtenerReporteSemanaActual = async (actorId) => {
   try {
@@ -359,9 +359,8 @@ export const obtenerHistorialReportes = async (actorId) => {
     throw error;
   }
 };
-
-// Obtener promedio del territorio (semana actual) por categoría
-export const obtenerPromedioTerritorio = async (categoria) => {
+// Obtener promedio del territorio (semana actual) por categoría/subcategoría
+export const obtenerPromedioTerritorio = async (categoria, subcategoria) => {
   try {
     const weekId = getWeekId();
     const q = query(
@@ -372,23 +371,26 @@ export const obtenerPromedioTerritorio = async (categoria) => {
     const snap = await getDocs(q);
     if (snap.empty) return null;
 
-    const reportes = snap.docs.map(d => d.data());
-    const total = reportes.length;
-    const sumaVisitantes = reportes.reduce((s, r) => s + (r.totalVisitantes || 0), 0);
-    const sumaNacionales = reportes.reduce((s, r) => s + (r.visitantesNacionales || 0), 0);
-    const sumaExtranjeros = reportes.reduce((s, r) => s + (r.visitantesExtranjeros || 0), 0);
-    const conNoches = reportes.filter(r => r.nochesPromedio);
-    const promedioNoches = conNoches.length > 0
-      ? conNoches.reduce((s, r) => s + r.nochesPromedio, 0) / conNoches.length
-      : null;
+    let reportes = snap.docs.map(d => d.data());
+    if (subcategoria) {
+      reportes = reportes.filter(r => r.subcategoria === subcategoria);
+    } else {
+      reportes = reportes.filter(r => !r.subcategoria);
+    }
+    if (reportes.length === 0) return null;
 
-    return {
-      totalReportantes: total,
-      promedioVisitantes: Math.round(sumaVisitantes / total),
-      promedioNacionales: Math.round(sumaNacionales / total),
-      promedioExtranjeros: Math.round(sumaExtranjeros / total),
-      promedioNoches: promedioNoches ? Math.round(promedioNoches * 10) / 10 : null
-    };
+    const excluir = ['semana', 'categoria', 'subcategoria', 'actualizadoEn', 'actividadPrincipal', 'unidadMaterial'];
+    const camposNumericos = Object.keys(reportes[0]).filter(
+      k => !excluir.includes(k) && typeof reportes[0][k] === 'number'
+    );
+
+    const promedios = {};
+    camposNumericos.forEach(campo => {
+      const suma = reportes.reduce((s, r) => s + (r[campo] || 0), 0);
+      promedios[campo] = Math.round((suma / reportes.length) * 10) / 10;
+    });
+
+    return { totalReportantes: reportes.length, promedios };
   } catch (error) {
     console.error('Error obteniendo promedio territorio:', error);
     throw error;
