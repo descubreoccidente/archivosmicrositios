@@ -119,6 +119,22 @@ export const crearEvento = async (actorId, datosEvento) => {
   }
 };
 
+// Verificar si el usuario ya dejó reseña para este actor
+export const obtenerResenaUsuario = async (actorId, userId) => {
+  try {
+    const q = query(
+      collection(db, 'reviews'),
+      where('actorId', '==', actorId),
+      where('userId', '==', userId)
+    );
+    const snap = await getDocs(q);
+    return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+  } catch (error) {
+    console.error('Error verificando reseña:', error);
+    return null;
+  }
+};
+
 // Crear reseña
 export const crearResena = async (actorId, userId, datosResena) => {
   try {

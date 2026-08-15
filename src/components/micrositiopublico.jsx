@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
+import SistemaResenas from './sistemaresenas';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
   Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag
@@ -466,23 +467,9 @@ export default function MicrositioPublico({ slug }) {
         </div>
 
         {/* Reseñas (ancho completo) */}
-        {resenas && resenas.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-bold text-terracota mb-4">Reseñas de visitantes</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {resenas.map((resena) => (
-                <div key={resena.id} className="border-b border-gris/10 pb-3 last:border-0">
-                  <div className="flex items-center gap-1 mb-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={14} className={i < resena.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'} />
-                    ))}
-                  </div>
-                  <p className="text-sm text-marron">{resena.comentario}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <SistemaResenas actorId={actor.id} resenas={resenas} onResenaCreada={cargar} />
+        </div>
       </div>
 
       {/* Botón flotante de WhatsApp */}
