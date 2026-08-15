@@ -8,11 +8,14 @@ import GaleriaFotos from './galeriafotos';
 import CrearEvento from './crearevento';
 import TurismoResponsable from './turismoresponsable';
 import CrearPromocion from './CrearPromocion';
-import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag } from 'lucide-react';
+import MisDatosActor from './misdatosactor';
+import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle } from 'lucide-react';
+import { obtenerReporteSemanaActual } from '../services/firestore';
 export default function DashboardActor({ actorId }) {
   const [micrositio, setMicrositio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
+  const [faltaReportar, setFaltaReportar] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +26,12 @@ export default function DashboardActor({ actorId }) {
     try {
       const data = await obtenerMicrositio(actorId);
       setMicrositio(data);
+      const categoria = data?.actor?.basicInfo?.categoria;
+      const sinReporte = ['Recuperadora de residuos', ''].includes(categoria) || !categoria;
+      if (!sinReporte) {
+        const reporte = await obtenerReporteSemanaActual(actorId);
+        setFaltaReportar(!reporte);
+      }
     } catch (error) {
       console.error('Error cargando micrositio:', error);
     }
@@ -48,6 +57,7 @@ export default function DashboardActor({ actorId }) {
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'promociones', label: 'Promociones', icon: Tag },
     { id: 'sostenibilidad', label: 'Turismo Responsable', icon: Leaf },
+    { id: 'datos', label: 'Mis Datos', icon: BarChart3 },
   ];
 
   return (
@@ -80,6 +90,15 @@ export default function DashboardActor({ actorId }) {
           </button>
         </div>
       </div>
+{faltaReportar && activeTab !== 'datos' && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-center gap-2 text-sm text-yellow-800">
+          <AlertCircle size={16} />
+          Te falta reportar tus datos de esta semana.
+          <button onClick={() => setActiveTab('datos')} className="font-semibold underline hover:no-underline">
+            Reportar ahora
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b border-gris/20 sticky top-0 bg-white shadow-sm z-10">
@@ -125,6 +144,9 @@ export default function DashboardActor({ actorId }) {
         )}
         {activeTab === 'sostenibilidad' && (
           <TurismoResponsable actorId={actorId} />
+        )}
+        {activeTab === 'datos' && (
+          <MisDatosActor actorId={actorId} categoria={micrositio?.actor?.basicInfo?.categoria} />
         )}
       </div>
     </div>

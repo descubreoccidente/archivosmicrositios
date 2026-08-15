@@ -4,6 +4,7 @@ import {
   setDoc,
   getDoc,
   collection,
+  collectionGroup,
   query,
   where,
   getDocs,
@@ -303,6 +304,93 @@ export const obtenerMicrositioPorSlug = async (slug) => {
     return await obtenerMicrositio(actorId);
   } catch (error) {
     console.error('Error obteniendo micrositio por slug:', error);
+    throw error;
+  }
+};
+// Identificador de semana (formato YYYY-Www)
+function getWeekId(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+// Guardar reporte semanal de datos de un actor
+export const guardarReporteSemanal = async (actorId, categoria, datos) => {
+  try {
+    const weekId = getWeekId();
+    const reporteRef = doc(db, 'actors', actorId, 'reportesSemanales', weekId);
+    await setDoc(reporteRef, {
+      ...datos,
+      categoria,
+      semana: weekId,
+      actualizadoEn: new Date()
+    }, { merge: true });
+    return { success: true, weekId };
+  } catch (error) {
+    console.error('Error guardando reporte semanal:', error);
+    throw error;
+  }
+};
+
+// Obtener el reporte de la semana actual de un actor (o null si no existe)
+export const obtenerReporteSemanaActual = async (actorId) => {
+  try {
+    const weekId = getWeekId();
+    const reporteDoc = await getDoc(doc(db, 'actors', actorId, 'reportesSemanales', weekId));
+    return reporteDoc.exists() ? { id: reporteDoc.id, ...reporteDoc.data() } : null;
+  } catch (error) {
+    console.error('Error obteniendo reporte de la semana:', error);
+    throw error;
+  }
+};
+
+// Obtener historial de reportes de un actor
+export const obtenerHistorialReportes = async (actorId) => {
+  try {
+    const snap = await getDocs(
+      query(collection(db, 'actors', actorId, 'reportesSemanales'), orderBy('semana', 'desc'), limit(12))
+    );
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error obteniendo historial:', error);
+    throw error;
+  }
+};
+
+// Obtener promedio del territorio (semana actual) por categoría
+export const obtenerPromedioTerritorio = async (categoria) => {
+  try {
+    const weekId = getWeekId();
+    const q = query(
+      collectionGroup(db, 'reportesSemanales'),
+      where('semana', '==', weekId),
+      where('categoria', '==', categoria)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+
+    const reportes = snap.docs.map(d => d.data());
+    const total = reportes.length;
+    const sumaVisitantes = reportes.reduce((s, r) => s + (r.totalVisitantes || 0), 0);
+    const sumaNacionales = reportes.reduce((s, r) => s + (r.visitantesNacionales || 0), 0);
+    const sumaExtranjeros = reportes.reduce((s, r) => s + (r.visitantesExtranjeros || 0), 0);
+    const conNoches = reportes.filter(r => r.nochesPromedio);
+    const promedioNoches = conNoches.length > 0
+      ? conNoches.reduce((s, r) => s + r.nochesPromedio, 0) / conNoches.length
+      : null;
+
+    return {
+      totalReportantes: total,
+      promedioVisitantes: Math.round(sumaVisitantes / total),
+      promedioNacionales: Math.round(sumaNacionales / total),
+      promedioExtranjeros: Math.round(sumaExtranjeros / total),
+      promedioNoches: promedioNoches ? Math.round(promedioNoches * 10) / 10 : null
+    };
+  } catch (error) {
+    console.error('Error obteniendo promedio territorio:', error);
     throw error;
   }
 };
