@@ -465,3 +465,41 @@ export const verificarYRegistrarInvitacion = async (email, uid) => {
     return { autorizado: false };
   }
 };
+// Obtener todos los actores públicos con datos resumidos para el directorio
+export const obtenerActoresPublicos = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'actors'));
+    const actores = await Promise.all(snap.docs.map(async (d) => {
+      const data = d.data();
+      const info = data.basicInfo || {};
+      if (!info.nombre || !info.slug) return null;
+
+      let fotoPortada = null;
+      try {
+        const mediaSnap = await getDocs(
+          query(collection(db, 'actors', d.id, 'media'), where('esPortada', '==', true), limit(1))
+        );
+        if (!mediaSnap.empty) fotoPortada = mediaSnap.docs[0].data().url;
+      } catch (e) {
+        // sin foto, no pasa nada
+      }
+
+      return {
+        id: d.id,
+        slug: info.slug,
+        nombre: info.nombre,
+        categoria: info.categoria,
+        subcategoria: info.subcategoria,
+        municipio: info.municipio,
+        logo: info.logo || null,
+        fotoPortada,
+        rating: data.stats?.ratingPromedio || 0,
+        totalResenas: data.stats?.totalResenas || 0
+      };
+    }));
+    return actores.filter(Boolean);
+  } catch (error) {
+    console.error('Error obteniendo actores públicos:', error);
+    throw error;
+  }
+};

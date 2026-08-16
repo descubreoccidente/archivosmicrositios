@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, Store } from 'lucide-react';
+import MicrositiosDestacados from './MicrositiosDestacados';
 
 export default function Home() {
   return (
@@ -44,8 +45,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Espacio reservado para las siguientes secciones (Fase 2 en adelante) */}
-      <div id="explorar"></div>
+      <div id="explorar">
+        <MicrositiosDestacados />
+      </div>
     </div>
   );
 }
