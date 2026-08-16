@@ -71,7 +71,7 @@ export const obtenerMicrositio = async (actorId) => {
         collection(db, 'events'),
         where('actorId', '==', actorId),
         where('fecha', '>=', new Date()),
-        orderBy('fecha'),
+        orderBy('fecha', 'asc'),
         limit(3)
       )
     );
