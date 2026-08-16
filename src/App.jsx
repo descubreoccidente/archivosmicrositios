@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import Home from './components/Home';
 import Login from './components/Login';
 import DashboardActor from './components/dashboardactor';
 import MicrositioPublico from './components/micrositiopublico';
@@ -19,7 +20,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/ingresar" element={<Login />} />
         <Route path="/dashboard/:actorId" element={<DashboardWrapper />} />
         <Route path="/micrositio/:slug" element={<MicrositioPublicoWrapper />} />
         <Route path="/agenda" element={<AgendaRegional />} />

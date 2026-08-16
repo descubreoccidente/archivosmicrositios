@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { loginConGoogle, loginConFacebook } from '../services/auth.js';
+import { verificarYRegistrarInvitacion } from '../services/firestore.js';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
@@ -7,11 +8,17 @@ export default function Login() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleGoogleLogin = async () => {
+  const procesarLogin = async (loginFn) => {
     setLoading(true);
     setError(null);
     try {
-      const user = await loginConGoogle();
+      const user = await loginFn();
+      const { autorizado } = await verificarYRegistrarInvitacion(user.email, user.uid);
+      if (!autorizado) {
+        setError('Este correo no tiene una invitación activa para gestionar un micrositio. Contáctanos para solicitar acceso.');
+        setLoading(false);
+        return;
+      }
       navigate(`/dashboard/${user.uid}`);
     } catch (err) {
       setError(err.message);
@@ -19,17 +26,8 @@ export default function Login() {
     setLoading(false);
   };
 
-  const handleFacebookLogin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const user = await loginConFacebook();
-      navigate(`/dashboard/${user.uid}`);
-    } catch (err) {
-      setError(err.message);
-    }
-    setLoading(false);
-  };
+  const handleGoogleLogin = () => procesarLogin(loginConGoogle);
+  const handleFacebookLogin = () => procesarLogin(loginConFacebook);
 
   return (
     <div

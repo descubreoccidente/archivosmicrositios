@@ -447,3 +447,21 @@ export const obtenerAsistenciaEvento = async (eventId, userId) => {
     return { total: 0, yaAsiste: false };
   }
 };
+// Verificar si un correo tiene invitación activa, y vincularla al usuario
+export const verificarYRegistrarInvitacion = async (email, uid) => {
+  try {
+    const emailNormalizado = email.trim().toLowerCase();
+    const invRef = doc(db, 'invitaciones', emailNormalizado);
+    const invSnap = await getDoc(invRef);
+
+    if (!invSnap.exists() || !invSnap.data().autorizado) {
+      return { autorizado: false };
+    }
+
+    await setDoc(invRef, { usado: true, actorId: uid, fechaUso: new Date() }, { merge: true });
+    return { autorizado: true };
+  } catch (error) {
+    console.error('Error verificando invitación:', error);
+    return { autorizado: false };
+  }
+};
