@@ -3,6 +3,7 @@ import { crearEvento, actualizarEvento, obtenerEventosActor, eliminarEvento } fr
 import { storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Calendar, MapPin, Trash2, Upload, Pencil } from 'lucide-react';
+import SelectorUbicacionMapa from './SelectorUbicacionMapa';
 
 const CATEGORIAS_TIPOS = {
   'Cultural': ['Cine', 'Musical', 'Artes plásticas', 'Teatro', 'Artesanal', 'Danza', 'Literario'],
@@ -541,27 +542,14 @@ export default function CrearEvento({ actorId, nombreNegocio, onEventCreated }) 
             {formData.modalidad !== 'Virtual' && (
               <div className="bg-crema p-4 rounded-lg">
                 <label className="block text-sm font-semibold text-marron mb-2">
-                  Ubicación exacta (coordenadas) <span className="text-gris font-normal">(opcional)</span>
+                  Ubicación exacta en el mapa <span className="text-gris font-normal">(opcional)</span>
                 </label>
-                <p className="text-xs text-gris mb-3">
-                  Búscalo en Google Maps, clic derecho sobre el punto y copia los números que aparecen primero.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    value={formData.ubicacion.lat}
-                    onChange={(e) => setFormData(prev => ({ ...prev, ubicacion: { ...prev.ubicacion, lat: e.target.value } }))}
-                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                    placeholder="Latitud, ej: 6.5570"
-                  />
-                  <input
-                    type="text"
-                    value={formData.ubicacion.lng}
-                    onChange={(e) => setFormData(prev => ({ ...prev, ubicacion: { ...prev.ubicacion, lng: e.target.value } }))}
-                    className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-                    placeholder="Longitud, ej: -75.8353"
-                  />
-                </div>
+                <SelectorUbicacionMapa
+                  lat={formData.ubicacion.lat}
+                  lng={formData.ubicacion.lng}
+                  municipio={formData.municipio}
+                  onChange={(lat, lng) => setFormData(prev => ({ ...prev, ubicacion: { lat, lng } }))}
+                />
               </div>
             )}
 

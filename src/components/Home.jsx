@@ -4,6 +4,7 @@ import { Compass, Store } from 'lucide-react';
 import MicrositiosDestacados from './MicrositiosDestacados';
 import AgendaDestacada from './AgendaDestacada';
 import PromocionesDestacadas from './PromocionesDestacadas';
+import MapaTerritorio from './MapaTerritorio';
 
 export default function Home() {
   return (
@@ -52,6 +53,7 @@ export default function Home() {
       </div>
       <AgendaDestacada />
       <PromocionesDestacadas />
+      <MapaTerritorio />
     </div>
   );
 }

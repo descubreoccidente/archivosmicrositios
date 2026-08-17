@@ -4,13 +4,14 @@ import { db, storage } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Upload, Trash2, Plus, X, Facebook, Instagram, Youtube, MessageCircle, Music2, Link as LinkIcon, Linkedin } from 'lucide-react';
+import SelectorUbicacionMapa from './SelectorUbicacionMapa';
 
 const CATEGORIAS_SUBCATEGORIAS = {
   'Alojamiento': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca', 'All inclusive', 'Apartamento', 'Resort', 'Glamping', 'Camping'],
   'Gastronomía': ['Típica/Tradicional', 'Gourmet', 'Rápida', 'Vegetariana/Vegana', 'Cafetería', 'Repostería', 'Comida internacional', 'Parrilla', 'Nikkei'],
   'Tour operador': ['Tours de un día', 'Paquetes multidía', 'Aventura/Extremo', 'Cultural/Patrimonial', 'Ecoturismo'],
   'Ente territorial': ['Alcaldía', 'Secretaría de Turismo', 'Casa de Cultura', 'Oficina de Turismo'],
-  'Institución': ['Caja de compensación', 'Cámara de comercio', 'Religiosa', 'Fundación', 'Adscrita a ministerio', 'Cooperativa', 'Corporación'],
+  'Institución': ['Museo', 'Caja de compensación', 'Cámara de comercio', 'Religiosa', 'Fundación', 'Adscrita a ministerio', 'Cooperativa', 'Corporación'],
   'Microempresa': ['Artesanías', 'Souvenirs', 'Productos agroalimentarios', 'Confecciones'],
   'Bares y pubs': ['Coctelería', 'Vinos', 'Música en vivo', 'Ambiente chill', 'Cerveza artesanal', 'Deportivo', 'Karaoke', 'Ambiente familiar'],
   'Recuperadora de residuos': ['Reciclaje', 'Compostaje', 'Educación ambiental'],
@@ -527,29 +528,14 @@ const MAX_CERTIFICACIONES = 5;
 
         <div className="bg-crema p-4 rounded-lg">
           <label className="block text-sm font-semibold text-marron mb-2">
-            Ubicación (coordenadas)
+            Ubicación en el mapa
           </label>
-          <p className="text-xs text-gris mb-3">
-            Puedes obtener tus coordenadas buscando tu perfil de negocio en Google Maps, clic derecho sobre el punto exacto y copiar los números que aparecen primero.
-          </p>
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="lat"
-              value={formData.ubicacion.lat}
-              onChange={handleUbicacionChange}
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-              placeholder="Latitud, ej: 6.5570"
-            />
-            <input
-              type="text"
-              name="lng"
-              value={formData.ubicacion.lng}
-              onChange={handleUbicacionChange}
-              className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
-              placeholder="Longitud, ej: -75.8353"
-            />
-          </div>
+          <SelectorUbicacionMapa
+            lat={formData.ubicacion.lat}
+            lng={formData.ubicacion.lng}
+            municipio={formData.municipio}
+            onChange={(lat, lng) => setFormData(prev => ({ ...prev, ubicacion: { lat, lng } }))}
+          />
         </div>
 
         {AMENITIES_POR_CATEGORIA[formData.categoria] && (

@@ -528,3 +528,90 @@ export const obtenerPromocionesDestacadas = async () => {
     throw error;
   }
 };
+// Coordenadas centrales aproximadas de cada municipio del Occidente Antioqueño
+export const COORDENADAS_MUNICIPIOS = {
+  'Abriaquí': { lat: 6.6314, lng: -76.0656 },
+  'Anzá': { lat: 6.2803, lng: -75.8983 },
+  'Armenia': { lat: 6.1567, lng: -75.7897 },
+  'Buriticá': { lat: 6.7203, lng: -75.9089 },
+  'Caicedo': { lat: 6.4128, lng: -75.6917 },
+  'Cañasgordas': { lat: 6.7508, lng: -76.0269 },
+  'Dabeiba': { lat: 7.0189, lng: -76.2622 },
+  'Ebéjico': { lat: 6.3269, lng: -75.7683 },
+  'Frontino': { lat: 6.7756, lng: -76.1319 },
+  'Giraldo': { lat: 6.6939, lng: -75.7381 },
+  'Heliconia': { lat: 6.2011, lng: -75.7325 },
+  'Liborina': { lat: 6.6772, lng: -75.8161 },
+  'Olaya': { lat: 6.6081, lng: -75.8103 },
+  'Peque': { lat: 7.0122, lng: -75.9042 },
+  'Sabanalarga': { lat: 6.8506, lng: -75.8228 },
+  'San Jerónimo': { lat: 6.4433, lng: -75.7256 },
+  'Santa Fe de Antioquia': { lat: 6.5564, lng: -75.8281 },
+  'Sopetrán': { lat: 6.5011, lng: -75.7439 },
+  'Uramita': { lat: 6.8908, lng: -76.1786 },
+};
+
+// Obtener puntos de mapa: actores (verde) y eventos (amarillo)
+export const obtenerPuntosMapa = async () => {
+  try {
+    const actoresSnap = await getDocs(collection(db, 'actors'));
+    const actores = actoresSnap.docs
+      .map(d => {
+        const info = d.data().basicInfo || {};
+        if (!info.nombre || !info.slug) return null;
+        let coords = null;
+        const latPropia = parseFloat(info.ubicacion?.lat);
+        const lngPropia = parseFloat(info.ubicacion?.lng);
+        if (Number.isFinite(latPropia) && Number.isFinite(lngPropia)) {
+          coords = { lat: latPropia, lng: lngPropia };
+        } else {
+          coords = COORDENADAS_MUNICIPIOS[info.municipio];
+        }
+        if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) return null;
+        return {
+          tipo: 'actor',
+          id: d.id,
+          nombre: info.nombre,
+          categoria: info.categoria,
+          municipio: info.municipio,
+          slug: info.slug,
+          lat: coords.lat,
+          lng: coords.lng
+        };
+      })
+      .filter(Boolean);
+
+    const ahora = new Date();
+    const eventosSnap = await getDocs(
+      query(collection(db, 'events'), where('fecha', '>=', ahora))
+    );
+    const eventos = eventosSnap.docs
+      .map(d => {
+        const e = d.data();
+        let coords = null;
+        const latPropia = parseFloat(e.ubicacion?.lat);
+        const lngPropia = parseFloat(e.ubicacion?.lng);
+        if (Number.isFinite(latPropia) && Number.isFinite(lngPropia)) {
+          coords = { lat: latPropia, lng: lngPropia };
+        } else {
+          coords = COORDENADAS_MUNICIPIOS[e.municipio];
+        }
+        if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) return null;
+        return {
+          tipo: 'evento',
+          id: d.id,
+          nombre: e.nombre,
+          categoria: e.categoria,
+          municipio: e.municipio,
+          lat: coords.lat,
+          lng: coords.lng
+        };
+      })
+      .filter(Boolean);
+
+    return [...actores, ...eventos];
+  } catch (error) {
+    console.error('Error obteniendo puntos del mapa:', error);
+    throw error;
+  }
+};
