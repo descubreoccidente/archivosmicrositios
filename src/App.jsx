@@ -7,6 +7,7 @@ import MicrositioPublico from './components/micrositiopublico';
 import AgendaRegional from './components/agendaregional';
 import PromocionesDelDia from './components/PromocionesDelDia';
 import Directorio from './components/Directorio';
+import CandelaFestival from './components/CandelaFestival';
 
 function DashboardWrapper() {
   const { actorId } = useParams();
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/agenda" element={<AgendaRegional />} />
         <Route path="/promociones" element={<PromocionesDelDia />} />
         <Route path="/directorio" element={<Directorio />} />
+        <Route path="/candela-festival" element={<CandelaFestival />} />
       </Routes>
     </BrowserRouter>
   );

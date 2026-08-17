@@ -615,3 +615,68 @@ export const obtenerPuntosMapa = async () => {
     throw error;
   }
 };
+// ===== CANDELA FESTIVAL =====
+
+// Fecha límite de votación: 4 de octubre de 2026, 11:59 pm
+export const CANDELA_FECHA_LIMITE = new Date('2026-10-04T23:59:59-05:00');
+
+// Obtener todos los participantes del concurso
+export const obtenerParticipantesCandela = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'candelaParticipantes'));
+    const participantes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const votosSnap = await getDocs(collectionGroup(db, 'votos'));
+    const conteo = {};
+    votosSnap.docs.forEach(v => {
+      const pid = v.data().participanteId;
+      conteo[pid] = (conteo[pid] || 0) + 1;
+    });
+
+    return participantes
+      .map(p => ({ ...p, votos: conteo[p.id] || 0 }))
+      .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+  } catch (error) {
+    console.error('Error obteniendo participantes Candela:', error);
+    throw error;
+  }
+};
+
+// Verificar si un usuario ya votó
+export const obtenerVotoUsuarioCandela = async (userId) => {
+  try {
+    const votoDoc = await getDoc(doc(db, 'candelaVotos', userId));
+    return votoDoc.exists() ? votoDoc.data() : null;
+  } catch (error) {
+    console.error('Error verificando voto:', error);
+    return null;
+  }
+};
+
+// Registrar un voto (una sola vez por usuario)
+export const votarCandela = async (participanteId, userId, nombreUsuario) => {
+  try {
+    const votoRef = doc(db, 'candelaVotos', userId);
+    const yaVoto = await getDoc(votoRef);
+    if (yaVoto.exists()) {
+      throw new Error('Ya has votado anteriormente');
+    }
+
+    await setDoc(votoRef, {
+      userId,
+      participanteId,
+      nombreUsuario,
+      fecha: new Date()
+    });
+
+    await setDoc(
+      doc(db, 'candelaParticipantes', participanteId, 'votos', userId),
+      { userId, fecha: new Date() }
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error registrando voto:', error);
+    throw error;
+  }
+};
