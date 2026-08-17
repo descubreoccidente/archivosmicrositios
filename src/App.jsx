@@ -5,6 +5,7 @@ import Login from './components/Login';
 import DashboardActor from './components/dashboardactor';
 import MicrositioPublico from './components/micrositiopublico';
 import AgendaRegional from './components/agendaregional';
+import PromocionesDelDia from './components/PromocionesDelDia';
 
 function DashboardWrapper() {
   const { actorId } = useParams();
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/dashboard/:actorId" element={<DashboardWrapper />} />
         <Route path="/micrositio/:slug" element={<MicrositioPublicoWrapper />} />
         <Route path="/agenda" element={<AgendaRegional />} />
+        <Route path="/promociones" element={<PromocionesDelDia />} />
       </Routes>
     </BrowserRouter>
   );

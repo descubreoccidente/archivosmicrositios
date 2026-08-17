@@ -235,7 +235,9 @@ export default function MicrositioPublico({ slug }) {
 
           {/* Promociones */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-bold text-terracota mb-4">🔥 Promociones activas</h2>
+            <h2 className="flex items-center gap-2 text-lg font-bold text-terracota mb-4">
+              <img src="/medalla-promocion.png" alt="" className="h-6" /> Promociones activas
+            </h2>
             {promociones && promociones.length > 0 ? (
               <div className="space-y-4">
                 {promociones.map((promo) => {

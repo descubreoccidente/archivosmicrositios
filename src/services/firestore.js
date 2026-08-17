@@ -503,3 +503,28 @@ export const obtenerActoresPublicos = async () => {
     throw error;
   }
 };
+// Obtener promociones activas para la landing, con municipio del actor
+export const obtenerPromocionesDestacadas = async () => {
+  try {
+    const ahora = new Date();
+    const snap = await getDocs(collection(db, 'promociones'));
+    const promos = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => !p.fechaVencimiento || p.fechaVencimiento.toDate() > ahora);
+
+    const conMunicipio = await Promise.all(promos.map(async (p) => {
+      try {
+        const actorDoc = await getDoc(doc(db, 'actors', p.actorId));
+        return { ...p, municipio: actorDoc.exists() ? actorDoc.data().basicInfo?.municipio : null };
+      } catch (e) {
+        return { ...p, municipio: null };
+      }
+    }));
+
+    conMunicipio.sort((a, b) => (b.fechaCreacion?.toMillis?.() || 0) - (a.fechaCreacion?.toMillis?.() || 0));
+    return conMunicipio;
+  } catch (error) {
+    console.error('Error obteniendo promociones destacadas:', error);
+    throw error;
+  }
+};
