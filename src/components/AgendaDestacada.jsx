@@ -76,7 +76,7 @@ export default function AgendaDestacada() {
         ) : eventos.length === 0 ? (
           <p className="text-center text-gris">No hay eventos próximos con estos filtros.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             {eventos.map((evento) => (
               <Link
                 key={evento.id}
@@ -92,21 +92,21 @@ export default function AgendaDestacada() {
                     </div>
                   )}
                 </div>
-                <div className="p-3">
-                  <span className="inline-block bg-terracota/10 text-terracota text-xs font-semibold px-2 py-0.5 rounded-full mb-1">
+                <div className="p-2 md:p-3">
+                  <span className="hidden md:inline-block bg-terracota/10 text-terracota text-xs font-semibold px-2 py-0.5 rounded-full mb-1">
                     {evento.categoria}
                   </span>
-                  <p className="font-bold text-marron text-sm leading-snug line-clamp-2">{evento.nombre}</p>
-                  <p className="flex items-center gap-1 text-xs text-gris mt-1">
+                  <p className="font-bold text-marron text-xs md:text-sm leading-snug line-clamp-2">{evento.nombre}</p>
+                  <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
                     <Calendar size={11} /> {formatFechaCorta(evento.fechaInicio || evento.fecha)}
                   </p>
                   {evento.municipio && (
-                    <p className="flex items-center gap-1 text-xs text-gris">
+                    <p className="hidden md:flex items-center gap-1 text-xs text-gris">
                       <MapPin size={11} /> {evento.municipio}
                     </p>
                   )}
                   {evento.nombreNegocio && (
-                    <p className="text-xs text-terracota font-semibold mt-1">Por {evento.nombreNegocio}</p>
+                    <p className="hidden md:block text-xs text-terracota font-semibold mt-1">Por {evento.nombreNegocio}</p>
                   )}
                 </div>
               </Link>

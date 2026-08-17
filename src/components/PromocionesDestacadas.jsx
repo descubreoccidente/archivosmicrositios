@@ -106,7 +106,7 @@ export default function PromocionesDestacadas() {
         ) : destacadas.length === 0 ? (
           <p className="text-center text-gris">No hay promociones activas con estos filtros.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
             {destacadas.map((promo) => {
               const color = colorPromo(promo.categoria);
               return (
@@ -128,23 +128,23 @@ export default function PromocionesDestacadas() {
                       </span>
                     )}
                   </div>
-                  <div className="p-4">
-                    <span className={`inline-block ${color.tag} text-xs font-semibold px-2 py-0.5 rounded-full mb-2`}>
+                  <div className="p-2 md:p-4">
+                    <span className={`hidden md:inline-block ${color.tag} text-xs font-semibold px-2 py-0.5 rounded-full mb-2`}>
                       {promo.categoria}
                     </span>
-                    <p className="font-bold text-marron text-base leading-snug">{promo.titulo}</p>
-                    <p className="text-xs text-gris mt-1 line-clamp-2">{promo.descripcion}</p>
+                    <p className="font-bold text-marron text-xs md:text-base leading-snug line-clamp-2">{promo.titulo}</p>
+                    <p className="hidden md:block text-xs text-gris mt-1 line-clamp-2">{promo.descripcion}</p>
                     {promo.municipio && (
-                      <p className="flex items-center gap-1 text-xs text-gris mt-2">
+                      <p className="hidden md:flex items-center gap-1 text-xs text-gris mt-2">
                         <MapPin size={11} /> {promo.municipio}
                       </p>
                     )}
                     {promo.precioOriginal && promo.precioDescuento && (
-                      <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-gris line-through text-xs">
+                      <div className="mt-1 md:mt-2 flex items-baseline gap-1 md:gap-2">
+                        <span className="text-gris line-through text-[10px] md:text-xs">
                           ${promo.precioOriginal.toLocaleString()}
                         </span>
-                        <span className="text-terracota font-bold text-lg">
+                        <span className="text-terracota font-bold text-sm md:text-lg">
                           ${promo.precioDescuento.toLocaleString()}
                         </span>
                       </div>
