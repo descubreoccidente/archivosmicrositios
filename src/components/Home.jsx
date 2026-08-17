@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, Store } from 'lucide-react';
 import MicrositiosDestacados from './MicrositiosDestacados';
+import AgendaDestacada from './AgendaDestacada';
 
 export default function Home() {
   return (
@@ -48,6 +49,7 @@ export default function Home() {
       <div id="explorar">
         <MicrositiosDestacados />
       </div>
+      <AgendaDestacada />
     </div>
   );
 }
