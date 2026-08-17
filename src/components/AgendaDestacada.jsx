@@ -45,10 +45,12 @@ export default function AgendaDestacada() {
   };
 
   return (
-    <section className="bg-white py-16">
+    <section className="relative py-16 bg-cover bg-center" style={{ backgroundImage: "linear-gradient(rgba(44,24,16,0.5), rgba(44,24,16,0.5)), url('/agenda-fondo.jpg')" }}>
       <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-terracota mb-2 text-center">Agenda Regional</h2>
-        <p className="text-gris text-center mb-8">Lo que está pasando en el Occidente Antioqueño</p>
+        <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-white mb-2 text-center">
+          <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> Agenda Regional
+        </h2>
+        <p className="text-white/90 text-center mb-8">Lo que está pasando en el Occidente Antioqueño</p>
 
         <div className="flex flex-wrap gap-3 justify-center mb-10">
           <select

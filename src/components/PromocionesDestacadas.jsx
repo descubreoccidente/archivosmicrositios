@@ -76,13 +76,12 @@ export default function PromocionesDestacadas() {
   const destacadas = filtradas.slice(0, 3);
 
   return (
-    <section className="bg-crema py-16">
+    <section className="bg-teal py-16">
       <div className="max-w-6xl mx-auto px-6">
-        <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-terracota mb-2 text-center">
+        <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-white mb-2 text-center">
           <img src="/medalla-promocion.png" alt="" className="h-10" /> Promociones del momento
         </h2>
-        <p className="text-gris text-center mb-8">Ofertas exclusivas de los actores del territorio</p>
-
+        <p className="text-white/90 text-center mb-8">Ofertas exclusivas de los actores del territorio</p>
         <div className="flex flex-wrap gap-3 justify-center mb-10">
           <select
             value={filtroCategoria}
