@@ -5,6 +5,7 @@ import MicrositiosDestacados from './MicrositiosDestacados';
 import AgendaDestacada from './AgendaDestacada';
 import PromocionesDestacadas from './PromocionesDestacadas';
 import MapaTerritorio from './MapaTerritorio';
+import Footer from './Footer';
 
 export default function Home() {
   return (
@@ -54,6 +55,7 @@ export default function Home() {
       <AgendaDestacada />
       <PromocionesDestacadas />
       <MapaTerritorio />
+      <Footer />
     </div>
   );
 }
