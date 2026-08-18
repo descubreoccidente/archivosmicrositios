@@ -19,6 +19,17 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col items-center gap-2 w-28 md:w-36">
+          <img
+            src="/logo-corporacion.png"
+            alt="Corporación de Turismo del Occidente de Antioquia"
+            className="h-16 md:h-20 object-contain drop-shadow-lg"
+          />
+          <p className="hidden md:block text-xs text-white font-semibold leading-tight text-center drop-shadow-md">
+            Una iniciativa de la Corporación de Turismo del Occidente de Antioquia 25 Años.
+          </p>
+        </div>
+
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
           <img
             src="/logo-teal.png"

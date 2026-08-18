@@ -134,7 +134,9 @@ export default function AgendaRegional() {
       {/* Header */}
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-6xl mx-auto px-8">
-          <h1 className="text-4xl font-bold mb-2">Agenda Regional</h1>
+          <h1 className="flex items-center gap-3 text-4xl font-bold mb-2">
+            <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> Agenda Regional
+          </h1>
           <p className="text-lg opacity-90">
             Descubre todos los eventos del Occidente Antioqueño
           </p>

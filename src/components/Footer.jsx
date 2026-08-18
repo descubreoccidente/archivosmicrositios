@@ -122,7 +122,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
           <div className="flex items-center gap-4 mb-3">
-            <img src="/logo-teal.png" alt="Descubre Occidente" className="h-16 brightness-0 invert" />
+            <img src="/logo-teal.png" alt="Descubre Occidente" className="h-20 brightness-0 invert" />
             <div className="w-px h-16 bg-white/20"></div>
             <img src="/logo-corporacion.png" alt="Corporación de Turismo del Occidente de Antioquia" className="h-24 w-24 object-contain bg-white rounded-lg p-1" />
           </div>

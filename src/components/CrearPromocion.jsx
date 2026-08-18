@@ -193,6 +193,9 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
 
       {/* Lista de promociones existentes */}
       <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-sm text-green-800 text-center">
+          🎉 Promociones gratis durante el mes de lanzamiento — aprovecha para publicar tus ofertas sin costo.
+        </div>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-terracota">
             Tus Promociones ({promociones.length})

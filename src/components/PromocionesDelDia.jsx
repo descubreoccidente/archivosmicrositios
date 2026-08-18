@@ -72,9 +72,11 @@ export default function PromocionesDelDia() {
       {/* Header */}
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-6xl mx-auto px-8">
-          <h1 className="text-4xl font-bold mb-2">🎉 Promociones del Día</h1>
+          <h1 className="flex items-center gap-3 text-4xl font-bold mb-2">
+            <img src="/medalla-promocion.png" alt="" className="h-14" /> Promociones del Día
+          </h1>
           <p className="text-lg opacity-90">
-            Ofertas exclusivas por 24 horas del Occidente Antioqueño
+            Ofertas exclusivas del Occidente Antioqueño
           </p>
         </div>
       </div>

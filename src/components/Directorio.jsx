@@ -77,7 +77,9 @@ export default function Directorio() {
     <div className="min-h-screen bg-crema">
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-6xl mx-auto px-6">
-          <h1 className="text-4xl font-bold mb-2">Directorio de Actores</h1>
+          <h1 className="flex items-center gap-3 text-4xl font-bold mb-2">
+            <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> Directorio de Actores
+          </h1>
           <p className="text-lg opacity-90">Todos los actores turísticos del Occidente Antioqueño</p>
         </div>
       </div>
