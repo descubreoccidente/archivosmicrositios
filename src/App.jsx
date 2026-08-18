@@ -8,6 +8,7 @@ import AgendaRegional from './components/agendaregional';
 import PromocionesDelDia from './components/PromocionesDelDia';
 import Directorio from './components/Directorio';
 import CandelaFestival from './components/CandelaFestival';
+import AdminPanel from './components/AdminPanel';
 
 function DashboardWrapper() {
   const { actorId } = useParams();
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/promociones" element={<PromocionesDelDia />} />
         <Route path="/directorio" element={<Directorio />} />
         <Route path="/candela-festival" element={<CandelaFestival />} />
+        <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </BrowserRouter>
   );

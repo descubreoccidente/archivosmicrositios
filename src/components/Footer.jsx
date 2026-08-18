@@ -162,7 +162,7 @@ export default function Footer() {
               <Instagram size={18} />
             </a>
           </div>
-          <p className="text-white/70 text-sm">Corporación de Turismo</p>
+          <p className="text-white/70 text-sm">Contacto Telefónico</p>
           <p className="text-white/70 text-sm">+57 304 114 8439</p>
         </div>
       </div>

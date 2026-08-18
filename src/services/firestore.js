@@ -13,7 +13,8 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  increment
+  increment,
+  writeBatch
 } from 'firebase/firestore';
 
 // Crear/actualizar micrositio del actor
@@ -317,6 +318,8 @@ export const obtenerMicrositioPorSlug = async (slug) => {
     const actorDoc = snap.docs[0];
     const actorId = actorDoc.id;
 
+    if (actorDoc.data().config?.activo === false) return null;
+
     return await obtenerMicrositio(actorId);
   } catch (error) {
     console.error('Error obteniendo micrositio por slug:', error);
@@ -473,6 +476,7 @@ export const obtenerActoresPublicos = async () => {
       const data = d.data();
       const info = data.basicInfo || {};
       if (!info.nombre || !info.slug) return null;
+      if (data.config?.activo === false) return null;
 
       let fotoPortada = null;
       try {
@@ -557,8 +561,10 @@ export const obtenerPuntosMapa = async () => {
     const actoresSnap = await getDocs(collection(db, 'actors'));
     const actores = actoresSnap.docs
       .map(d => {
-        const info = d.data().basicInfo || {};
+        const data = d.data();
+        const info = data.basicInfo || {};
         if (!info.nombre || !info.slug) return null;
+        if (data.config?.activo === false) return null;
         let coords = null;
         const latPropia = parseFloat(info.ubicacion?.lat);
         const lngPropia = parseFloat(info.ubicacion?.lng);
@@ -677,6 +683,100 @@ export const votarCandela = async (participanteId, userId, nombreUsuario) => {
     return { success: true };
   } catch (error) {
     console.error('Error registrando voto:', error);
+    throw error;
+  }
+};
+// ===== PANEL DE ADMINISTRADOR =====
+
+export const verificarAdmin = async (email) => {
+  try {
+    const adminDoc = await getDoc(doc(db, 'admins', email.trim().toLowerCase()));
+    return adminDoc.exists() && adminDoc.data().autorizado === true;
+  } catch (error) {
+    console.error('Error verificando admin:', error);
+    return false;
+  }
+};
+
+// Obtener todos los actores (para el panel admin, incluye suspendidos)
+export const obtenerTodosLosActoresAdmin = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'actors'));
+    return snap.docs
+      .map(d => {
+        const info = d.data().basicInfo || {};
+        return {
+          id: d.id,
+          nombre: info.nombre || '(Sin nombre)',
+          categoria: info.categoria || '',
+          municipio: info.municipio || '',
+          slug: info.slug || '',
+          activo: d.data().config?.activo !== false
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  } catch (error) {
+    console.error('Error obteniendo actores (admin):', error);
+    throw error;
+  }
+};
+
+// Suspender / reactivar un actor
+export const toggleActivoActor = async (actorId, activo) => {
+  try {
+    await updateDoc(doc(db, 'actors', actorId), { 'config.activo': activo });
+    return { success: true };
+  } catch (error) {
+    console.error('Error cambiando estado del actor:', error);
+    throw error;
+  }
+};
+
+// Obtener todos los eventos (para el panel admin)
+export const obtenerTodosLosEventosAdmin = async () => {
+  try {
+    const snap = await getDocs(query(collection(db, 'events'), orderBy('fecha', 'desc'), limit(100)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error obteniendo eventos (admin):', error);
+    throw error;
+  }
+};
+
+// Obtener todas las promociones activas (para el panel admin)
+export const obtenerTodasLasPromocionesAdmin = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'promociones'));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error obteniendo promociones (admin):', error);
+    throw error;
+  }
+};
+
+// Agregar un correo autorizado a la lista de invitaciones (desde el panel admin)
+export const agregarInvitacionAdmin = async (email) => {
+  try {
+    const emailNormalizado = email.trim().toLowerCase();
+    await setDoc(doc(db, 'invitaciones', emailNormalizado), {
+      autorizado: true,
+      usado: false,
+      agregadoPorAdmin: true,
+      fecha: new Date()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error agregando invitación:', error);
+    throw error;
+  }
+};
+// Eliminar una promoción (uso general, incluido admin)
+export const eliminarPromocion = async (promoId) => {
+  try {
+    await deleteDoc(doc(db, 'promociones', promoId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error eliminando promoción:', error);
     throw error;
   }
 };
