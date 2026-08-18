@@ -10,7 +10,7 @@ import TurismoResponsable from './turismoresponsable';
 import CrearPromocion from './CrearPromocion';
 import MisDatosActor from './misdatosactor';
 import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle } from 'lucide-react';
-import { obtenerReporteSemanaActual } from '../services/firestore';
+import { obtenerReporteMesActual } from '../services/firestore';
 export default function DashboardActor({ actorId }) {
   const [micrositio, setMicrositio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function DashboardActor({ actorId }) {
       const categoria = data?.actor?.basicInfo?.categoria;
       const sinReporte = ['Recuperadora de residuos', ''].includes(categoria) || !categoria;
       if (!sinReporte) {
-        const reporte = await obtenerReporteSemanaActual(actorId);
+        const reporte = await obtenerReporteMesActual(actorId);
         setFaltaReportar(!reporte);
       }
     } catch (error) {
@@ -93,7 +93,7 @@ export default function DashboardActor({ actorId }) {
 {faltaReportar && activeTab !== 'datos' && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-center gap-2 text-sm text-yellow-800">
           <AlertCircle size={16} />
-          Te falta reportar tus datos de esta semana.
+          Te falta reportar tus datos de este mes.
           <button onClick={() => setActiveTab('datos')} className="font-semibold underline hover:no-underline">
             Reportar ahora
           </button>

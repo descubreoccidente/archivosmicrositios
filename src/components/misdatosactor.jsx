@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { guardarReporteSemanal, obtenerReporteSemanaActual, obtenerHistorialReportes, obtenerPromedioTerritorio } from '../services/firestore';
+import { guardarReporteMensual, obtenerReporteMesActual, obtenerHistorialReportes, obtenerPromedioTerritorio } from '../services/firestore';
 import { BarChart3, TrendingUp, Info, CheckCircle } from 'lucide-react';
+
+const MUNICIPIOS = [
+  'Abriaquí', 'Anzá', 'Armenia', 'Buriticá', 'Caicedo', 'Cañasgordas',
+  'Dabeiba', 'Ebéjico', 'Frontino', 'Giraldo', 'Heliconia', 'Liborina',
+  'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
+  'Sopetrán', 'Uramita'
+];
+
+function slugMunicipio(m) {
+  return m.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '_');
+}
 
 const ACTIVIDADES_VISITANTE = [
   'Vacaciones/ocio', 'Trabajo', 'Nómada digital', 'Aventura', 'Deportes', 'Académico', 'Religioso'
@@ -43,6 +56,10 @@ const LABELS = {
   personasAtendidasSedes: 'Personas atendidas en sedes',
   nuevasEmpresasCreadas: 'Nuevas empresas creadas',
   numeroVisitantes: 'Número de visitantes',
+  vehiculosPeajes: 'Vehículos reportados en peajes',
+  accidentesMes: 'Accidentes este mes',
+  accidentesMuertosMes: 'Accidentes con muertos este mes',
+  cierresVia: 'Cierres de la vía este mes',
 };
 
 const CONFIG_REPORTE = {
@@ -92,11 +109,6 @@ const CONFIG_REPORTE = {
       { name: 'municipiosImpactados', type: 'number' },
     ]
   },
-  'Transporte': {
-    campos: [
-      { name: 'pasajerosAtendidos', type: 'number' },
-    ]
-  },
   'Bares y pubs': {
     campos: [
       { name: 'asistentes', type: 'number' },
@@ -119,6 +131,23 @@ const CONFIG_REPORTE = {
   'Otros': { campos: [{ name: 'personasAtendidas', type: 'number' }] },
 };
 
+// Subcategorías de Transporte con formularios distintos
+const CONFIG_TRANSPORTE = {
+  'Público urbano': {
+    campos: [{ name: 'pasajerosAtendidos', type: 'number' }]
+  },
+  'Intermunicipal': {
+    campos: MUNICIPIOS.flatMap(m => {
+      const slug = slugMunicipio(m);
+      return [
+        { name: `salida_${slug}`, type: 'number', label: `Salida hacia ${m}` },
+        { name: `llegada_${slug}`, type: 'number', label: `Llegada desde ${m}` },
+      ];
+    })
+  },
+};
+const CONFIG_TRANSPORTE_DEFAULT = { campos: [{ name: 'pasajerosAtendidos', type: 'number' }] };
+
 const CONFIG_INSTITUCION = {
   'Caja de compensación': {
     campos: [
@@ -140,6 +169,14 @@ const CONFIG_INSTITUCION = {
       { name: 'asistentesEventosPropios', type: 'number' },
     ]
   },
+  'Concesión vial': {
+    campos: [
+      { name: 'vehiculosPeajes', type: 'number' },
+      { name: 'accidentesMes', type: 'number' },
+      { name: 'accidentesMuertosMes', type: 'number' },
+      { name: 'cierresVia', type: 'number' },
+    ]
+  },
 };
 
 const INSTITUCION_SIN_REPORTE = ['Religiosa'];
@@ -148,6 +185,9 @@ function getConfig(categoria, subcategoria) {
   if (categoria === 'Institución') {
     if (INSTITUCION_SIN_REPORTE.includes(subcategoria)) return null;
     return CONFIG_INSTITUCION[subcategoria] || { campos: [{ name: 'personasAtendidas', type: 'number' }] };
+  }
+  if (categoria === 'Transporte') {
+    return CONFIG_TRANSPORTE[subcategoria] || CONFIG_TRANSPORTE_DEFAULT;
   }
   return CONFIG_REPORTE[categoria] || null;
 }
@@ -171,18 +211,22 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
     else setLoading(false);
   }, [actorId, categoria, subcategoria]);
 
+  const camposActuales = esGrupoC
+    ? [
+        { name: 'visitantesNacionales', type: 'number' },
+        { name: 'visitantesExtranjeros', type: 'number' },
+        { name: 'actividadPrincipal', type: 'select', options: MOTIVOS_CONSULTA_PIT },
+      ]
+    : (config ? config.campos : []);
+
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const reporte = await obtenerReporteSemanaActual(actorId);
+      const reporte = await obtenerReporteMesActual(actorId);
       setReporteActual(reporte);
 
-      const campos = esGrupoC
-        ? [{ name: 'visitantesNacionales' }, { name: 'visitantesExtranjeros' }, { name: 'actividadPrincipal' }]
-        : config.campos;
-
       const inicial = {};
-      campos.forEach(c => {
+      camposActuales.forEach(c => {
         inicial[c.name] = reporte?.[c.name] ?? '';
       });
       setFormData(inicial);
@@ -190,7 +234,7 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
       const hist = await obtenerHistorialReportes(actorId);
       setHistorial(hist);
 
-      const prom = await obtenerPromedioTerritorio(categoria, categoria === 'Institución' ? subcategoria : undefined);
+      const prom = await obtenerPromedioTerritorio(categoria, (categoria === 'Institución' || categoria === 'Transporte') ? subcategoria : undefined);
       setPromedio(prom);
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -208,16 +252,12 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
     setGuardando(true);
     try {
       const datos = {};
-      const campos = esGrupoC
-        ? [{ name: 'visitantesNacionales', type: 'number' }, { name: 'visitantesExtranjeros', type: 'number' }, { name: 'actividadPrincipal', type: 'select' }]
-        : config.campos;
-
-      campos.forEach(c => {
+      camposActuales.forEach(c => {
         const valor = formData[c.name];
         datos[c.name] = c.type === 'number' ? (parseFloat(valor) || 0) : valor;
       });
 
-      await guardarReporteSemanal(actorId, categoria, categoria === 'Institución' ? subcategoria : null, datos);
+      await guardarReporteMensual(actorId, categoria, categoria === 'Institución' || categoria === 'Transporte' ? subcategoria : null, datos);
       setSuccess(true);
       setEditando(false);
       cargarDatos();
@@ -243,14 +283,6 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
     );
   }
 
-  const camposFormulario = esGrupoC
-    ? [
-        { name: 'visitantesNacionales', type: 'number' },
-        { name: 'visitantesExtranjeros', type: 'number' },
-        { name: 'actividadPrincipal', type: 'select', options: MOTIVOS_CONSULTA_PIT },
-      ]
-    : config.campos;
-
   const mostrarFormulario = !reporteActual || editando;
 
   return (
@@ -264,23 +296,23 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
       <div className="bg-white rounded-lg shadow-sm p-8">
         <div className="flex items-center gap-2 mb-2">
           <BarChart3 className="text-terracota" size={22} />
-          <h2 className="text-xl font-bold text-terracota">Mis Datos — Reporte Semanal</h2>
+          <h2 className="text-xl font-bold text-terracota">Mis Datos — Reporte Mensual</h2>
         </div>
         <p className="text-sm text-gris mb-6">
           {esGrupoC
-            ? 'Cuéntanos cuántas personas atendió el Punto de Información Turística (PIT) esta semana. Esta información ayuda al territorio a tomar mejores decisiones.'
-            : 'Cuéntanos cómo te fue esta semana. Tus datos se usan de forma agregada y anónima para apoyar decisiones del territorio, y a cambio puedes ver el promedio de tu categoría.'}
+            ? 'Cuéntanos cuántas personas atendió el Punto de Información Turística (PIT) este mes. Esta información ayuda al territorio a tomar mejores decisiones.'
+            : 'Cuéntanos cómo te fue este mes. Tus datos se usan de forma agregada y anónima para apoyar decisiones del territorio, y a cambio puedes ver el promedio de tu categoría.'}
         </p>
 
         {!mostrarFormulario && reporteActual && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 flex items-start gap-3">
             <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-green-800">Ya reportaste esta semana</p>
-              <div className="text-xs text-green-700 mt-1 space-y-0.5">
-                {camposFormulario.map(c => (
+              <p className="text-sm font-semibold text-green-800">Ya reportaste este mes</p>
+              <div className="text-xs text-green-700 mt-1 space-y-0.5 max-h-32 overflow-y-auto">
+                {camposActuales.map(c => (
                   reporteActual[c.name] !== undefined && reporteActual[c.name] !== '' && (
-                    <p key={c.name}>{LABELS[c.name] || c.name}: {reporteActual[c.name]}</p>
+                    <p key={c.name}>{c.label || LABELS[c.name] || c.name}: {reporteActual[c.name]}</p>
                   )
                 ))}
               </div>
@@ -296,10 +328,10 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
 
         {mostrarFormulario && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {camposFormulario.map(campo => (
+            {camposActuales.map(campo => (
               <div key={campo.name}>
                 <label className="block text-sm font-semibold text-marron mb-2">
-                  {LABELS[campo.name] || campo.name}
+                  {campo.label || LABELS[campo.name] || campo.name}
                   {esGrupoC && campo.name === 'actividadPrincipal' ? ' (motivo de consulta más recurrente)' : ''}
                 </label>
                 {campo.type === 'select' ? (
@@ -320,8 +352,7 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
                     name={campo.name}
                     value={formData[campo.name] || ''}
                     onChange={handleChange}
-                    min={campo.min ?? 0}
-                    max={campo.max}
+                    min={0}
                     required
                     className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
                     placeholder="0"
@@ -330,7 +361,7 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
               </div>
             ))}
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 sticky bottom-0 bg-white pt-2">
               <button
                 type="submit"
                 disabled={guardando}
@@ -356,13 +387,13 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
         <div className="bg-white rounded-lg shadow-sm p-8">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="text-terracota" size={20} />
-            <h3 className="text-lg font-bold text-terracota">Promedio del territorio esta semana</h3>
+            <h3 className="text-lg font-bold text-terracota">Promedio del territorio este mes</h3>
           </div>
           <p className="text-xs text-gris mb-4 flex items-start gap-1">
             <Info size={14} className="flex-shrink-0 mt-0.5" />
             Basado en {promedio.totalReportantes} actor{promedio.totalReportantes !== 1 ? 'es' : ''} de tu misma categoría que ya reportaron.
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center max-h-64 overflow-y-auto">
             {Object.entries(promedio.promedios).map(([campo, valor]) => (
               <div key={campo} className="bg-crema rounded-lg p-4">
                 <p className="text-2xl font-bold text-terracota">{valor}</p>
@@ -379,11 +410,11 @@ export default function MisDatosActor({ actorId, categoria, subcategoria }) {
           <div className="space-y-2">
             {historial.map((rep) => (
               <div key={rep.id} className="border border-gris/20 rounded-lg p-3 text-sm">
-                <p className="font-semibold text-marron mb-1">{rep.semana}</p>
+                <p className="font-semibold text-marron mb-1">{rep.mes}</p>
                 <p className="text-gris text-xs">
-                  {camposFormulario
+                  {camposActuales
                     .filter(c => rep[c.name] !== undefined && rep[c.name] !== '')
-                    .map(c => `${LABELS[c.name] || c.name}: ${rep[c.name]}`)
+                    .map(c => `${c.label || LABELS[c.name] || c.name}: ${rep[c.name]}`)
                     .join(' · ')}
                 </p>
               </div>

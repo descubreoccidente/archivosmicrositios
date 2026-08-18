@@ -326,42 +326,39 @@ export const obtenerMicrositioPorSlug = async (slug) => {
     throw error;
   }
 };
-// Identificador de semana (formato YYYY-Www)
-function getWeekId(date = new Date()) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+// Identificador de mes (formato YYYY-MM)
+function getMonthId(date = new Date()) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Guardar reporte semanal de datos de un actor
-export const guardarReporteSemanal = async (actorId, categoria, subcategoria, datos) => {
+// Guardar reporte mensual de datos de un actor
+export const guardarReporteMensual = async (actorId, categoria, subcategoria, datos) => {
   try {
-    const weekId = getWeekId();
-    const reporteRef = doc(db, 'actors', actorId, 'reportesSemanales', weekId);
+    const monthId = getMonthId();
+    const reporteRef = doc(db, 'actors', actorId, 'reportesMensuales', monthId);
     await setDoc(reporteRef, {
       ...datos,
       categoria,
       subcategoria: subcategoria || null,
-      semana: weekId,
+      mes: monthId,
       actualizadoEn: new Date()
     }, { merge: true });
-    return { success: true, weekId };
+    return { success: true, monthId };
   } catch (error) {
-    console.error('Error guardando reporte semanal:', error);
+    console.error('Error guardando reporte mensual:', error);
     throw error;
   }
 };
-// Obtener el reporte de la semana actual de un actor (o null si no existe)
-export const obtenerReporteSemanaActual = async (actorId) => {
+
+// Obtener el reporte del mes actual de un actor (o null si no existe)
+export const obtenerReporteMesActual = async (actorId) => {
   try {
-    const weekId = getWeekId();
-    const reporteDoc = await getDoc(doc(db, 'actors', actorId, 'reportesSemanales', weekId));
+    const monthId = getMonthId();
+    const reporteDoc = await getDoc(doc(db, 'actors', actorId, 'reportesMensuales', monthId));
     return reporteDoc.exists() ? { id: reporteDoc.id, ...reporteDoc.data() } : null;
   } catch (error) {
-    console.error('Error obteniendo reporte de la semana:', error);
+    console.error('Error obteniendo reporte del mes:', error);
     throw error;
   }
 };
@@ -370,7 +367,7 @@ export const obtenerReporteSemanaActual = async (actorId) => {
 export const obtenerHistorialReportes = async (actorId) => {
   try {
     const snap = await getDocs(
-      query(collection(db, 'actors', actorId, 'reportesSemanales'), orderBy('semana', 'desc'), limit(12))
+      query(collection(db, 'actors', actorId, 'reportesMensuales'), orderBy('mes', 'desc'), limit(12))
     );
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (error) {
@@ -378,13 +375,14 @@ export const obtenerHistorialReportes = async (actorId) => {
     throw error;
   }
 };
-// Obtener promedio del territorio (semana actual) por categoría/subcategoría
+
+// Obtener promedio del territorio (mes actual) por categoría/subcategoría
 export const obtenerPromedioTerritorio = async (categoria, subcategoria) => {
   try {
-    const weekId = getWeekId();
+    const monthId = getMonthId();
     const q = query(
-      collectionGroup(db, 'reportesSemanales'),
-      where('semana', '==', weekId),
+      collectionGroup(db, 'reportesMensuales'),
+      where('mes', '==', monthId),
       where('categoria', '==', categoria)
     );
     const snap = await getDocs(q);
@@ -398,7 +396,7 @@ export const obtenerPromedioTerritorio = async (categoria, subcategoria) => {
     }
     if (reportes.length === 0) return null;
 
-    const excluir = ['semana', 'categoria', 'subcategoria', 'actualizadoEn', 'actividadPrincipal', 'unidadMaterial'];
+    const excluir = ['mes', 'categoria', 'subcategoria', 'actualizadoEn', 'actividadPrincipal', 'unidadMaterial'];
     const camposNumericos = Object.keys(reportes[0]).filter(
       k => !excluir.includes(k) && typeof reportes[0][k] === 'number'
     );

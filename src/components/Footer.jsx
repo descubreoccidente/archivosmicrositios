@@ -139,6 +139,7 @@ export default function Footer() {
             <li><Link to="/agenda" className="hover:text-white transition">Agenda regional</Link></li>
             <li><Link to="/promociones" className="hover:text-white transition">Promociones</Link></li>
             <li><Link to="/candela-festival" className="hover:text-white transition">Candela Festival</Link></li>
+            <li><Link to="/faq" className="hover:text-white transition">Preguntas frecuentes</Link></li>
           </ul>
         </div>
 
