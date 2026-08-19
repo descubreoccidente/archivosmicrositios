@@ -3,10 +3,11 @@ import {
   verificarAdmin, obtenerTodosLosActoresAdmin, toggleActivoActor,
   obtenerTodosLosEventosAdmin, eliminarEvento,
   obtenerTodasLasPromocionesAdmin, eliminarPromocion,
-  agregarInvitacionAdmin, obtenerVotosCandelaAdmin
+  agregarInvitacionAdmin, obtenerVotosCandelaAdmin, obtenerReportesMesAdmin
 } from '../services/firestore';
 import { loginConGoogle, logout, onAuthChange } from '../services/auth';
-import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame } from 'lucide-react';
+import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame, BarChart3, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 function formatFecha(fecha) {
   if (!fecha) return '';
@@ -25,6 +26,7 @@ export default function AdminPanel() {
   const [eventos, setEventos] = useState([]);
   const [promociones, setPromociones] = useState([]);
   const [votosCandela, setVotosCandela] = useState(null);
+  const [reportesMes, setReportesMes] = useState([]);
   const [nuevoCorreo, setNuevoCorreo] = useState('');
   const [invitacionMsg, setInvitacionMsg] = useState(null);
 
@@ -53,6 +55,11 @@ export default function AdminPanel() {
       if (tab === 'eventos') setEventos(await obtenerTodosLosEventosAdmin());
       if (tab === 'promociones') setPromociones(await obtenerTodasLasPromocionesAdmin());
       if (tab === 'candela') setVotosCandela(await obtenerVotosCandelaAdmin());
+      if (tab === 'datos') {
+        const ahora = new Date();
+        const monthId = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+        setReportesMes(await obtenerReportesMesAdmin(monthId));
+      }
     } catch (e) {
       setError('Error cargando datos');
     }
@@ -109,6 +116,49 @@ export default function AdminPanel() {
     }
   };
 
+  const gruposReportes = reportesMes.reduce((acc, r) => {
+    const clave = `${r.categoria}${r.subcategoria ? ' · ' + r.subcategoria : ''}`;
+    if (!acc[clave]) acc[clave] = [];
+    acc[clave].push(r);
+    return acc;
+  }, {});
+
+  const descargarExcel = () => {
+    if (reportesMes.length === 0) return;
+
+    const camposExcluir = ['mes', 'actualizadoEn', 'categoria', 'subcategoria'];
+    const wb = XLSX.utils.book_new();
+
+    Object.entries(gruposReportes).forEach(([nombreGrupo, reportes]) => {
+      const columnas = [...new Set(reportes.flatMap(r => Object.keys(r).filter(k => !camposExcluir.includes(k))))];
+      const orden = ['actorId', 'nombreActor'];
+      columnas.sort((a, b) => {
+        const ai = orden.indexOf(a), bi = orden.indexOf(b);
+        if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        return a.localeCompare(b);
+      });
+
+      const filas = reportes.map(r =>
+        Object.fromEntries(columnas.map(c => [c, typeof r[c] === 'number' ? r[c] : (r[c] ?? '')]))
+      );
+
+      const totales = {};
+      columnas.forEach(c => {
+        const esNumerica = reportes.every(r => typeof r[c] === 'number' || r[c] === undefined);
+        totales[c] = esNumerica && c !== 'actorId' && c !== 'nombreActor'
+          ? reportes.reduce((s, r) => s + (typeof r[c] === 'number' ? r[c] : 0), 0)
+          : (c === 'nombreActor' ? 'TOTAL' : '');
+      });
+      filas.push(totales);
+
+      const ws = XLSX.utils.json_to_sheet(filas, { header: columnas });
+      const nombreHoja = nombreGrupo.replace(/[\\/*?:[\]]/g, '').slice(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, nombreHoja || 'Datos');
+    });
+
+    XLSX.writeFile(wb, `mis-datos-${new Date().toISOString().slice(0, 7)}.xlsx`);
+  };
+
   // Sin sesión iniciada
   if (!usuario) {
     return (
@@ -152,6 +202,7 @@ export default function AdminPanel() {
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'promociones', label: 'Promociones', icon: Tag },
     { id: 'candela', label: 'Candela', icon: Flame },
+    { id: 'datos', label: 'Datos', icon: BarChart3 },
     { id: 'invitaciones', label: 'Invitaciones', icon: UserPlus },
   ];
 
@@ -247,7 +298,8 @@ export default function AdminPanel() {
             ))}
           </div>
         )}
-{!loading && tab === 'candela' && votosCandela && (
+
+        {!loading && tab === 'candela' && votosCandela && (
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-6">
               <p className="text-sm text-gris">Total de votos registrados</p>
@@ -270,6 +322,45 @@ export default function AdminPanel() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {!loading && tab === 'datos' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gris">Reportes recibidos este mes</p>
+                <p className="text-2xl font-bold text-terracota">{reportesMes.length}</p>
+              </div>
+              <button
+                onClick={descargarExcel}
+                disabled={reportesMes.length === 0}
+                className="flex items-center gap-2 bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition disabled:opacity-40"
+              >
+                <Download size={16} /> Descargar Excel
+              </button>
+            </div>
+
+            {Object.keys(gruposReportes).length === 0 ? (
+              <p className="text-center text-gris text-sm">Aún no hay reportes este mes.</p>
+            ) : (
+              Object.entries(gruposReportes).map(([categoria, reportes]) => (
+                <div key={categoria} className="bg-white rounded-lg p-4 border border-gris/10">
+                  <p className="font-bold text-marron mb-2">{categoria} <span className="text-xs text-gris font-normal">({reportes.length} reportante{reportes.length !== 1 ? 's' : ''})</span></p>
+                  <div className="space-y-1">
+                    {reportes.map(r => (
+                      <p key={r.actorId} className="text-xs text-gris">
+                        <span className="font-semibold text-marron">{r.nombreActor}</span> ·{' '}
+                        {Object.entries(r)
+                          .filter(([k, v]) => typeof v === 'number' && v !== 0)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(', ')}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 

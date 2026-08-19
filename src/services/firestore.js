@@ -793,3 +793,28 @@ export const obtenerVotosCandelaAdmin = async () => {
     throw error;
   }
 };
+// Obtener todos los reportes mensuales de un mes específico (para el panel admin)
+export const obtenerReportesMesAdmin = async (monthId) => {
+  try {
+    const q = query(collectionGroup(db, 'reportesMensuales'), where('mes', '==', monthId));
+    const snap = await getDocs(q);
+
+    const actoresSnap = await getDocs(collection(db, 'actors'));
+    const nombresPorId = {};
+    actoresSnap.docs.forEach(d => {
+      nombresPorId[d.id] = d.data().basicInfo?.nombre || '(Sin nombre)';
+    });
+
+    return snap.docs.map(d => {
+      const actorId = d.ref.parent.parent.id;
+      return {
+        actorId,
+        nombreActor: nombresPorId[actorId] || '(Actor eliminado)',
+        ...d.data()
+      };
+    });
+  } catch (error) {
+    console.error('Error obteniendo reportes del mes (admin):', error);
+    throw error;
+  }
+};
