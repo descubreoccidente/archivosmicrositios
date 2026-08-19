@@ -151,16 +151,105 @@ export default function CandelaFestival() {
       {/* Sobre el festival */}
       <section className="max-w-4xl mx-auto px-6 py-14 text-center">
         <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-4">La fiesta de nuestra identidad gastronómica</h2>
-        <p className="text-marron leading-relaxed">
+        <p className="text-marron leading-relaxed mb-4">
           El Candela Festival es el evento anual de la Corporación de Turismo del Occidente de Antioquia dedicado a
           celebrar la identidad gastronómica del territorio. En sus cuatro versiones anteriores se realizó siempre en
           Santa Fe de Antioquia; este año se suman Sopetrán y San Jerónimo. Durante cinco días, el festival reúne
-          agenda cultural, cocina ancestral y un concurso de experiencias gastronómicas en los locales inscritos,
+          agenda cultural, cocina ancestral y un concurso de experiencias gastronómicas en los comercios inscritos,
           con el apoyo de la Cámara de Comercio de Medellín para Antioquia, las secretarías de desarrollo económico
           municipales y las instituciones del territorio. Candela Festival conecta la cultura culinaria, los insumos
           agrícolas y los saberes de siempre, para que el legado gastronómico del departamento se conserve y tenga
           relevo generacional.
         </p>
+        <p className="text-marron leading-relaxed font-semibold">
+          ¡Llega Candela Festival 2026! La gran vitrina gastronómica del Occidente de Antioquia sigue creciendo. Gracias
+          a la integración con la plataforma Descubre Occidente, el festival contará con un micrositio oficial, mapa
+          interactivo, formulario de votación y una estrategia de difusión en redes sociales que permitirá llegar a
+          miles de potenciales visitantes.
+        </p>
+      </section>
+
+      {/* Inscripción al concurso */}
+      <section className="py-14" style={{ backgroundColor: '#c81d3f' }}>
+        <div className="max-w-3xl mx-auto px-6 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">¿Tienes un restaurante, café o bar?</h2>
+          <p className="text-white/90 mb-6">
+            Inscribe tu establecimiento y sé parte del Concurso de Experiencias Gastronómicas 2026 — sin ningún costo.
+          </p>
+
+          <div className="bg-white/10 rounded-lg p-4 mb-8 inline-flex items-center gap-2">
+            <Calendar size={18} />
+            <span className="font-semibold">Cierre de inscripciones: 10 de septiembre de 2026</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
+            {[
+              'Acompañamiento profesional',
+              'Presencia en el micrositio oficial y en redes sociales del evento',
+              'Identificador oficial para tu restaurante, café, panadería, repostería, bar o pub',
+              'Inclusión en el formulario de votación y en el mapa interactivo de Descubre Occidente',
+            ].map((beneficio, idx) => (
+              <div key={idx} className="flex items-start gap-2 bg-white/10 rounded-lg p-3">
+                <CheckCircle size={18} className="flex-shrink-0 mt-0.5 text-yellow-300" />
+                <span className="text-sm">{beneficio}</span>
+              </div>
+            ))}
+          </div>
+
+          <a
+            href="https://forms.gle/Wi5NTMxNbUWa2V649"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block bg-yellow-400 text-[#c81d3f] font-bold px-8 py-4 rounded-lg hover:bg-yellow-300 transition text-lg"
+          >
+            Inscribe tu establecimiento aquí →
+          </a>
+          <p className="text-white/70 text-xs mt-3">Todo sin costo, gracias al apoyo de las instituciones vinculadas.</p>
+        </div>
+      </section>
+
+      {/* Paquetes de experiencia */}
+      <section className="max-w-5xl mx-auto px-6 py-14">
+        <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">¿Qué experiencia ofrecerás?</h2>
+        <p className="text-gris text-center mb-10">Precios de referencia para la experiencia de 2 personas</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              titulo: 'Restaurantes',
+              precio: '$119.900',
+              color: '#D6203C',
+              items: ['1 entrada para compartir', '2 platos fuertes', '1 postre para compartir', '2 bebidas'],
+            },
+            {
+              titulo: 'Cafés, cacao y reposterías',
+              precio: '$39.900',
+              color: '#F5821F',
+              items: ['2 bebidas', '2 experiencias reposteras'],
+            },
+            {
+              titulo: 'Bares y pubs',
+              precio: '$69.900',
+              color: '#E2568C',
+              items: ['1 experiencia de bebidas para compartir', 'Maridaje para compartir'],
+            },
+          ].map((paquete) => (
+            <div key={paquete.titulo} className="bg-white rounded-lg shadow-md overflow-hidden border-t-4" style={{ borderColor: paquete.color }}>
+              <div className="p-6">
+                <h3 className="font-bold text-marron text-lg mb-1">{paquete.titulo}</h3>
+                <p className="text-2xl font-extrabold mb-1" style={{ color: paquete.color }}>{paquete.precio}</p>
+                <p className="text-xs text-gris mb-4">Experiencia para 2 personas</p>
+                <ul className="space-y-2">
+                  {paquete.items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-marron">
+                      <span style={{ color: paquete.color }}>●</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Sedes en mapa */}
