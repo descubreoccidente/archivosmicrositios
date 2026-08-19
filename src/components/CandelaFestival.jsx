@@ -138,14 +138,25 @@ export default function CandelaFestival() {
           </span>
         </div>
 
-        <a
-          href="https://www.instagram.com/candelafestivalgastronomico"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 mt-6 bg-white text-[#e2007a] font-semibold px-5 py-2.5 rounded-lg hover:bg-crema transition"
-        >
-          <Instagram size={18} /> Síguenos en Instagram
-        </a>
+        
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <a
+            href="https://www.instagram.com/candelafestivalgastronomico"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 bg-white text-[#e2007a] font-semibold px-5 py-2.5 rounded-lg hover:bg-crema transition"
+          >
+            <Instagram size={18} /> Síguenos en Instagram
+          </a>
+          <a
+            href="https://drive.google.com/PENDIENTE-reemplazar-cuando-este-lista"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 bg-yellow-400 text-[#c81d3f] font-bold px-5 py-2.5 rounded-lg hover:bg-yellow-300 transition"
+          >
+            <Calendar size={18} /> Ver programación completa
+          </a>
+        </div>
       </div>
 
       {/* Sobre el festival */}
