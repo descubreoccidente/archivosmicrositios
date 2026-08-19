@@ -6,6 +6,7 @@ import AgendaDestacada from './AgendaDestacada';
 import PromocionesDestacadas from './PromocionesDestacadas';
 import MapaTerritorio from './MapaTerritorio';
 import Footer from './Footer';
+import Banner from './Banner';
 
 export default function Home() {
   return (
@@ -58,6 +59,10 @@ export default function Home() {
             </Link>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-6">
+        <Banner imagen="/banners/Banner-1.png" aspecto="2721/340" />
       </div>
 
       <div id="explorar">

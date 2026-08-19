@@ -119,51 +119,52 @@ export default function Directorio() {
               {mostrados.map((actor) => {
                 const color = colorCategoria(actor.categoria);
                 return (
-                  <Link
-                    key={actor.id}
-                    to={`/micrositio/${actor.slug}`}
-                    className={`block rounded-lg overflow-hidden border-t-4 ${color.accent} bg-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all`}
-                  >
-                    <div className="aspect-video bg-gray-100 overflow-hidden">
-                      {actor.fotoPortada ? (
-                        <img src={actor.fotoPortada} alt={actor.nombre} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className={`w-full h-full flex items-center justify-center ${color.tag} text-2xl md:text-3xl font-bold`}>
-                          {actor.nombre.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-2 md:p-4">
-                      <span className={`hidden md:inline-block ${color.tag} text-xs font-semibold px-2 py-0.5 rounded-full mb-2`}>
-                        {actor.categoria}{actor.subcategoria ? ` · ${actor.subcategoria}` : ''}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {actor.logo && (
-                          <div className="hidden md:block w-8 h-8 rounded-full border border-gris/20 flex-shrink-0 overflow-hidden bg-white">
-                            <img src={actor.logo} alt="" className="w-full h-full object-contain" />
+                  <React.Fragment key={actor.id}>
+                    <Link
+                      to={`/micrositio/${actor.slug}`}
+                      className={`block rounded-lg overflow-hidden border-t-4 ${color.accent} bg-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all`}
+                    >
+                      <div className="aspect-video bg-gray-100 overflow-hidden">
+                        {actor.fotoPortada ? (
+                          <img src={actor.fotoPortada} alt={actor.nombre} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className={`w-full h-full flex items-center justify-center ${color.tag} text-2xl md:text-3xl font-bold`}>
+                            {actor.nombre.charAt(0)}
                           </div>
                         )}
-                        <p className="font-bold text-marron text-xs md:text-base leading-snug line-clamp-2">{actor.nombre}</p>
                       </div>
-                      {actor.municipio && (
-                        <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
-                          <MapPin size={11} /> {actor.municipio}
-                        </p>
-                      )}
-                      <div className="hidden md:flex items-center gap-1 mt-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={13}
-                            className={i < Math.round(actor.rating) ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}
-                          />
-                        ))}
-                        {actor.totalResenas > 0 && (
-                          <span className="text-xs text-gris ml-1">({actor.totalResenas})</span>
+                      <div className="p-2 md:p-4">
+                        <span className={`hidden md:inline-block ${color.tag} text-xs font-semibold px-2 py-0.5 rounded-full mb-2`}>
+                          {actor.categoria}{actor.subcategoria ? ` · ${actor.subcategoria}` : ''}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {actor.logo && (
+                            <div className="hidden md:block w-8 h-8 rounded-full border border-gris/20 flex-shrink-0 overflow-hidden bg-white">
+                              <img src={actor.logo} alt="" className="w-full h-full object-contain" />
+                            </div>
+                          )}
+                          <p className="font-bold text-marron text-xs md:text-base leading-snug line-clamp-2">{actor.nombre}</p>
+                        </div>
+                        {actor.municipio && (
+                          <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
+                            <MapPin size={11} /> {actor.municipio}
+                          </p>
                         )}
+                        <div className="hidden md:flex items-center gap-1 mt-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={13}
+                              className={i < Math.round(actor.rating) ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}
+                            />
+                          ))}
+                          {actor.totalResenas > 0 && (
+                            <span className="text-xs text-gris ml-1">({actor.totalResenas})</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </React.Fragment>
                 );
               })}
             </div>
