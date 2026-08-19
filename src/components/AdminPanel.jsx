@@ -3,10 +3,10 @@ import {
   verificarAdmin, obtenerTodosLosActoresAdmin, toggleActivoActor,
   obtenerTodosLosEventosAdmin, eliminarEvento,
   obtenerTodasLasPromocionesAdmin, eliminarPromocion,
-  agregarInvitacionAdmin
+  agregarInvitacionAdmin, obtenerVotosCandelaAdmin
 } from '../services/firestore';
 import { loginConGoogle, logout, onAuthChange } from '../services/auth';
-import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2 } from 'lucide-react';
+import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame } from 'lucide-react';
 
 function formatFecha(fecha) {
   if (!fecha) return '';
@@ -24,6 +24,7 @@ export default function AdminPanel() {
   const [actores, setActores] = useState([]);
   const [eventos, setEventos] = useState([]);
   const [promociones, setPromociones] = useState([]);
+  const [votosCandela, setVotosCandela] = useState(null);
   const [nuevoCorreo, setNuevoCorreo] = useState('');
   const [invitacionMsg, setInvitacionMsg] = useState(null);
 
@@ -51,6 +52,7 @@ export default function AdminPanel() {
       if (tab === 'actores') setActores(await obtenerTodosLosActoresAdmin());
       if (tab === 'eventos') setEventos(await obtenerTodosLosEventosAdmin());
       if (tab === 'promociones') setPromociones(await obtenerTodasLasPromocionesAdmin());
+      if (tab === 'candela') setVotosCandela(await obtenerVotosCandelaAdmin());
     } catch (e) {
       setError('Error cargando datos');
     }
@@ -149,6 +151,7 @@ export default function AdminPanel() {
     { id: 'actores', label: 'Actores', icon: Store },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'promociones', label: 'Promociones', icon: Tag },
+    { id: 'candela', label: 'Candela', icon: Flame },
     { id: 'invitaciones', label: 'Invitaciones', icon: UserPlus },
   ];
 
@@ -242,6 +245,31 @@ export default function AdminPanel() {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+{!loading && tab === 'candela' && votosCandela && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg p-6">
+              <p className="text-sm text-gris">Total de votos registrados</p>
+              <p className="text-3xl font-bold text-terracota">{votosCandela.total}</p>
+            </div>
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="font-bold text-terracota mb-4">Votos por participante (ID)</h3>
+              {Object.keys(votosCandela.porParticipante).length === 0 ? (
+                <p className="text-sm text-gris">Aún no hay votos registrados.</p>
+              ) : (
+                <div className="space-y-2">
+                  {Object.entries(votosCandela.porParticipante)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([pid, votos]) => (
+                      <div key={pid} className="flex justify-between items-center border-b border-gris/10 pb-2">
+                        <span className="text-sm text-marron">{pid}</span>
+                        <span className="font-bold text-terracota">{votos} voto{votos !== 1 ? 's' : ''}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

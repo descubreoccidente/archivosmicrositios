@@ -778,3 +778,18 @@ export const eliminarPromocion = async (promoId) => {
     throw error;
   }
 };
+// Obtener todos los votos del concurso Candela (solo admin)
+export const obtenerVotosCandelaAdmin = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'candelaVotos'));
+    const conteo = {};
+    snap.docs.forEach(d => {
+      const pid = d.data().participanteId;
+      conteo[pid] = (conteo[pid] || 0) + 1;
+    });
+    return { total: snap.size, porParticipante: conteo };
+  } catch (error) {
+    console.error('Error obteniendo votos Candela:', error);
+    throw error;
+  }
+};

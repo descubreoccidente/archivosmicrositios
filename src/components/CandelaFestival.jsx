@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  obtenerParticipantesCandela, obtenerVotoUsuarioCandela, votarCandela, CANDELA_FECHA_LIMITE
+  obtenerVotoUsuarioCandela, votarCandela, CANDELA_FECHA_LIMITE
 } from '../services/firestore';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
@@ -12,6 +12,35 @@ const SEDES = [
   { nombre: 'San Jerónimo', lat: 6.4433, lng: -75.7256 },
 ];
 
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKPl_uqsLeMzIBOCITggJHHSyR_y90wyPKcFHwxy-hxmgqtoCA3UmPuHIUlsyIBTxQ/exec';
+
+const COLORES_FESTIVAL = [
+  { bg: 'bg-[#2AA876]', tag: 'bg-[#2AA876]/10 text-[#2AA876]' },
+  { bg: 'bg-[#F5821F]', tag: 'bg-[#F5821F]/10 text-[#F5821F]' },
+  { bg: 'bg-[#E2568C]', tag: 'bg-[#E2568C]/10 text-[#E2568C]' },
+  { bg: 'bg-[#D6203C]', tag: 'bg-[#D6203C]/10 text-[#D6203C]' },
+  { bg: 'bg-[#F4E01B]', tag: 'bg-[#F4E01B]/10 text-yellow-700' },
+];
+
+function slugParticipante(nombre, municipio) {
+  return `${nombre}-${municipio}`
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function obtenerParticipantesDesdeSheet() {
+  const res = await fetch(`${SCRIPT_URL}?sheet=Concursantes`);
+  const data = await res.json();
+  if (data.error) return [];
+  return data.map((p, idx) => ({
+    ...p,
+    id: slugParticipante(p.nombre, p.municipio),
+    color: COLORES_FESTIVAL[idx % COLORES_FESTIVAL.length]
+  }));
+}
+
 export default function CandelaFestival() {
   const [participantes, setParticipantes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +50,7 @@ export default function CandelaFestival() {
   const [participantePendiente, setParticipantePendiente] = useState(null);
   const [votando, setVotando] = useState(false);
   const [error, setError] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
   const votacionCerrada = new Date() > CANDELA_FECHA_LIMITE;
 
@@ -41,7 +71,7 @@ export default function CandelaFestival() {
   const cargarParticipantes = async () => {
     setLoading(true);
     try {
-      const data = await obtenerParticipantesCandela();
+      const data = await obtenerParticipantesDesdeSheet();
       setParticipantes(data);
     } catch (error) {
       console.error('Error cargando participantes:', error);
@@ -79,6 +109,10 @@ export default function CandelaFestival() {
       setParticipantePendiente(null);
     }
   };
+
+  const participantesFiltrados = participantes.filter(p =>
+    !busqueda || p.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || p.municipio?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   const ganador = votacionCerrada && participantes.length > 0
     ? [...participantes].sort((a, b) => b.votos - a.votos)[0]
@@ -183,13 +217,27 @@ export default function CandelaFestival() {
           </div>
         )}
 
+        {!loading && participantes.length > 0 && (
+          <div className="max-w-md mx-auto mb-8">
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Busca por nombre o municipio..."
+              className="w-full border border-gris/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-terracota"
+            />
+          </div>
+        )}
+
         {loading ? (
           <p className="text-center text-terracota">Cargando participantes...</p>
         ) : participantes.length === 0 ? (
           <p className="text-center text-gris">Los participantes se publicarán próximamente.</p>
+        ) : participantesFiltrados.length === 0 ? (
+          <p className="text-center text-gris">No encontramos ningún participante con ese nombre.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {participantes.map((p) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
+            {participantesFiltrados.map((p) => {
               const esMiVoto = miVoto?.participanteId === p.id;
               return (
                 <div
@@ -200,7 +248,7 @@ export default function CandelaFestival() {
                     {p.foto ? (
                       <img src={p.foto} alt={p.nombre} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-white" style={{ backgroundColor: '#e2007a' }}>
+                      <div className={`w-full h-full flex items-center justify-center text-3xl font-bold text-white ${p.color.bg}`}>
                         {p.nombre?.charAt(0)}
                       </div>
                     )}
@@ -222,9 +270,8 @@ export default function CandelaFestival() {
                             ? 'bg-yellow-400 text-marron'
                             : miVoto
                               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'text-white hover:opacity-90'
+                              : `text-white hover:opacity-90 ${p.color.bg}`
                         }`}
-                        style={!miVoto ? { backgroundColor: '#e2007a' } : {}}
                       >
                         {esMiVoto ? '✓ Tu voto' : 'Votar'}
                       </button>
