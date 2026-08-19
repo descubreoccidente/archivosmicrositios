@@ -92,9 +92,7 @@ export default function CandelaFestival() {
         style={{ backgroundImage: "url('/candela-fondo.png')" }}
       >  
       
-        <h1 className="text-4xl md:text-6xl font-extrabold text-yellow-300 tracking-wide drop-shadow-lg">
-          CANDELA FESTIVAL
-        </h1>
+        <img src="/candela-logo.png" alt="Candela Festival" className="h-56 md:h-80 mx-auto drop-shadow-2xl" />
         <p className="text-white text-lg md:text-xl font-semibold mt-2">Festival Gastronómico del Occidente Antioqueño</p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-6 text-white">
