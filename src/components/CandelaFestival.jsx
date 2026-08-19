@@ -12,6 +12,17 @@ const SEDES = [
   { nombre: 'San Jerónimo', lat: 6.4433, lng: -75.7256 },
 ];
 
+const ALIADOS = [
+  { nombre: 'Alcaldía de Santa Fe de Antioquia', archivo: 'alcaldia-santa-fe-de-antioquia.png' },
+  { nombre: 'Cámara de Comercio de Medellín para Antioquia', archivo: 'camara-logo.png' },
+  { nombre: 'Comfama', archivo: 'comfama.jpeg', pareja: 'logo-cajas.png' },
+  { nombre: 'Comfenalco', archivo: 'comfenalco-logo.png', pareja: 'logo-cajas.png' },
+  { nombre: 'Eventos Antioquia', archivo: 'eventosantioquia-logo.png' },
+  { nombre: 'SENA', archivo: 'logo-Sena.png' },
+  { nombre: 'Marca Ciudad', archivo: 'marca-ciudad.png' },
+  { nombre: 'Museo', archivo: 'museo-jc-logo.png' },
+];
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKPl_uqsLeMzIBOCITggJHHSyR_y90wyPKcFHwxy-hxmgqtoCA3UmPuHIUlsyIBTxQ/exec';
 
 const COLORES_FESTIVAL = [
@@ -279,6 +290,39 @@ export default function CandelaFestival() {
             Encuentra la ubicación exacta de cada evento y concursante en el{' '}
             <a href="/#explorar" className="text-terracota underline">mapa del territorio</a>.
           </p>
+        </div>
+      </section>
+
+      {/* Aliados y patrocinadores */}
+      <section className="bg-crema py-14">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-2xl font-bold text-[#c81d3f] mb-10 text-center">Aliados y Patrocinadores</h2>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-8">
+            {ALIADOS.map((aliado) => (
+              aliado.pareja ? (
+                <div key={aliado.archivo} className="flex items-center">
+                  <img
+                    src={`/aliados/${aliado.archivo}`}
+                    alt={aliado.nombre}
+                    className="max-h-14 md:max-h-20 max-w-[100px] md:max-w-[140px] w-auto h-auto object-contain"
+                  />
+                  <img
+                    src={`/aliados/${aliado.pareja}`}
+                    alt="Cajas de Compensación Familiar"
+                    className="max-h-14 md:max-h-20 max-w-[100px] md:max-w-[140px] w-auto h-auto object-contain -ml-1"
+                  />
+                </div>
+              ) : (
+                <div key={aliado.archivo} className="h-14 w-24 md:h-20 md:w-36 flex items-center justify-center">
+                  <img
+                    src={`/aliados/${aliado.archivo}`}
+                    alt={aliado.nombre}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+              )
+            ))}
+          </div>
         </div>
       </section>
 
