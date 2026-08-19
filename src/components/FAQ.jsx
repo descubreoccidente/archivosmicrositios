@@ -35,8 +35,8 @@ const PREGUNTAS_ACTORES = [
     r: 'Consulta las condiciones vigentes directamente con la Corporación de Turismo del Occidente de Antioquia.'
   },
   {
-    p: '¿Qué son los reportes semanales ("Mis Datos") y por qué son obligatorios?',
-    r: 'Es información que cada actor comparte semanalmente (visitantes, motivo de viaje, entre otros según tu categoría) para que el territorio tome mejores decisiones de turismo. A cambio, puedes ver el promedio comparativo de tu categoría.'
+    p: '¿Qué son los reportes mensuales ("Mis Datos") y por qué son obligatorios?',
+    r: 'Es información que cada actor comparte mensualmente (visitantes, motivo de viaje, entre otros según tu categoría) para que el territorio tome mejores decisiones de turismo. A cambio, puedes ver el promedio comparativo de tu categoría.'
   },
   {
     p: '¿Cómo publico una promoción o evento?',

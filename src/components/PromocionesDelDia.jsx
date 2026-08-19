@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, orderBy, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { useSEO } from '../hooks/useSEO';
 import { Trash2, Eye } from 'lucide-react';
+
 
 export default function PromocionesDelDia() {
   const [promociones, setPromociones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('todas');
+  
+  useSEO(
+    'Promociones del Día — Ofertas del Occidente Antioqueño | Descubre Occidente',
+    'Aprovecha las promociones y ofertas exclusivas de hoteles, restaurantes, tours y experiencias en el Occidente Antioqueño.'
+  );
 
   useEffect(() => {
     cargarPromociones();

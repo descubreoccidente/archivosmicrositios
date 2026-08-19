@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
+import { useSEO } from '../hooks/useSEO';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import SistemaResenas from './sistemaresenas';
@@ -85,6 +86,15 @@ export default function MicrositioPublico({ slug }) {
     const unsubscribe = onAuthChange((user) => setUsuario(user));
     return () => unsubscribe();
   }, [slug]);
+  useSEO(
+    data?.actor?.basicInfo?.nombre
+      ? `${data.actor.basicInfo.nombre} — ${data.actor.basicInfo.categoria}${data.actor.basicInfo.municipio ? ' en ' + data.actor.basicInfo.municipio : ''} | Descubre Occidente`
+      : 'Descubre Occidente Antioqueño',
+    data?.actor?.basicInfo?.descripcion ||
+      (data?.actor?.basicInfo?.nombre
+        ? `Conoce ${data.actor.basicInfo.nombre}, ${data.actor.basicInfo.categoria} en ${data.actor.basicInfo.municipio || 'el Occidente Antioqueño'}.`
+        : undefined)
+  );
 
   useEffect(() => {
     if (eventoSeleccionado) {
