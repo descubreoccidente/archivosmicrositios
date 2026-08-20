@@ -22,6 +22,8 @@ const ALIADOS = [
   { nombre: 'SENA', archivo: 'logo-Sena.png' },
   { nombre: 'Marca Ciudad', archivo: 'marca-ciudad.png' },
   { nombre: 'Museo', archivo: 'museo-jc-logo.png' },
+  { nombre: 'Provincia Agroindustrial del Occidente Antioqueño', archivo: 'provinciaagro-logo.png' },
+  { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
 ];
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKPl_uqsLeMzIBOCITggJHHSyR_y90wyPKcFHwxy-hxmgqtoCA3UmPuHIUlsyIBTxQ/exec';

@@ -107,13 +107,32 @@ export default function AdminPanel() {
   const handleAgregarInvitacion = async (e) => {
     e.preventDefault();
     setInvitacionMsg(null);
-    try {
-      await agregarInvitacionAdmin(nuevoCorreo);
-      setInvitacionMsg({ tipo: 'ok', texto: `${nuevoCorreo} fue autorizado correctamente.` });
-      setNuevoCorreo('');
-    } catch (e) {
-      setInvitacionMsg({ tipo: 'error', texto: 'No se pudo agregar la invitación.' });
+
+    const correos = nuevoCorreo
+      .split(/[\n,;]+/)
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
+
+    if (correos.length === 0) return;
+
+    let exitosos = 0;
+    let fallidos = [];
+
+    for (const correo of correos) {
+      try {
+        await agregarInvitacionAdmin(correo);
+        exitosos++;
+      } catch (e) {
+        fallidos.push(correo);
+      }
     }
+
+    if (fallidos.length === 0) {
+      setInvitacionMsg({ tipo: 'ok', texto: `${exitosos} correo${exitosos !== 1 ? 's' : ''} autorizado${exitosos !== 1 ? 's' : ''} correctamente.` });
+    } else {
+      setInvitacionMsg({ tipo: 'error', texto: `${exitosos} autorizados. Fallaron: ${fallidos.join(', ')}` });
+    }
+    setNuevoCorreo('');
   };
 
   const gruposReportes = reportesMes.reduce((acc, r) => {
@@ -366,26 +385,26 @@ export default function AdminPanel() {
 
         {tab === 'invitaciones' && (
           <div className="bg-white rounded-lg p-6 max-w-md">
-            <h3 className="font-bold text-terracota mb-3">Autorizar nuevo actor</h3>
+            <h3 className="font-bold text-terracota mb-3">Autorizar actores</h3>
             <p className="text-sm text-gris mb-4">
-              Agrega el correo con el que un actor podrá crear su micrositio.
+              Pega uno o varios correos (uno por línea, o separados por coma) para autorizarlos de una vez.
             </p>
             {invitacionMsg && (
               <div className={`text-sm rounded p-3 mb-4 ${invitacionMsg.tipo === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                 {invitacionMsg.texto}
               </div>
             )}
-            <form onSubmit={handleAgregarInvitacion} className="flex gap-2">
-              <input
-                type="email"
+            <form onSubmit={handleAgregarInvitacion} className="space-y-3">
+              <textarea
                 value={nuevoCorreo}
                 onChange={(e) => setNuevoCorreo(e.target.value)}
                 required
-                placeholder="correo@ejemplo.com"
-                className="flex-1 border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+                rows={5}
+                placeholder={'correo1@ejemplo.com\ncorreo2@ejemplo.com\ncorreo3@ejemplo.com'}
+                className="w-full border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota resize-none"
               />
-              <button type="submit" className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition">
-                Autorizar
+              <button type="submit" className="w-full bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition">
+                Autorizar todos
               </button>
             </form>
           </div>
