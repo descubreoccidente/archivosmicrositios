@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, orderBy, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import NavBar from './NavBar';
 import { useSEO } from '../hooks/useSEO';
 import { Trash2, Eye } from 'lucide-react';
 
@@ -74,8 +75,9 @@ export default function PromocionesDelDia() {
     );
   }
 
-  return (
+ return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       {/* Header */}
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-6xl mx-auto px-8">

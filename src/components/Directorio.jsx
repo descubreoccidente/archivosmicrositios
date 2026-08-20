@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { obtenerActoresPublicos } from '../services/firestore';
+import NavBar from './NavBar';
 import { MapPin, Star } from 'lucide-react';
 
 const MUNICIPIOS = [
@@ -75,6 +76,7 @@ export default function Directorio() {
 
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-6xl mx-auto px-6">
           <h1 className="flex items-center gap-3 text-4xl font-bold mb-2">

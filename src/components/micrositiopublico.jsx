@@ -4,6 +4,7 @@ import { useSEO } from '../hooks/useSEO';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import SistemaResenas from './sistemaresenas';
+import NavBar from './NavBar';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
   Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag
@@ -175,6 +176,7 @@ export default function MicrositioPublico({ slug }) {
 
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       {/* Portada */}
       {fotoPortada && (
         <div className="relative h-64 md:h-80 w-full overflow-hidden">

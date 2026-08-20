@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { obtenerAgendaRegional, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
+import NavBar from './NavBar';
 import { useSEO } from '../hooks/useSEO';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
@@ -136,6 +137,7 @@ useSEO(
 
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       {/* Header */}
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-6xl mx-auto px-8">

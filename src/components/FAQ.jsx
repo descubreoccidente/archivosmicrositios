@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, HelpCircle, Users, Store } from 'lucide-react';
+import NavBar from './NavBar';
 
 const PREGUNTAS_VISITANTES = [
   {
@@ -89,6 +90,7 @@ export default function FAQ() {
 
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       <div className="bg-gradient-to-r from-terracota to-terracota-dark text-white py-12">
         <div className="max-w-4xl mx-auto px-6">
           <h1 className="flex items-center gap-3 text-4xl font-bold mb-2">

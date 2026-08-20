@@ -5,6 +5,7 @@ import {
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import { Calendar, MapPin, Instagram, CheckCircle, Trophy } from 'lucide-react';
+import NavBar from './NavBar';
 
 const SEDES = [
   { nombre: 'Santa Fe de Antioquia', lat: 6.5564, lng: -75.8281 },
@@ -131,6 +132,7 @@ export default function CandelaFestival() {
 
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       {/* Hero */}
       <div
         className="relative py-20 px-6 text-center overflow-hidden bg-cover bg-center"

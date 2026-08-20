@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, Store } from 'lucide-react';
+import NavBar from './NavBar';
 import MicrositiosDestacados from './MicrositiosDestacados';
 import AgendaDestacada from './AgendaDestacada';
 import PromocionesDestacadas from './PromocionesDestacadas';
@@ -11,6 +12,7 @@ import Banner from './Banner';
 export default function Home() {
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       {/* Hero */}
       <div className="relative h-screen min-h-[600px] w-full overflow-hidden">
         <img

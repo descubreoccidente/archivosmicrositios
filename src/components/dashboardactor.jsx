@@ -11,6 +11,7 @@ import CrearPromocion from './CrearPromocion';
 import MisDatosActor from './misdatosactor';
 import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle } from 'lucide-react';
 import { obtenerReporteMesActual } from '../services/firestore';
+import NavBar from './NavBar';
 export default function DashboardActor({ actorId }) {
   const [micrositio, setMicrositio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,7 @@ export default function DashboardActor({ actorId }) {
 
   return (
     <div className="min-h-screen bg-crema">
+      <NavBar />
       {/* Header */}
       <div className="bg-terracota text-white p-4 flex justify-between items-center shadow-md">
         <div className="flex items-center gap-3">
