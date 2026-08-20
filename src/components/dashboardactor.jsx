@@ -9,7 +9,7 @@ import CrearEvento from './crearevento';
 import TurismoResponsable from './turismoresponsable';
 import CrearPromocion from './CrearPromocion';
 import MisDatosActor from './misdatosactor';
-import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle } from 'lucide-react';
+import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle } from 'lucide-react';
 import { obtenerReporteMesActual } from '../services/firestore';
 import NavBar from './NavBar';
 export default function DashboardActor({ actorId }) {
@@ -71,8 +71,16 @@ export default function DashboardActor({ actorId }) {
           <h1 className="text-xl font-bold">Tu Micrositio</h1>
         </div>
         <div className="flex gap-3">
+          <a
+            href="/guia-actores"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 bg-terracota-dark text-white px-4 py-2 rounded-lg font-semibold hover:bg-marron transition"
+          >
+            <HelpCircle size={18} />
+            Tutorial
+          </a>
           {micrositio && (
-            
              <a
               href={`/micrositio/${micrositio?.actor?.basicInfo?.slug || actorId}`}
               target="_blank"

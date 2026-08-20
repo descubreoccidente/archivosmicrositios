@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { loginConGoogle, enviarEnlaceAcceso, esEnlaceDeAcceso, completarLoginConEnlace } from '../services/auth.js';
 import { verificarYRegistrarInvitacion } from '../services/firestore.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, CheckCircle } from 'lucide-react';
 import NavBar from './NavBar';
 
@@ -150,7 +150,10 @@ export default function Login() {
             </>
           )}
 
-          <p className="text-center text-gris text-xs mt-6">
+          <p className="text-center text-gris text-xs mt-4">
+            <Link to="/guia-actores" className="text-terracota underline font-semibold">¿Primera vez? Mira la guía paso a paso</Link>
+          </p>
+          <p className="text-center text-gris text-xs mt-4">
             Al entrar aceptas nuestros términos de servicio y política de privacidad
           </p>
         </div>
