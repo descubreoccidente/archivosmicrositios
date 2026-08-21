@@ -16,8 +16,8 @@ const SEDES = [
 const ALIADOS = [
   { nombre: 'Alcaldía de Santa Fe de Antioquia', archivo: 'alcaldia-santa-fe-de-antioquia.png' },
   { nombre: 'Cámara de Comercio de Medellín para Antioquia', archivo: 'camara-logo.png' },
-  { nombre: 'Comfama', archivo: 'comfama.jpeg', pareja: 'logo-cajas.png' },
-  { nombre: 'Comfenalco', archivo: 'comfenalco-logo.png', pareja: 'logo-cajas.png' },
+  { nombre: 'Comfama', archivo: 'comfama.png' },
+  { nombre: 'Comfenalco', archivo: 'comfenalco-logo.png' },
   { nombre: 'Eventos Antioquia', archivo: 'eventosantioquia-logo.png' },
   { nombre: 'SENA', archivo: 'logo-Sena.png' },
   { nombre: 'Marca Ciudad', archivo: 'marca-ciudad.png' },

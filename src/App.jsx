@@ -11,6 +11,7 @@ import CandelaFestival from './components/CandelaFestival';
 import AdminPanel from './components/AdminPanel';
 import FAQ from './components/FAQ';
 import GuiaActores from './components/GuiaActores';
+import PoliticaDatos from './components/PoliticaDatos';
 
 function DashboardWrapper() {
   const { actorId } = useParams();
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/guia-actores" element={<GuiaActores />} />
+        <Route path="/politica-de-datos" element={<PoliticaDatos />} />
       </Routes>
     </BrowserRouter>
   );

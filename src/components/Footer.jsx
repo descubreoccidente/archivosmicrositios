@@ -170,6 +170,8 @@ export default function Footer() {
 
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
         © 2026 Corporación de Turismo del Occidente de Antioquia · 25 años conectando el territorio
+        <br />
+        <Link to="/politica-de-datos" className="underline hover:text-white transition">Política de Tratamiento de Datos</Link>
       </div>
     </footer>
   );
