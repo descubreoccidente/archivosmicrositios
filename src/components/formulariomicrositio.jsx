@@ -76,7 +76,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     certificaciones: [],
     redesSociales: { facebook: '', instagram: '', whatsapp: '', tiktok: '', youtube: '', linkedin: '' },
     ubicacion: { lat: '', lng: '' },
-    amenities: []
+    amenities: [],
+    aceptaPolitica: false
   });
   const [loading, setLoading] = useState(false);
   const [subiendoLogo, setSubiendoLogo] = useState(false);
@@ -178,7 +179,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
       enlacesInteres: prev.enlacesInteres.filter((_, i) => i !== idx)
     }));
   };
-const agregarCertificacion = () => {
+
+  const agregarCertificacion = () => {
     if (formData.certificaciones.length >= MAX_CERTIFICACIONES) return;
     setFormData(prev => ({
       ...prev,
@@ -199,6 +201,7 @@ const agregarCertificacion = () => {
       certificaciones: prev.certificaciones.filter((_, i) => i !== idx)
     }));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -216,11 +219,11 @@ const agregarCertificacion = () => {
 
   const subcategoriasDisponibles = formData.categoria ? (CATEGORIAS_SUBCATEGORIAS[formData.categoria] || []) : [];
   const MAX_ENLACES_INSTITUCIONAL = 10;
-const MAX_ENLACES_GENERAL = 2;
-const MAX_CERTIFICACIONES = 5;  
+  const MAX_ENLACES_GENERAL = 2;
+  const MAX_CERTIFICACIONES = 5;
   const esInstitucional = CATEGORIAS_CON_ENLACES.includes(formData.categoria);
   const maxEnlaces = esInstitucional ? MAX_ENLACES_INSTITUCIONAL : MAX_ENLACES_GENERAL;
-  
+
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 max-w-2xl">
       <h2 className="text-2xl font-bold text-terracota mb-2">Información para su Micrositio</h2>
@@ -580,9 +583,26 @@ const MAX_CERTIFICACIONES = 5;
           </p>
         </div>
 
+        <div className="bg-crema p-4 rounded-lg flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="aceptaPolitica"
+            checked={formData.aceptaPolitica || false}
+            onChange={(e) => setFormData(prev => ({ ...prev, aceptaPolitica: e.target.checked }))}
+            className="mt-1 w-4 h-4 flex-shrink-0 accent-terracota"
+          />
+          <label htmlFor="aceptaPolitica" className="text-sm text-marron">
+            He leído y acepto la{' '}
+            <a href="/politica-de-datos" target="_blank" rel="noreferrer" className="text-terracota underline font-semibold">
+              Política de Tratamiento de Datos
+            </a>{' '}
+            de la Corporación de Turismo del Occidente de Antioquia.
+          </label>
+        </div>
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !formData.aceptaPolitica}
           className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
         >
           {loading ? 'Guardando...' : 'Guardar Información'}
