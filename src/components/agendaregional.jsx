@@ -449,12 +449,10 @@ useSEO(
 
               {eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${eventoSeleccionado.ubicacion.lat},${eventoSeleccionado.ubicacion.lng}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/?lat=${eventoSeleccionado.ubicacion.lat}&lng=${eventoSeleccionado.ubicacion.lng}&nombre=${encodeURIComponent(eventoSeleccionado.nombre)}#mapa-territorio`}
                   className="mt-4 w-full flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold py-2.5 rounded-lg hover:bg-crema transition text-sm"
                 >
-                  <MapPin size={16} /> Cómo llegar
+                  <MapPin size={16} /> Ver en el mapa
                 </a>
               )}
               {eventoSeleccionado.requiereInscripcion && eventoSeleccionado.linkInscripcion && (

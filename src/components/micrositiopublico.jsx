@@ -357,6 +357,11 @@ export default function MicrositioPublico({ slug }) {
                     <Globe size={16} className="text-terracota" /> {info.paginaWeb}
                   </a>
                 )}
+                {info.horarioAtencion && (
+                  <p className="flex items-start gap-2 text-marron">
+                    <Clock size={16} className="text-terracota flex-shrink-0 mt-0.5" /> {info.horarioAtencion}
+                  </p>
+                )}
               </div>
 
               {redesConValor.length > 0 && (
@@ -381,15 +386,12 @@ export default function MicrositioPublico({ slug }) {
                   })}
                 </div>
               )}
-
               {info.ubicacion?.lat && info.ubicacion?.lng && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${info.ubicacion.lat},${info.ubicacion.lng}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/?lat=${info.ubicacion.lat}&lng=${info.ubicacion.lng}&nombre=${encodeURIComponent(info.nombre)}#mapa-territorio`}
                   className="mt-4 w-full flex items-center justify-center gap-2 bg-terracota text-white font-semibold py-2.5 rounded-lg hover:bg-terracota-dark transition text-sm"
                 >
-                  <MapPin size={16} /> Cómo llegar
+                  <MapPin size={16} /> Ver en el mapa
                 </a>
               )}
             </div>
@@ -690,12 +692,10 @@ export default function MicrositioPublico({ slug }) {
 
               {eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${eventoSeleccionado.ubicacion.lat},${eventoSeleccionado.ubicacion.lng}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/?lat=${eventoSeleccionado.ubicacion.lat}&lng=${eventoSeleccionado.ubicacion.lng}&nombre=${encodeURIComponent(eventoSeleccionado.nombre)}#mapa-territorio`}
                   className="mt-4 w-full flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold py-2.5 rounded-lg hover:bg-crema transition text-sm"
                 >
-                  <MapPin size={16} /> Cómo llegar
+                  <MapPin size={16} /> Ver en el mapa
                 </a>
               )}
               {eventoSeleccionado.requiereInscripcion && eventoSeleccionado.linkInscripcion && (

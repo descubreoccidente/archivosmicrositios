@@ -8,10 +8,10 @@ import SelectorUbicacionMapa from './SelectorUbicacionMapa';
 
 const CATEGORIAS_SUBCATEGORIAS = {
   'Alojamiento': ['Familiar', 'Bienestar/Holístico', 'Parejas', 'Rumba/Fiesta', 'Regenerativo', 'Eventos', 'Ecohotel', 'Boutique', 'Campestre/Finca', 'All inclusive', 'Apartamento', 'Resort', 'Glamping', 'Camping'],
-  'Gastronomía': ['Típica/Tradicional', 'Gourmet', 'Rápida', 'Vegetariana/Vegana', 'Cafetería', 'Repostería', 'Comida internacional', 'Parrilla', 'Nikkei'],
+  'Gastronomía': ['Típica/Tradicional', 'Gourmet', 'Rápida', 'Vegetariana/Vegana', 'Cafetería', 'Repostería', 'Comida internacional', 'Parrilla', 'Nikkei', 'Restaurante-bar','fusión', 'kosher'],
   'Tour operador': ['Tours de un día', 'Paquetes multidía', 'Aventura/Extremo', 'Cultural/Patrimonial', 'Ecoturismo'],
   'Ente territorial': ['Alcaldía', 'Secretaría de Turismo', 'Casa de Cultura', 'Oficina de Turismo'],
-  'Institución': ['Museo', 'Concesión vial', 'Caja de compensación', 'Cámara de comercio', 'Religiosa', 'Fundación', 'Adscrita a ministerio', 'Cooperativa', 'Corporación'],
+  'Institución': ['Museo', 'Concesión vial', 'Caja de compensación', 'Cámara de comercio', 'Religiosa', 'Fundación', 'Universitaria', 'Educativa', 'Adscrita a ministerio', 'Cooperativa', 'Corporación'],
   'Microempresa': ['Artesanías', 'Souvenirs', 'Productos agroalimentarios', 'Confecciones'],
   'Bares y pubs': ['Coctelería', 'Vinos', 'Música en vivo', 'Ambiente chill', 'Cerveza artesanal', 'Deportivo', 'Karaoke', 'Ambiente familiar'],
   'Recuperadora de residuos': ['Reciclaje', 'Compostaje', 'Educación ambiental'],
@@ -68,6 +68,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     telefono: '',
     email: '',
     paginaWeb: '',
+    horarioAtencion: '',
     descripcion: '',
     logo: '',
     rntVigente: false,
@@ -385,7 +386,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-marron mb-2">
+            <label className="block text-sm font-semibold text-marron mb-2">
             Página web <span className="text-gris font-normal">(opcional)</span>
           </label>
           <input
@@ -395,6 +396,20 @@ export default function FormularioMicrositio({ actorId, onSave }) {
             onChange={handleChange}
             className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
             placeholder="https://tunegocio.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-marron mb-2">
+            Horario de atención <span className="text-gris font-normal">(opcional)</span>
+          </label>
+          <input
+            type="text"
+            name="horarioAtencion"
+            value={formData.horarioAtencion}
+            onChange={handleChange}
+            className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota"
+            placeholder="Ej: Lunes a Sábado 8am - 6pm, Domingo 9am - 2pm"
           />
         </div>
 

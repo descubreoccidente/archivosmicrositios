@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Home, Store, Calendar, Tag, Flame, HelpCircle } from 'lucide-react';
+import { Menu, X, Home, Store, Calendar, Tag, Flame, HelpCircle, LayoutDashboard } from 'lucide-react';
+import { onAuthChange } from '../services/auth';
 
 const ENLACES = [
   { to: '/', label: 'Inicio', icon: Home },
@@ -13,6 +14,12 @@ const ENLACES = [
 
 export default function NavBar() {
   const [abierto, setAbierto] = useState(false);
+  const [usuario, setUsuario] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => setUsuario(user));
+    return () => unsubscribe();
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm">
@@ -32,8 +39,15 @@ export default function NavBar() {
               {label}
             </Link>
           ))}
+          {usuario && (
+            <Link
+              to={`/dashboard/${usuario.uid}`}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold bg-terracota text-white hover:bg-terracota-dark transition"
+            >
+              <LayoutDashboard size={16} /> Editar mi micrositio
+            </Link>
+          )}
         </div>
-
         {/* Botón menú móvil */}
         <button
           onClick={() => setAbierto(!abierto)}
@@ -56,6 +70,15 @@ export default function NavBar() {
               <Icon size={18} className="text-terracota" /> {label}
             </Link>
           ))}
+          {usuario && (
+            <Link
+              to={`/dashboard/${usuario.uid}`}
+              onClick={() => setAbierto(false)}
+              className="flex items-center gap-3 px-2 py-3 text-sm font-semibold text-terracota"
+            >
+              <LayoutDashboard size={18} /> Editar mi micrositio
+            </Link>
+          )}
         </div>
       )}
     </nav>

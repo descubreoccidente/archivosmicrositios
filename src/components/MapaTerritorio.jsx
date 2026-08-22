@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { obtenerPuntosMapa } from '../services/firestore';
@@ -9,8 +9,15 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 export default function MapaTerritorio() {
   const mapContainer = useRef(null);
   const mapInstance = useRef(null);
+  const sectionRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const targetLat = parseFloat(searchParams.get('lat'));
+  const targetLng = parseFloat(searchParams.get('lng'));
+  const targetNombre = searchParams.get('nombre');
+  const tieneDestino = Number.isFinite(targetLat) && Number.isFinite(targetLng);
 
   useEffect(() => {
     if (mapInstance.current) return;
@@ -18,8 +25,8 @@ export default function MapaTerritorio() {
     mapInstance.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/outdoors-v12',
-      center: [-75.85, 6.55],
-      zoom: 9.2
+      center: tieneDestino ? [targetLng, targetLat] : [-75.85, 6.55],
+      zoom: tieneDestino ? 14 : 9.2
     });
 
     mapInstance.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -30,6 +37,14 @@ export default function MapaTerritorio() {
       mapInstance.current?.remove();
       mapInstance.current = null;
     };
+  }, []);
+
+  useEffect(() => {
+    if (tieneDestino && sectionRef.current) {
+      setTimeout(() => {
+        sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
   }, []);
 
   const cargarPuntos = async () => {
@@ -66,6 +81,14 @@ export default function MapaTerritorio() {
           .setPopup(popup)
           .addTo(mapInstance.current);
 
+        const esElDestino = tieneDestino &&
+          Math.abs(punto.lat - targetLat) < 0.0001 &&
+          Math.abs(punto.lng - targetLng) < 0.0001;
+
+        if (esElDestino) {
+          popup.addTo(mapInstance.current);
+        }
+
         if (punto.tipo === 'actor' && punto.slug) {
           el.addEventListener('click', () => {
             setTimeout(() => navigate(`/micrositio/${punto.slug}`), 200);
@@ -86,10 +109,12 @@ export default function MapaTerritorio() {
   };
 
   return (
-    <section className="bg-white py-16">
+    <section id="mapa-territorio" ref={sectionRef} className="bg-white py-16">
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-terracota mb-2 text-center">Mapa del territorio</h2>
-        <p className="text-gris text-center mb-6">Ubica actores y eventos en el Occidente Antioqueño</p>
+        <p className="text-gris text-center mb-6">
+          {tieneDestino && targetNombre ? `Ubicación de ${targetNombre}` : 'Ubica actores y eventos en el Occidente Antioqueño'}
+        </p>
 
         <div className="flex items-center justify-center gap-6 mb-4 text-sm">
           <span className="flex items-center gap-2">
