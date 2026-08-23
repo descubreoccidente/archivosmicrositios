@@ -26,8 +26,7 @@ const ALIADOS = [
   { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
 ];
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKPl_uqsLeMzIBOCITggJHHSyR_y90wyPKcFHwxy-hxmgqtoCA3UmPuHIUlsyIBTxQ/exec';
-
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfrMrdDAhW45wCBaGqv7FJz9YDDox12lz1YZvOSOMYTZOKnA8mlX_RAK6U_am8LCyr/exec';
 const COLORES_FESTIVAL = [
   { bg: 'bg-[#2AA876]', tag: 'bg-[#2AA876]/10 text-[#2AA876]' },
   { bg: 'bg-[#F5821F]', tag: 'bg-[#F5821F]/10 text-[#F5821F]' },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginConGoogle, loginConFacebook } from '../services/auth.js';
+import { loginConGoogle, loginConFacebook, agregarContactoBrevo } from '../services/auth.js';
 import { X } from 'lucide-react';
 
 export default function ModalLoginVisitante({ onClose, onSuccess }) {
@@ -11,6 +11,7 @@ export default function ModalLoginVisitante({ onClose, onSuccess }) {
     setError(null);
     try {
       const user = proveedor === 'google' ? await loginConGoogle('visitante') : await loginConFacebook('visitante');
+      agregarContactoBrevo(user.email, user.displayName, 3); // Lista "Visitante General"
       onSuccess(user);
     } catch (err) {
       setError('No pudimos iniciar sesión. Intenta de nuevo.');

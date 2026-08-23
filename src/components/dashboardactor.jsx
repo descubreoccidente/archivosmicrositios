@@ -1,26 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from '../services/firebase';
-import { crearMicrositio, obtenerMicrositio } from '../services/firestore';
-import { logout } from '../services/auth';
-import { useNavigate } from 'react-router-dom';
+import { crearMicrositio, obtenerMicrositio, verificarInvitacion } from '../services/firestore';
+import { logout, onAuthChange } from '../services/auth';
+import { useNavigate, Link } from 'react-router-dom';
 import FormularioMicrositio from './formulariomicrositio';
 import GaleriaFotos from './galeriafotos';
 import CrearEvento from './crearevento';
 import TurismoResponsable from './turismoresponsable';
 import CrearPromocion from './CrearPromocion';
 import MisDatosActor from './misdatosactor';
-import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle } from 'lucide-react';
+import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle, ShieldAlert } from 'lucide-react';
 import { obtenerReporteMesActual } from '../services/firestore';
 import NavBar from './NavBar';
+
 export default function DashboardActor({ actorId }) {
   const [micrositio, setMicrositio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
   const [faltaReportar, setFaltaReportar] = useState(false);
+  const [autorizado, setAutorizado] = useState(null); // null = verificando, true/false = resultado
   const navigate = useNavigate();
 
   useEffect(() => {
-    cargarMicrositio();
+    const unsubscribe = onAuthChange(async (user) => {
+      if (!user) {
+        setAutorizado(false);
+        setLoading(false);
+        return;
+      }
+      if (user.uid !== actorId) {
+        setAutorizado(false);
+        setLoading(false);
+        return;
+      }
+      const tieneAcceso = await verificarInvitacion(user.email);
+      setAutorizado(tieneAcceso);
+      if (tieneAcceso) {
+        cargarMicrositio();
+      } else {
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
   }, [actorId]);
 
   const cargarMicrositio = async () => {
@@ -44,7 +65,7 @@ export default function DashboardActor({ actorId }) {
     navigate('/');
   };
 
-  if (loading) {
+  if (loading || autorizado === null) {
     return (
       <div className="min-h-screen bg-crema flex items-center justify-center">
         <div className="text-terracota text-xl font-semibold">Cargando...</div>
@@ -52,7 +73,25 @@ export default function DashboardActor({ actorId }) {
     );
   }
 
- const tabs = [
+  if (autorizado === false) {
+    return (
+      <div className="min-h-screen bg-crema">
+        <NavBar />
+        <div className="max-w-md mx-auto mt-20 bg-white rounded-lg shadow-sm p-8 text-center">
+          <ShieldAlert size={40} className="mx-auto text-red-500 mb-3" />
+          <h2 className="font-bold text-marron text-lg mb-2">No tienes acceso a este micrositio</h2>
+          <p className="text-sm text-gris mb-6">
+            Tu cuenta no tiene una invitación activa para gestionar un micrositio en la plataforma. Si crees que esto es un error, contáctanos.
+          </p>
+          <Link to="/ingresar" className="inline-block bg-terracota text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-terracota-dark transition">
+            Volver a Ingresar
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
     { id: 'info', label: 'Información', icon: Info },
     { id: 'fotos', label: 'Galería', icon: Image },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
@@ -100,7 +139,7 @@ export default function DashboardActor({ actorId }) {
           </button>
         </div>
       </div>
-{faltaReportar && activeTab !== 'datos' && (
+      {faltaReportar && activeTab !== 'datos' && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-center gap-2 text-sm text-yellow-800">
           <AlertCircle size={16} />
           Te falta reportar tus datos de este mes.

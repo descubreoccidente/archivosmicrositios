@@ -818,3 +818,14 @@ export const obtenerReportesMesAdmin = async (monthId) => {
     throw error;
   }
 };
+// Verificación de solo lectura (sin marcar como "usado"), para proteger el Dashboard
+export const verificarInvitacion = async (email) => {
+  try {
+    const emailNormalizado = email.trim().toLowerCase();
+    const invSnap = await getDoc(doc(db, 'invitaciones', emailNormalizado));
+    return invSnap.exists() && invSnap.data().autorizado === true;
+  } catch (error) {
+    console.error('Error verificando invitación:', error);
+    return false;
+  }
+};

@@ -12,6 +12,7 @@ import { auth, db } from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 const facebookProvider = new FacebookAuthProvider();
 export const enviarEnlaceAcceso = async (email, origen = 'actor') => {
   try {
@@ -125,4 +126,16 @@ export const logout = async () => {
 
 export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
+};
+const SCRIPT_URL_BREVO = 'https://script.google.com/macros/s/AKfycbxfrMrdDAhW45wCBaGqv7FJz9YDDox12lz1YZvOSOMYTZOKnA8mlX_RAK6U_am8LCyr/exec';
+export const agregarContactoBrevo = async (email, nombre, listaId) => {
+  try {
+    await fetch(SCRIPT_URL_BREVO, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({ tipo: 'contacto_brevo', email, nombre, listaId }),
+    });
+  } catch (error) {
+    console.error('Error agregando contacto a Brevo:', error);
+  }
 };

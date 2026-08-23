@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
-import Home from './components/Home';
-import Login from './components/Login';
-import DashboardActor from './components/dashboardactor';
-import MicrositioPublico from './components/micrositiopublico';
-import AgendaRegional from './components/agendaregional';
-import PromocionesDelDia from './components/PromocionesDelDia';
-import Directorio from './components/Directorio';
-import CandelaFestival from './components/CandelaFestival';
-import AdminPanel from './components/AdminPanel';
-import FAQ from './components/FAQ';
-import GuiaActores from './components/GuiaActores';
-import PoliticaDatos from './components/PoliticaDatos';
+
+const Home = lazy(() => import('./components/Home'));
+const Login = lazy(() => import('./components/Login'));
+const DashboardActor = lazy(() => import('./components/dashboardactor'));
+const MicrositioPublico = lazy(() => import('./components/micrositiopublico'));
+const AgendaRegional = lazy(() => import('./components/agendaregional'));
+const PromocionesDelDia = lazy(() => import('./components/PromocionesDelDia'));
+const Directorio = lazy(() => import('./components/Directorio'));
+const CandelaFestival = lazy(() => import('./components/CandelaFestival'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const FAQ = lazy(() => import('./components/FAQ'));
+const GuiaActores = lazy(() => import('./components/GuiaActores'));
+const PoliticaDatos = lazy(() => import('./components/PoliticaDatos'));
 
 function DashboardWrapper() {
   const { actorId } = useParams();
@@ -23,23 +24,33 @@ function MicrositioPublicoWrapper() {
   return <MicrositioPublico slug={slug} />;
 }
 
+function CargandoPagina() {
+  return (
+    <div className="min-h-screen bg-crema flex items-center justify-center">
+      <p className="text-terracota text-lg font-semibold">Cargando...</p>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/ingresar" element={<Login />} />
-        <Route path="/dashboard/:actorId" element={<DashboardWrapper />} />
-        <Route path="/micrositio/:slug" element={<MicrositioPublicoWrapper />} />
-        <Route path="/agenda" element={<AgendaRegional />} />
-        <Route path="/promociones" element={<PromocionesDelDia />} />
-        <Route path="/directorio" element={<Directorio />} />
-        <Route path="/candela-festival" element={<CandelaFestival />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/guia-actores" element={<GuiaActores />} />
-        <Route path="/politica-de-datos" element={<PoliticaDatos />} />
-      </Routes>
+      <Suspense fallback={<CargandoPagina />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/ingresar" element={<Login />} />
+          <Route path="/dashboard/:actorId" element={<DashboardWrapper />} />
+          <Route path="/micrositio/:slug" element={<MicrositioPublicoWrapper />} />
+          <Route path="/agenda" element={<AgendaRegional />} />
+          <Route path="/promociones" element={<PromocionesDelDia />} />
+          <Route path="/directorio" element={<Directorio />} />
+          <Route path="/candela-festival" element={<CandelaFestival />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/guia-actores" element={<GuiaActores />} />
+          <Route path="/politica-de-datos" element={<PoliticaDatos />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
