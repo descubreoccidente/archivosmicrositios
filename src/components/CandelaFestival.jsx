@@ -6,6 +6,7 @@ import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import { Calendar, MapPin, Instagram, CheckCircle, Trophy } from 'lucide-react';
 import NavBar from './NavBar';
+import { obtenerParticipantesCandelaSheet } from '../services/candela';
 
 const SEDES = [
   { nombre: 'Santa Fe de Antioquia', lat: 6.5564, lng: -75.8281 },
@@ -26,7 +27,6 @@ const ALIADOS = [
   { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
 ];
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfrMrdDAhW45wCBaGqv7FJz9YDDox12lz1YZvOSOMYTZOKnA8mlX_RAK6U_am8LCyr/exec';
 const COLORES_FESTIVAL = [
   { bg: 'bg-[#2AA876]', tag: 'bg-[#2AA876]/10 text-[#2AA876]' },
   { bg: 'bg-[#F5821F]', tag: 'bg-[#F5821F]/10 text-[#F5821F]' },
@@ -35,21 +35,10 @@ const COLORES_FESTIVAL = [
   { bg: 'bg-[#F4E01B]', tag: 'bg-[#F4E01B]/10 text-yellow-700' },
 ];
 
-function slugParticipante(nombre, municipio) {
-  return `${nombre}-${municipio}`
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 async function obtenerParticipantesDesdeSheet() {
-  const res = await fetch(`${SCRIPT_URL}?sheet=Concursantes`);
-  const data = await res.json();
-  if (data.error) return [];
+  const data = await obtenerParticipantesCandelaSheet();
   return data.map((p, idx) => ({
     ...p,
-    id: slugParticipante(p.nombre, p.municipio),
     color: COLORES_FESTIVAL[idx % COLORES_FESTIVAL.length]
   }));
 }
@@ -138,8 +127,7 @@ export default function CandelaFestival() {
       <div
         className="relative py-20 px-6 text-center overflow-hidden bg-cover bg-center"
         style={{ backgroundImage: "url('/candela-fondo.png')" }}
-      >  
-      
+      >
         <img src="/candela-logo.png" alt="Candela Festival" className="h-56 md:h-80 mx-auto drop-shadow-2xl" />
         <p className="text-white text-lg md:text-xl font-semibold mt-2">Festival Gastronómico del Occidente Antioqueño</p>
 
@@ -152,8 +140,7 @@ export default function CandelaFestival() {
           </span>
         </div>
 
-        
-      <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <a
             href="https://www.instagram.com/candelafestivalgastronomico"
             target="_blank"
@@ -386,6 +373,7 @@ export default function CandelaFestival() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
             {participantesFiltrados.map((p) => {
               const esMiVoto = miVoto?.participanteId === p.id;
+              const tieneCoordenadas = p.lat && p.lng && !isNaN(parseFloat(p.lat)) && !isNaN(parseFloat(p.lng));
               return (
                 <div
                   key={p.id}
@@ -407,6 +395,14 @@ export default function CandelaFestival() {
                       <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
                         <MapPin size={10} /> {p.municipio}
                       </p>
+                    )}
+                    {tieneCoordenadas && (
+                      <a
+                        href={`/?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}#mapa-territorio`}
+                        className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
+                      >
+                        <MapPin size={10} /> Cómo llegar
+                      </a>
                     )}
                     {!votacionCerrada && (
                       <button

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { obtenerPuntosMapa } from '../services/firestore';
+import { obtenerParticipantesCandelaSheet } from '../services/candela';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -51,20 +52,47 @@ export default function MapaTerritorio() {
     setLoading(true);
     try {
       const puntos = await obtenerPuntosMapa();
+      const concursantes = await obtenerParticipantesCandelaSheet();
 
-      puntos.forEach((punto) => {
+      const puntosConcursantes = concursantes
+        .filter(c => c.lat && c.lng && !isNaN(parseFloat(c.lat)) && !isNaN(parseFloat(c.lng)))
+        .map(c => ({
+          nombre: c.nombre,
+          municipio: c.municipio,
+          categoria: 'Candela Festival',
+          lat: parseFloat(c.lat),
+          lng: parseFloat(c.lng),
+          tipo: 'candela'
+        }));
+
+      [...puntos, ...puntosConcursantes].forEach((punto) => {
        try {
-        const color = punto.tipo === 'actor' ? '#22c55e' : '#eab308';
+        const esCandela = punto.tipo === 'candela';
+        const color = punto.tipo === 'actor' ? '#22c55e' : punto.tipo === 'evento' ? '#eab308' : '#f26631';
 
         const el = document.createElement('div');
-        el.style.width = '18px';
-        el.style.height = '18px';
-        el.style.borderRadius = '50%';
-        el.style.backgroundColor = color;
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.4)';
-       el.style.cursor = 'pointer';
+        el.style.cursor = 'pointer';
         el.title = `${punto.nombre}${punto.municipio ? ' · ' + punto.municipio : ''}`;
+
+        if (esCandela) {
+          el.style.width = '36px';
+          el.style.height = '36px';
+          el.style.borderRadius = '50%';
+          el.style.backgroundColor = 'white';
+          el.style.border = `3px solid ${color}`;
+          el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.5)';
+          el.style.backgroundImage = "url('/tenedor-candela.jpg')";
+          el.style.backgroundSize = '75%';
+          el.style.backgroundPosition = 'center';
+          el.style.backgroundRepeat = 'no-repeat';
+        } else {
+          el.style.width = '18px';
+          el.style.height = '18px';
+          el.style.borderRadius = '50%';
+          el.style.backgroundColor = color;
+          el.style.border = '2px solid white';
+          el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.4)';
+        }
 
         const popupHtml = `
           <div style="font-family: sans-serif; min-width: 160px;">
@@ -97,6 +125,10 @@ export default function MapaTerritorio() {
           el.addEventListener('click', () => {
             setTimeout(() => navigate('/agenda'), 200);
           });
+        } else if (punto.tipo === 'candela') {
+          el.addEventListener('click', () => {
+            setTimeout(() => navigate('/candela-festival'), 200);
+          });
         }
        } catch (e) {
          console.warn('Punto con coordenadas inválidas, se omitió:', punto.nombre);
@@ -116,12 +148,15 @@ export default function MapaTerritorio() {
           {tieneDestino && targetNombre ? `Ubicación de ${targetNombre}` : 'Ubica actores y eventos en el Occidente Antioqueño'}
         </p>
 
-        <div className="flex items-center justify-center gap-6 mb-4 text-sm">
+        <div className="flex items-center justify-center gap-6 mb-4 text-sm flex-wrap">
           <span className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span> Actores turísticos
           </span>
           <span className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> Eventos
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#f26631] inline-block"></span> Candela Festival
           </span>
         </div>
 
