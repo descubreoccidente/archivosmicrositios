@@ -5,13 +5,37 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Upload, X, FileText, Download, Star } from 'lucide-react';
 
 function obtenerEmbedUrl(url) {
-  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-  if (youtubeMatch) return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  try {
+    const parsed = new URL(url.trim());
+    const host = parsed.hostname.replace('www.', '').replace('m.', '');
 
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    if (host === 'youtu.be') {
+      const id = parsed.pathname.slice(1).split('/')[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
 
-  return null;
+    if (host === 'youtube.com') {
+      if (parsed.pathname === '/watch') {
+        const id = parsed.searchParams.get('v');
+        if (id) return `https://www.youtube.com/embed/${id}`;
+      }
+      const shortsMatch = parsed.pathname.match(/^\/shorts\/([a-zA-Z0-9_-]+)/);
+      if (shortsMatch) return `https://www.youtube.com/embed/${shortsMatch[1]}`;
+      const liveMatch = parsed.pathname.match(/^\/live\/([a-zA-Z0-9_-]+)/);
+      if (liveMatch) return `https://www.youtube.com/embed/${liveMatch[1]}`;
+      const embedMatch = parsed.pathname.match(/^\/embed\/([a-zA-Z0-9_-]+)/);
+      if (embedMatch) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+    }
+
+    if (host === 'vimeo.com') {
+      const id = parsed.pathname.split('/').filter(Boolean)[0];
+      if (id && /^\d+$/.test(id)) return `https://player.vimeo.com/video/${id}`;
+    }
+
+    return null;
+  } catch (e) {
+    return null;
+  }
 }
 
 export default function GaleriaFotos({ actorId, onUpdate }) {

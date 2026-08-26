@@ -7,7 +7,8 @@ import SistemaResenas from './sistemaresenas';
 import NavBar from './NavBar';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
-  Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag
+  Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag,
+  ChevronLeft, ChevronRight, Video
 } from 'lucide-react';
 
 function WhatsAppIcon({ size = 18, className = '' }) {
@@ -75,12 +76,13 @@ export default function MicrositioPublico({ slug }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
-  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [indiceGaleria, setIndiceGaleria] = useState(null);
   const [promoSeleccionada, setPromoSeleccionada] = useState(null);
   const [usuario, setUsuario] = useState(null);
   const [mostrarLoginVisitante, setMostrarLoginVisitante] = useState(false);
   const [asistencia, setAsistencia] = useState({ total: 0, yaAsiste: false });
   const [accionPendiente, setAccionPendiente] = useState(null);
+  const [touchStartX, setTouchStartX] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -171,8 +173,29 @@ export default function MicrositioPublico({ slug }) {
   const tieneInsignia = sostenibilidad.insignia;
   const documentos = fotos.filter(f => f.tipo === 'documento');
   const imagenes = fotos.filter(f => !f.tipo || f.tipo === 'foto');
+  const videos = fotos.filter(f => f.tipo === 'video');
   const fotoPortada = imagenes.find(f => f.esPortada) || imagenes[0];
   const redesConValor = Object.entries(info.redesSociales || {}).filter(([_, v]) => v);
+
+  const fotoAmpliada = indiceGaleria !== null ? imagenes[indiceGaleria] : null;
+
+  const irAnterior = () => {
+    if (indiceGaleria === null) return;
+    setIndiceGaleria((indiceGaleria - 1 + imagenes.length) % imagenes.length);
+  };
+  const irSiguiente = () => {
+    if (indiceGaleria === null) return;
+    setIndiceGaleria((indiceGaleria + 1) % imagenes.length);
+  };
+
+  const handleTouchStart = (e) => setTouchStartX(e.touches[0].clientX);
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    if (deltaX > 50) irAnterior();
+    else if (deltaX < -50) irSiguiente();
+    setTouchStartX(null);
+  };
 
   return (
     <div className="min-h-screen bg-crema">
@@ -226,10 +249,10 @@ export default function MicrositioPublico({ slug }) {
             <h2 className="text-lg font-bold text-terracota mb-4">Galería</h2>
             {imagenes.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
-                {imagenes.map((foto) => (
+                {imagenes.map((foto, idx) => (
                   <button
                     key={foto.id}
-                    onClick={() => setFotoAmpliada(foto)}
+                    onClick={() => setIndiceGaleria(idx)}
                     className="block"
                   >
                     <img
@@ -335,7 +358,7 @@ export default function MicrositioPublico({ slug }) {
           </div>
         </div>
 
-        {/* FILA INFERIOR: Contacto+Amenities | Descripción+Enlaces | Documentos+Certificaciones */}
+        {/* FILA INFERIOR: Contacto+Amenities | Descripción+Enlaces | Documentos+Videos+Certificaciones */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Columna izquierda: Contacto + Amenities */}
           <div className="space-y-6">
@@ -410,7 +433,7 @@ export default function MicrositioPublico({ slug }) {
             )}
           </div>
 
-          {/* Columna central: Descripción + Enlaces de interés */}
+          {/* Columna central: Descripción + Enlaces de interés + Videos */}
           <div className="space-y-6">
             {info.descripcion && (
               <div className="bg-white rounded-lg shadow-sm p-6">
@@ -433,6 +456,27 @@ export default function MicrositioPublico({ slug }) {
                     >
                       <LinkIcon size={14} className="flex-shrink-0" /> {en.etiqueta || en.url}
                     </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {videos.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="flex items-center gap-2 text-lg font-bold text-terracota mb-4">
+                  <Video size={20} /> Videos
+                </h2>
+                <div className="space-y-4">
+                  {videos.map((video) => (
+                    <div key={video.id} className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                      <iframe
+                        src={video.embedUrl}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={`Video de ${info.nombre}`}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -501,24 +545,51 @@ export default function MicrositioPublico({ slug }) {
         </a>
       )}
 
-      {/* Modal de foto ampliada */}
+      {/* Modal de galería (carrusel con flechas y deslizamiento) */}
       {fotoAmpliada && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
-          onClick={() => setFotoAmpliada(null)}
+          onClick={() => setIndiceGaleria(null)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <button
-            onClick={() => setFotoAmpliada(null)}
-            className="absolute top-6 right-6 text-white hover:text-gray-300 transition"
+            onClick={() => setIndiceGaleria(null)}
+            className="absolute top-6 right-6 text-white hover:text-gray-300 transition z-10"
           >
             <X size={32} />
           </button>
+
+          {imagenes.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); irAnterior(); }}
+              className="absolute left-2 md:left-6 text-white hover:text-gray-300 transition bg-black/30 hover:bg-black/50 rounded-full p-2 z-10"
+            >
+              <ChevronLeft size={32} />
+            </button>
+          )}
+
           <img
             src={fotoAmpliada.url}
             alt={fotoAmpliada.titulo}
             className="max-w-full max-h-full rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
+
+          {imagenes.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); irSiguiente(); }}
+              className="absolute right-2 md:right-6 text-white hover:text-gray-300 transition bg-black/30 hover:bg-black/50 rounded-full p-2 z-10"
+            >
+              <ChevronRight size={32} />
+            </button>
+          )}
+
+          {imagenes.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white text-sm bg-black/40 px-3 py-1 rounded-full">
+              {indiceGaleria + 1} / {imagenes.length}
+            </div>
+          )}
         </div>
       )}
 
@@ -614,7 +685,8 @@ export default function MicrositioPublico({ slug }) {
           </div>
         </div>
       )}
-{mostrarLoginVisitante && (
+
+      {mostrarLoginVisitante && (
         <ModalLoginVisitante
           onClose={() => setMostrarLoginVisitante(false)}
           onSuccess={handleLoginExitoso}

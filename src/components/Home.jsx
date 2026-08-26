@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, Store } from 'lucide-react';
 import NavBar from './NavBar';
@@ -9,17 +9,33 @@ import MapaTerritorio from './MapaTerritorio';
 import Footer from './Footer';
 import Banner from './Banner';
 
+const FONDOS_HERO = ['/fondo-hero-1.jpg', '/fondo-hero-2.jpeg', '/fondo-hero-3.jpg'];
+
 export default function Home() {
+  const [indiceFondo, setIndiceFondo] = useState(0);
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setIndiceFondo((prev) => (prev + 1) % FONDOS_HERO.length);
+    }, 6000);
+    return () => clearInterval(intervalo);
+  }, []);
+
   return (
     <div className="min-h-screen bg-crema">
       <NavBar />
       {/* Hero */}
       <div className="relative h-screen min-h-[600px] w-full overflow-hidden">
-        <img
-          src="/fondo-login.png"
-          alt="Occidente Antioqueño"
-          className="w-full h-full object-cover"
-        />
+        {FONDOS_HERO.map((src, idx) => (
+          <img
+            key={src}
+            src={src}
+            alt="Occidente Antioqueño"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+              idx === indiceFondo ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
         <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col items-center gap-2 w-28 md:w-36">
