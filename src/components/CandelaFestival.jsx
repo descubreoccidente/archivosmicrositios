@@ -140,7 +140,14 @@ export default function CandelaFestival() {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+        <a
+          href="#concurso"
+          className="inline-flex items-center gap-2 bg-white text-[#c81d3f] font-bold px-8 py-3.5 rounded-lg hover:bg-crema transition text-lg mt-6 shadow-lg"
+        >
+          🏆 Vota ya por tu favorito
+        </a>
+
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
           <a
             href="https://www.instagram.com/candelafestivalgastronomico"
             target="_blank"
@@ -317,7 +324,7 @@ export default function CandelaFestival() {
       </section>
 
       {/* Concurso de experiencias gastronómicas */}
-      <section className="max-w-6xl mx-auto px-6 py-14">
+      <section id="concurso" className="max-w-6xl mx-auto px-6 py-14">
         <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">
           Concurso de Experiencias Gastronómicas
         </h2>

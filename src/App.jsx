@@ -14,6 +14,7 @@ const FAQ = lazy(() => import('./components/FAQ'));
 const GuiaActores = lazy(() => import('./components/GuiaActores'));
 const PoliticaDatos = lazy(() => import('./components/PoliticaDatos'));
 const HerramientaCoordenadas = lazy(() => import('./components/HerramientaCoordenadas'));
+const MapaPagina = lazy(() => import('./components/MapaPagina'));
 
 function DashboardWrapper() {
   const { actorId } = useParams();
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/guia-actores" element={<GuiaActores />} />
           <Route path="/politica-de-datos" element={<PoliticaDatos />} />
         <Route path="/coordenadas" element={<HerramientaCoordenadas />} />
+        <Route path="/mapa" element={<MapaPagina />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
