@@ -1,35 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { loginConGoogle, enviarEnlaceAcceso, esEnlaceDeAcceso, completarLoginConEnlace } from '../services/auth.js';
+import React, { useState } from 'react';
+import { loginConGoogle, registrarConEmail, loginConEmailPassword, crearPerfilUsuario, eliminarCuentaActual } from '../services/auth.js';
 import { verificarYRegistrarInvitacion } from '../services/firestore.js';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import NavBar from './NavBar';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [mostrarFormEmail, setMostrarFormEmail] = useState(false);
+  const [modo, setModo] = useState('inicial'); // inicial | login | registro
   const [email, setEmail] = useState('');
-  const [enlaceEnviado, setEnlaceEnviado] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmarPassword, setConfirmarPassword] = useState('');
+  const [nombre, setNombre] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (esEnlaceDeAcceso(window.location.href)) {
-      completarLogin();
-    }
-  }, []);
-
-  const completarLogin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const user = await completarLoginConEnlace(window.location.href);
-      await procesarAutorizacion(user);
-    } catch (err) {
-      setError('El enlace no es válido o ya expiró. Solicita uno nuevo.');
-    }
-    setLoading(false);
-  };
 
   const procesarAutorizacion = async (user) => {
     const { autorizado } = await verificarYRegistrarInvitacion(user.email, user.uid);
@@ -40,29 +24,69 @@ export default function Login() {
     navigate(`/dashboard/${user.uid}`);
   };
 
-  const procesarLogin = async (loginFn) => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
     try {
-      const user = await loginFn();
+      const user = await loginConGoogle('actor');
       await procesarAutorizacion(user);
     } catch (err) {
-      setError(err.message);
+      setError('No pudimos iniciar sesión con Google.');
     }
     setLoading(false);
   };
 
-  const handleGoogleLogin = () => procesarLogin(loginConGoogle);
-
-  const handleEnviarEnlace = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await enviarEnlaceAcceso(email, 'actor');
-      setEnlaceEnviado(true);
+      const user = await loginConEmailPassword(email.trim().toLowerCase(), password);
+      await procesarAutorizacion(user);
     } catch (err) {
-      setError('No pudimos enviar el enlace. Verifica tu correo e intenta de nuevo.');
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError('Correo o contraseña incorrectos. Si aún no tienes cuenta, crea una abajo.');
+      } else {
+        setError('No pudimos iniciar sesión. Intenta de nuevo.');
+      }
+    }
+    setLoading(false);
+  };
+
+  const handleRegistro = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (password !== confirmarPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const emailNormalizado = email.trim().toLowerCase();
+      const user = await registrarConEmail(emailNormalizado, password, nombre.trim());
+
+      const { autorizado } = await verificarYRegistrarInvitacion(user.email, user.uid);
+      if (!autorizado) {
+        await eliminarCuentaActual();
+        setError('Este correo no tiene una invitación activa para gestionar un micrositio. Contáctanos para solicitar acceso.');
+        setLoading(false);
+        return;
+      }
+
+      await crearPerfilUsuario(user.uid, user.email, nombre.trim());
+      navigate(`/dashboard/${user.uid}`);
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Ya existe una cuenta con este correo. Usa "Iniciar sesión" en su lugar.');
+      } else {
+        setError('No pudimos crear tu cuenta. Intenta de nuevo.');
+      }
     }
     setLoading(false);
   };
@@ -91,40 +115,7 @@ export default function Login() {
             </div>
           )}
 
-          {enlaceEnviado ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-              <CheckCircle size={32} className="mx-auto text-green-600 mb-2" />
-              <p className="font-semibold text-green-800 mb-1">¡Enlace enviado!</p>
-              <p className="text-sm text-green-700">
-                Revisa tu correo <strong>{email}</strong> y haz clic en el enlace para entrar. Puedes cerrar esta ventana.
-              </p>
-            </div>
-          ) : mostrarFormEmail ? (
-            <form onSubmit={handleEnviarEnlace} className="space-y-4">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="tu@correo.com"
-                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
-              >
-                {loading ? 'Enviando...' : 'Enviarme el enlace de acceso'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMostrarFormEmail(false)}
-                className="w-full text-gris text-sm hover:underline"
-              >
-                ← Volver a las demás opciones
-              </button>
-            </form>
-          ) : (
+          {modo === 'inicial' && (
             <>
               <button
                 onClick={handleGoogleLogin}
@@ -141,13 +132,106 @@ export default function Login() {
               </button>
 
               <button
-                onClick={() => setMostrarFormEmail(true)}
+                onClick={() => { setModo('login'); setError(null); }}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-3 bg-crema text-terracota font-semibold py-3 px-4 rounded-lg hover:bg-crema/70 transition disabled:opacity-50"
               >
-                <Mail size={20} /> Continuar con correo electrónico
+                <Mail size={20} /> Iniciar sesión con correo
               </button>
+
+              <p className="text-center text-sm text-gris mt-4">
+                ¿Primera vez?{' '}
+                <button onClick={() => { setModo('registro'); setError(null); }} className="text-terracota font-semibold underline">
+                  Crea tu cuenta aquí
+                </button>
+              </p>
             </>
+          )}
+
+          {modo === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="tu@correo.com"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Tu contraseña"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
+              >
+                {loading ? 'Entrando...' : 'Iniciar sesión'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setModo('inicial'); setError(null); }}
+                className="w-full text-gris text-sm hover:underline"
+              >
+                ← Volver a las demás opciones
+              </button>
+            </form>
+          )}
+
+          {modo === 'registro' && (
+            <form onSubmit={handleRegistro} className="space-y-4">
+              <input
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+                placeholder="Tu nombre"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="tu@correo.com (el mismo que fue invitado)"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Crea una contraseña (mín. 6 caracteres)"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <input
+                type="password"
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+                required
+                placeholder="Confirma tu contraseña"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
+              >
+                {loading ? 'Creando cuenta...' : 'Crear mi cuenta'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setModo('inicial'); setError(null); }}
+                className="w-full text-gris text-sm hover:underline"
+              >
+                ← Volver a las demás opciones
+              </button>
+            </form>
           )}
 
           <p className="text-center text-gris text-xs mt-4">
