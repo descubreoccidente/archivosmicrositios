@@ -622,7 +622,8 @@ export const obtenerPuntosMapa = async () => {
 // ===== CANDELA FESTIVAL =====
 
 // Fecha límite de votación: 4 de octubre de 2026, 11:59 pm
-export const CANDELA_FECHA_LIMITE = new Date('2026-10-04T23:59:59-05:00');
+export const CANDELA_FECHA_INICIO = new Date('2026-09-30T19:00:00-05:00');
+export const CANDELA_FECHA_LIMITE = new Date('2026-10-04T22:00:00-05:00');
 
 // Obtener todos los participantes del concurso
 export const obtenerParticipantesCandela = async () => {

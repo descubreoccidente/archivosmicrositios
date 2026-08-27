@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  obtenerVotoUsuarioCandela, votarCandela, CANDELA_FECHA_LIMITE
+  obtenerVotoUsuarioCandela, votarCandela, CANDELA_FECHA_INICIO, CANDELA_FECHA_LIMITE
 } from '../services/firestore';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
@@ -54,7 +54,10 @@ export default function CandelaFestival() {
   const [error, setError] = useState(null);
   const [busqueda, setBusqueda] = useState('');
 
-  const votacionCerrada = new Date() > CANDELA_FECHA_LIMITE;
+  const ahora = new Date();
+  const votacionNoIniciada = ahora < CANDELA_FECHA_INICIO;
+  const votacionCerrada = ahora > CANDELA_FECHA_LIMITE;
+  const votacionAbierta = !votacionNoIniciada && !votacionCerrada;
 
   useEffect(() => {
     cargarParticipantes();
@@ -82,7 +85,7 @@ export default function CandelaFestival() {
   };
 
   const iniciarVoto = (participanteId) => {
-    if (votacionCerrada || miVoto) return;
+    if (!votacionAbierta || miVoto) return;
     if (!usuario) {
       setParticipantePendiente(participanteId);
       setMostrarLoginVisitante(true);
@@ -332,9 +335,11 @@ export default function CandelaFestival() {
           Vota por tu experiencia gastronómica favorita del Candela Festival 2026
         </p>
         <p className="text-xs text-gris text-center mb-10">
-          {votacionCerrada
-            ? 'La votación cerró el 4 de octubre.'
-            : 'Votación abierta hasta el 4 de octubre de 2026 · Un voto por persona'}
+          {votacionNoIniciada
+            ? 'La votación abre el 30 de septiembre a las 7:00 PM.'
+            : votacionCerrada
+              ? 'La votación cerró el 4 de octubre a las 10:00 PM.'
+              : 'Votación abierta hasta el 4 de octubre de 2026, 10:00 PM · Un voto por persona'}
         </p>
 
         {votacionCerrada && ganador && (
@@ -411,7 +416,7 @@ export default function CandelaFestival() {
                         <MapPin size={10} /> Cómo llegar
                       </a>
                     )}
-                    {!votacionCerrada && (
+                    {votacionAbierta && (
                       <button
                         onClick={() => iniciarVoto(p.id)}
                         disabled={votando || !!miVoto}
