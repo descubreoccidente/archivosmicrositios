@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { obtenerActoresPublicos } from '../services/firestore';
 import NavBar from './NavBar';
+import Banner from './Banner';
 import { MapPin, Star } from 'lucide-react';
 
 const MUNICIPIOS = [
@@ -108,6 +109,10 @@ export default function Directorio() {
             {filtrados.length} resultado{filtrados.length !== 1 ? 's' : ''}
           </span>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 pt-6">
+        <Banner imagen="/banners/Banner-3.png" aspecto="2721/340" />
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-10">

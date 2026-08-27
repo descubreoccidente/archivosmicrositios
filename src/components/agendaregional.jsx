@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { obtenerAgendaRegional, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
 import NavBar from './NavBar';
+import Banner from './Banner';
 import { useSEO } from '../hooks/useSEO';
 import { onAuthChange } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
@@ -54,11 +55,11 @@ export default function AgendaRegional() {
     fechaInicio: new Date().toISOString().split('T')[0],
     fechaFin: new Date(Date.now() + 60*24*60*60*1000).toISOString().split('T')[0]
   });
-useSEO(
+  useSEO(
     'Agenda Regional — Eventos del Occidente Antioqueño | Descubre Occidente',
     'Descubre todos los eventos culturales, religiosos, de formación y fiestas tradicionales del Occidente Antioqueño en un solo lugar.'
   );
-  
+
   useEffect(() => {
     cargarEventos();
   }, [filtros]);
@@ -252,6 +253,10 @@ useSEO(
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-8 pt-6">
+        <Banner imagen="/banners/Banner-4.jpg" aspecto="2721/340" />
       </div>
 
       {/* Contenido */}
