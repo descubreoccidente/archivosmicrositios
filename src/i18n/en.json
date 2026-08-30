@@ -1,0 +1,76 @@
+{
+   "comun": {
+    "cargando": "Loading...",
+    "todasCategorias": "All categories",
+    "todosMunicipios": "All municipalities",
+    "sinEventos": "No upcoming events match these filters.",
+    "por": "By",
+    "todasSubcategorias": "All subcategories",
+    "cargandoPromos": "Loading deals...",
+    "sinPromos": "No active deals match these filters.",
+    "ubicacionDe": "Location of",
+    "cargandoMapa": "Loading map..."
+  },
+  "nav": {
+    "inicio": "Home",
+    "directorio": "Directory",
+    "agenda": "Events",
+    "promociones": "Deals",
+    "candela": "Candela Festival",
+    "ayuda": "Help",
+    "nosotros": "About Us",
+    "dashboard": "Edit my site"
+  },
+  "hero": {
+    "titulo": "Discover Western Antioquia",
+    "subtitulo": "19 municipalities, dozens of authentic experiences, and a territory waiting for you.",
+    "explorar": "Explore the territory",
+    "soyActor": "I'm a tourism business",
+    "iniciativa": "An initiative of the Corporación de Turismo del Occidente de Antioquia, 25 Years."
+  },
+  "destacados": {
+    "micrositiosTitulo": "Featured businesses",
+    "micrositiosSubtitulo": "Meet some of the tourism businesses in the territory",
+    "verTodos": "See all businesses",
+    "agendaTitulo": "Featured events",
+    "agendaSubtitulo": "Upcoming events in the territory",
+    "verAgenda": "See the full calendar",
+    "promoTitulo": "Featured deals",
+    "promoSubtitulo": "Special offers and experiences",
+    "verPromociones": "See all deals"
+  },
+  "mapa": {
+    "titulo": "Territory map",
+    "subtitulo": "Find businesses and events across Western Antioquia",
+    "actores": "Tourism businesses",
+    "eventos": "Events",
+    "candela": "Candela Festival"
+  },
+  "footer": {
+    "explora": "Explore",
+    "directorio": "Business directory",
+    "agenda": "Regional calendar",
+    "promociones": "Deals",
+    "candela": "Candela Festival",
+    "faq": "FAQ",
+    "contacto": "Contact",
+    "politica": "Data Privacy Policy",
+    "iniciativa": "An initiative of the Corporación de Turismo del Occidente de Antioquia",
+    "descripcion": "Descubre el Occidente Antioqueño is the official digital platform of the Corporación de Turismo del Occidente de Antioquia.",
+    "paraActores": "For businesses",
+    "gestionaMicrositio": "Manage your site",
+    "siguenos": "Follow us",
+    "contactoTelefonico": "Phone Contact",
+    "inversionTitulo": "Interested in investing in the platform?",
+    "inversionSubtitulo": "Tell us and we'll reach out to discuss investment opportunities.",
+    "inversionGracias": "Thank you! We received your message and will contact you soon.",
+    "nombreCompleto": "Full name",
+    "correoElectronico": "Email address",
+    "telefono": "Phone",
+    "cuentanosInteres": "Briefly tell us about your interest...",
+    "enviarMensaje": "Send message",
+    "enviando": "Sending...",
+    "errorEnvio": "We couldn't send your message. Try again or write to us directly.",
+    "copyright": "Corporación de Turismo del Occidente de Antioquia · 25 years connecting the territory"
+  }
+}

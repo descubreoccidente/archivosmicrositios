@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { obtenerPuntosMapa } from '../services/firestore';
@@ -14,6 +15,7 @@ export default function MapaTerritorio() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
 
   const targetLat = parseFloat(searchParams.get('lat'));
   const targetLng = parseFloat(searchParams.get('lng'));
@@ -143,27 +145,27 @@ export default function MapaTerritorio() {
   return (
     <section id="mapa-territorio" ref={sectionRef} className="bg-white py-16">
       <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-terracota mb-2 text-center">Mapa del territorio</h2>
+        <h2 className="text-3xl font-bold text-terracota mb-2 text-center">{t('mapa.titulo')}</h2>
         <p className="text-gris text-center mb-6">
-          {tieneDestino && targetNombre ? `Ubicación de ${targetNombre}` : 'Ubica actores y eventos en el Occidente Antioqueño'}
+          {tieneDestino && targetNombre ? `${t('mapa.ubicacionDe') || t('comun.ubicacionDe')} ${targetNombre}` : t('mapa.subtitulo')}
         </p>
 
         <div className="flex items-center justify-center gap-6 mb-4 text-sm flex-wrap">
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span> Actores turísticos
+            <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span> {t('mapa.actores')}
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> Eventos
+            <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> {t('mapa.eventos')}
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#f26631] inline-block"></span> Candela Festival
+            <span className="w-3 h-3 rounded-full bg-[#f26631] inline-block"></span> {t('mapa.candela')}
           </span>
         </div>
 
         <div className="relative rounded-lg overflow-hidden shadow-md border border-gris/10">
           {loading && (
             <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-              <p className="text-terracota font-semibold">Cargando mapa...</p>
+              <p className="text-terracota font-semibold">{t('comun.cargandoMapa')}</p>
             </div>
           )}
           <div ref={mapContainer} className="w-full h-[450px] md:h-[550px]" />

@@ -1,25 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Home, Store, Calendar, Tag, Flame, HelpCircle, LayoutDashboard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Menu, X, Home, Store, Calendar, Tag, Flame, HelpCircle, LayoutDashboard, Building2, Globe } from 'lucide-react';
 import { onAuthChange } from '../services/auth';
 
-const ENLACES = [
-  { to: '/', label: 'Inicio', icon: Home },
-  { to: '/directorio', label: 'Directorio', icon: Store },
-  { to: '/agenda', label: 'Agenda', icon: Calendar },
-  { to: '/promociones', label: 'Promociones', icon: Tag },
-  { to: '/candela-festival', label: 'Candela Festival', icon: Flame },
-  { to: '/faq', label: 'Ayuda', icon: HelpCircle },
+const IDIOMAS = [
+  { codigo: 'es', label: 'ES' },
+  { codigo: 'en', label: 'EN' },
+  { codigo: 'fr', label: 'FR' },
 ];
+
+const CORPORACION_SLUG = 'corporacion-de-turismo-del-occidente-de-antioquia';
 
 export default function NavBar() {
   const [abierto, setAbierto] = useState(false);
   const [usuario, setUsuario] = useState(null);
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const unsubscribe = onAuthChange((user) => setUsuario(user));
     return () => unsubscribe();
   }, []);
+
+  const cambiarIdioma = (codigo) => {
+    i18n.changeLanguage(codigo);
+    localStorage.setItem('idioma', codigo);
+  };
+
+  const ENLACES = [
+    { to: '/', label: t('nav.inicio'), icon: Home },
+    { to: '/directorio', label: t('nav.directorio'), icon: Store },
+    { to: '/agenda', label: t('nav.agenda'), icon: Calendar },
+    { to: '/promociones', label: t('nav.promociones'), icon: Tag },
+    { to: '/candela-festival', label: t('nav.candela'), icon: Flame },
+    { to: `/micrositio/${CORPORACION_SLUG}`, label: t('nav.nosotros'), icon: Building2 },
+    { to: '/faq', label: t('nav.ayuda'), icon: HelpCircle },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm">
@@ -44,10 +60,27 @@ export default function NavBar() {
               to={`/dashboard/${usuario.uid}`}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold bg-terracota text-white hover:bg-terracota-dark transition"
             >
-              <LayoutDashboard size={16} /> Editar mi micrositio
+              <LayoutDashboard size={16} /> {t('nav.dashboard')}
             </Link>
           )}
+
+          {/* Selector de idioma */}
+          <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gris/20">
+            <Globe size={14} className="text-gris" />
+            {IDIOMAS.map(({ codigo, label }) => (
+              <button
+                key={codigo}
+                onClick={() => cambiarIdioma(codigo)}
+                className={`px-2 py-1 rounded text-xs font-bold transition ${
+                  i18n.language === codigo ? 'bg-terracota text-white' : 'text-gris hover:bg-crema'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
+
         {/* Botón menú móvil */}
         <button
           onClick={() => setAbierto(!abierto)}
@@ -76,9 +109,25 @@ export default function NavBar() {
               onClick={() => setAbierto(false)}
               className="flex items-center gap-3 px-2 py-3 text-sm font-semibold text-terracota"
             >
-              <LayoutDashboard size={18} /> Editar mi micrositio
+              <LayoutDashboard size={18} /> {t('nav.dashboard')}
             </Link>
           )}
+
+          {/* Selector de idioma móvil */}
+          <div className="flex items-center gap-2 px-2 py-3">
+            <Globe size={16} className="text-gris" />
+            {IDIOMAS.map(({ codigo, label }) => (
+              <button
+                key={codigo}
+                onClick={() => cambiarIdioma(codigo)}
+                className={`px-3 py-1.5 rounded text-xs font-bold transition ${
+                  i18n.language === codigo ? 'bg-terracota text-white' : 'text-gris bg-crema'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </nav>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { obtenerPromocionesDestacadas } from '../services/firestore';
 import { Tag, MapPin } from 'lucide-react';
 
@@ -52,6 +53,7 @@ export default function PromocionesDestacadas() {
   const [loading, setLoading] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroMunicipio, setFiltroMunicipio] = useState('');
+  const { t } = useTranslation();
 
   useEffect(() => {
     cargar();
@@ -79,16 +81,16 @@ export default function PromocionesDestacadas() {
     <section className="bg-teal py-16">
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-white mb-2 text-center">
-          <img src="/medalla-promocion.png" alt="" className="h-10" /> Promociones del momento
+          <img src="/medalla-promocion.png" alt="" className="h-10" /> {t('destacados.promoTitulo')}
         </h2>
-        <p className="text-white/90 text-center mb-8">Ofertas exclusivas de los actores del territorio</p>
+        <p className="text-white/90 text-center mb-8">{t('destacados.promoSubtitulo')}</p>
         <div className="flex flex-wrap gap-3 justify-center mb-10">
           <select
             value={filtroCategoria}
             onChange={(e) => setFiltroCategoria(e.target.value)}
             className="border border-gris/30 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-terracota bg-white"
           >
-            <option value="">Todas las subcategorías</option>
+            <option value="">{t('comun.todasSubcategorias')}</option>
             {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <select
@@ -96,15 +98,15 @@ export default function PromocionesDestacadas() {
             onChange={(e) => setFiltroMunicipio(e.target.value)}
             className="border border-gris/30 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-terracota bg-white"
           >
-            <option value="">Todos los municipios</option>
+            <option value="">{t('comun.todosMunicipios')}</option>
             {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
 
         {loading ? (
-          <p className="text-center text-terracota">Cargando promociones...</p>
+          <p className="text-center text-terracota">{t('comun.cargandoPromos')}</p>
         ) : destacadas.length === 0 ? (
-          <p className="text-center text-gris">No hay promociones activas con estos filtros.</p>
+          <p className="text-center text-gris">{t('comun.sinPromos')}</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
             {destacadas.map((promo) => {
@@ -161,7 +163,7 @@ export default function PromocionesDestacadas() {
             to="/promociones"
             className="inline-block bg-terracota text-white font-semibold px-6 py-3 rounded-lg hover:bg-terracota-dark transition"
           >
-            Ver todas las promociones
+            {t('destacados.verPromociones')}
           </Link>
         </div>
       </div>

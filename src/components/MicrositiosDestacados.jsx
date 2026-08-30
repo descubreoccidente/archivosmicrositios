@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { obtenerActoresPublicos } from '../services/firestore';
 import { MapPin, Star } from 'lucide-react';
 
@@ -37,6 +38,7 @@ function mezclar(array) {
 export default function MicrositiosDestacados() {
   const [actores, setActores] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     cargar();
@@ -57,12 +59,12 @@ export default function MicrositiosDestacados() {
     <section className="bg-naranja py-16">
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-white mb-2 text-center">
-          <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> Explora el territorio
+          <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> {t('destacados.micrositiosTitulo')}
         </h2>
-        <p className="text-white/90 text-center mb-10">Descubre los actores turísticos del Occidente Antioqueño</p>
+        <p className="text-white/90 text-center mb-10">{t('destacados.micrositiosSubtitulo')}</p>
 
         {loading ? (
-          <p className="text-center text-white">Cargando actores...</p>
+          <p className="text-center text-white">{t('comun.cargando')}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
             {actores.map((actor) => {
@@ -123,7 +125,7 @@ export default function MicrositiosDestacados() {
             to="/directorio"
             className="inline-block bg-white text-terracota font-semibold px-6 py-3 rounded-lg hover:bg-crema transition"
           >
-            Ver todos los actores
+            {t('destacados.verTodos')}
           </Link>
         </div>
       </div>

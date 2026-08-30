@@ -1,0 +1,76 @@
+{
+    "comun": {
+    "cargando": "Cargando...",
+    "todasCategorias": "Todas las categorías",
+    "todosMunicipios": "Todos los municipios",
+    "sinEventos": "No hay eventos próximos con estos filtros.",
+    "por": "Por",
+    "todasSubcategorias": "Todas las subcategorías",
+    "cargandoPromos": "Cargando promociones...",
+    "sinPromos": "No hay promociones activas con estos filtros.",
+    "ubicacionDe": "Ubicación de",
+    "cargandoMapa": "Cargando mapa..."
+  },
+  "nav": {
+    "inicio": "Inicio",
+    "directorio": "Directorio",
+    "agenda": "Agenda",
+    "promociones": "Promociones",
+    "candela": "Candela Festival",
+    "ayuda": "Ayuda",
+    "nosotros": "Nosotros",
+    "dashboard": "Editar mi micrositio"
+  },
+  "hero": {
+    "titulo": "Descubre el Occidente Antioqueño",
+    "subtitulo": "19 municipios, decenas de experiencias auténticas y un territorio que te espera.",
+    "explorar": "Explorar el territorio",
+    "soyActor": "Soy un actor turístico",
+    "iniciativa": "Una iniciativa de la Corporación de Turismo del Occidente de Antioquia 25 Años."
+  },
+  "destacados": {
+    "micrositiosTitulo": "Actores destacados",
+    "micrositiosSubtitulo": "Conoce algunos de los actores turísticos del territorio",
+    "verTodos": "Ver todos los actores",
+    "agendaTitulo": "Agenda destacada",
+    "agendaSubtitulo": "Próximos eventos del territorio",
+    "verAgenda": "Ver toda la agenda",
+    "promoTitulo": "Promociones destacadas",
+    "promoSubtitulo": "Ofertas y experiencias especiales",
+    "verPromociones": "Ver todas las promociones"
+  },
+  "mapa": {
+    "titulo": "Mapa del territorio",
+    "subtitulo": "Ubica actores y eventos en el Occidente Antioqueño",
+    "actores": "Actores turísticos",
+    "eventos": "Eventos",
+    "candela": "Candela Festival"
+  },
+ "footer": {
+    "explora": "Explora",
+    "directorio": "Directorio de actores",
+    "agenda": "Agenda regional",
+    "promociones": "Promociones",
+    "candela": "Candela Festival",
+    "faq": "Preguntas frecuentes",
+    "contacto": "Contacto",
+    "politica": "Política de Tratamiento de Datos",
+    "iniciativa": "Una iniciativa de la Corporación de Turismo del Occidente de Antioquia",
+    "descripcion": "Descubre el Occidente Antioqueño es la plataforma digital oficial de la Corporación de Turismo del Occidente de Antioquia.",
+    "paraActores": "Para actores",
+    "gestionaMicrositio": "Gestiona tu micrositio",
+    "siguenos": "Síguenos",
+    "contactoTelefonico": "Contacto Telefónico",
+    "inversionTitulo": "¿Interesado en invertir en la plataforma?",
+    "inversionSubtitulo": "Cuéntanos y te contactamos para conversar sobre oportunidades de inversión.",
+    "inversionGracias": "¡Gracias! Recibimos tu mensaje y te contactaremos pronto.",
+    "nombreCompleto": "Nombre completo",
+    "correoElectronico": "Correo electrónico",
+    "telefono": "Teléfono",
+    "cuentanosInteres": "Cuéntanos brevemente tu interés...",
+    "enviarMensaje": "Enviar mensaje",
+    "enviando": "Enviando...",
+    "errorEnvio": "No pudimos enviar tu mensaje. Intenta de nuevo o escríbenos directamente.",
+    "copyright": "Corporación de Turismo del Occidente de Antioquia · 25 años conectando el territorio"
+  } 
+}

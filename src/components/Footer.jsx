@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Facebook, Instagram, Youtube, Send, CheckCircle } from 'lucide-react';
 
 function WhatsAppIcon({ size = 18, className = '' }) {
@@ -18,6 +19,7 @@ export default function Footer() {
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState(null);
+  const { t } = useTranslation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,7 +48,7 @@ export default function Footer() {
         throw new Error(data.error || 'Error desconocido');
       }
     } catch (err) {
-      setError('No pudimos enviar tu mensaje. Intenta de nuevo o escríbenos directamente.');
+      setError(t('footer.errorEnvio'));
     }
     setEnviando(false);
   };
@@ -56,13 +58,13 @@ export default function Footer() {
       {/* Formulario de inversión */}
       <div className="bg-terracota-dark py-14">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">¿Interesado en invertir en la plataforma?</h2>
-          <p className="text-white/80 mb-8">Cuéntanos y te contactamos para conversar sobre oportunidades de inversión.</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">{t('footer.inversionTitulo')}</h2>
+          <p className="text-white/80 mb-8">{t('footer.inversionSubtitulo')}</p>
 
           {enviado ? (
             <div className="bg-white/10 rounded-lg p-6 flex flex-col items-center gap-2">
               <CheckCircle size={32} className="text-green-400" />
-              <p className="font-semibold">¡Gracias! Recibimos tu mensaje y te contactaremos pronto.</p>
+              <p className="font-semibold">{t('footer.inversionGracias')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="text-left space-y-4">
@@ -75,7 +77,7 @@ export default function Footer() {
                 value={formData.nombre}
                 onChange={handleChange}
                 required
-                placeholder="Nombre completo"
+                placeholder={t('footer.nombreCompleto')}
                 className="w-full rounded-lg px-4 py-3 text-marron focus:outline-none"
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -85,7 +87,7 @@ export default function Footer() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  placeholder="Correo electrónico"
+                  placeholder={t('footer.correoElectronico')}
                   className="w-full rounded-lg px-4 py-3 text-marron focus:outline-none"
                 />
                 <input
@@ -94,7 +96,7 @@ export default function Footer() {
                   value={formData.telefono}
                   onChange={handleChange}
                   required
-                  placeholder="Teléfono"
+                  placeholder={t('footer.telefono')}
                   className="w-full rounded-lg px-4 py-3 text-marron focus:outline-none"
                 />
               </div>
@@ -103,7 +105,7 @@ export default function Footer() {
                 value={formData.mensaje}
                 onChange={handleChange}
                 rows={3}
-                placeholder="Cuéntanos brevemente tu interés..."
+                placeholder={t('footer.cuentanosInteres')}
                 className="w-full rounded-lg px-4 py-3 text-marron focus:outline-none resize-none"
               />
               <button
@@ -111,7 +113,7 @@ export default function Footer() {
                 disabled={enviando}
                 className="w-full flex items-center justify-center gap-2 bg-white text-terracota font-semibold py-3 rounded-lg hover:bg-crema transition disabled:opacity-50"
               >
-                <Send size={18} /> {enviando ? 'Enviando...' : 'Enviar mensaje'}
+                <Send size={18} /> {enviando ? t('footer.enviando') : t('footer.enviarMensaje')}
               </button>
             </form>
           )}
@@ -127,31 +129,30 @@ export default function Footer() {
             <img src="/logo-corporacion.png" alt="Corporación de Turismo del Occidente de Antioquia" className="h-24 w-24 object-contain bg-white rounded-lg p-1" />
           </div>
           <p className="text-white/70 text-sm">
-            Descubre el Occidente Antioqueño es la plataforma digital oficial de la
-            Corporación de Turismo del Occidente de Antioquia.
+            {t('footer.descripcion')}
           </p>
         </div>
 
         <div>
-          <h3 className="font-bold mb-3">Explora</h3>
+          <h3 className="font-bold mb-3">{t('footer.explora')}</h3>
           <ul className="space-y-2 text-sm text-white/70">
-            <li><Link to="/directorio" className="hover:text-white transition">Directorio de actores</Link></li>
-            <li><Link to="/agenda" className="hover:text-white transition">Agenda regional</Link></li>
-            <li><Link to="/promociones" className="hover:text-white transition">Promociones</Link></li>
-            <li><Link to="/candela-festival" className="hover:text-white transition">Candela Festival</Link></li>
-            <li><Link to="/faq" className="hover:text-white transition">Preguntas frecuentes</Link></li>
+            <li><Link to="/directorio" className="hover:text-white transition">{t('footer.directorio')}</Link></li>
+            <li><Link to="/agenda" className="hover:text-white transition">{t('footer.agenda')}</Link></li>
+            <li><Link to="/promociones" className="hover:text-white transition">{t('footer.promociones')}</Link></li>
+            <li><Link to="/candela-festival" className="hover:text-white transition">{t('footer.candela')}</Link></li>
+            <li><Link to="/faq" className="hover:text-white transition">{t('footer.faq')}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h3 className="font-bold mb-3">Para actores</h3>
+          <h3 className="font-bold mb-3">{t('footer.paraActores')}</h3>
           <ul className="space-y-2 text-sm text-white/70">
-            <li><Link to="/ingresar" className="hover:text-white transition">Gestiona tu micrositio</Link></li>
+            <li><Link to="/ingresar" className="hover:text-white transition">{t('footer.gestionaMicrositio')}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h3 className="font-bold mb-3">Síguenos</h3>
+          <h3 className="font-bold mb-3">{t('footer.siguenos')}</h3>
           <div className="flex gap-3 mb-4">
             <a href="https://wa.me/573041148439" target="_blank" rel="noreferrer" className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition">
               <WhatsAppIcon size={18} />
@@ -163,15 +164,15 @@ export default function Footer() {
               <Instagram size={18} />
             </a>
           </div>
-          <p className="text-white/70 text-sm">Contacto Telefónico</p>
+          <p className="text-white/70 text-sm">{t('footer.contactoTelefonico')}</p>
           <p className="text-white/70 text-sm">+57 304 114 8439</p>
         </div>
       </div>
 
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
-        © 2026 Corporación de Turismo del Occidente de Antioquia · 25 años conectando el territorio
+        © 2026 {t('footer.copyright')}
         <br />
-        <Link to="/politica-de-datos" className="underline hover:text-white transition">Política de Tratamiento de Datos</Link>
+        <Link to="/politica-de-datos" className="underline hover:text-white transition">{t('footer.politica')}</Link>
       </div>
     </footer>
   );

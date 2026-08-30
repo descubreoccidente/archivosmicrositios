@@ -1,0 +1,76 @@
+{
+    "comun": {
+    "cargando": "Chargement...",
+    "todasCategorias": "Toutes les catégories",
+    "todosMunicipios": "Toutes les municipalités",
+    "sinEventos": "Aucun événement à venir avec ces filtres.",
+    "por": "Par",
+    "todasSubcategorias": "Toutes les sous-catégories",
+    "cargandoPromos": "Chargement des offres...",
+    "sinPromos": "Aucune offre active avec ces filtres.",
+    "ubicacionDe": "Emplacement de",
+    "cargandoMapa": "Chargement de la carte..."
+  },
+  "nav": {
+    "inicio": "Accueil",
+    "directorio": "Répertoire",
+    "agenda": "Événements",
+    "promociones": "Offres",
+    "candela": "Festival Candela",
+    "ayuda": "Aide",
+    "nosotros": "À propos",
+    "dashboard": "Modifier mon site"
+  },
+  "hero": {
+    "titulo": "Découvrez l'Occident Antioqueño",
+    "subtitulo": "19 municipalités, des dizaines d'expériences authentiques et un territoire qui vous attend.",
+    "explorar": "Explorer le territoire",
+    "soyActor": "Je suis un acteur touristique",
+    "iniciativa": "Une initiative de la Corporación de Turismo del Occidente de Antioquia, 25 Ans."
+  },
+  "destacados": {
+    "micrositiosTitulo": "Acteurs à la une",
+    "micrositiosSubtitulo": "Découvrez quelques acteurs touristiques du territoire",
+    "verTodos": "Voir tous les acteurs",
+    "agendaTitulo": "Événements à la une",
+    "agendaSubtitulo": "Prochains événements du territoire",
+    "verAgenda": "Voir tout l'agenda",
+    "promoTitulo": "Offres à la une",
+    "promoSubtitulo": "Offres et expériences spéciales",
+    "verPromociones": "Voir toutes les offres"
+  },
+  "mapa": {
+    "titulo": "Carte du territoire",
+    "subtitulo": "Localisez acteurs et événements dans l'Occident Antioqueño",
+    "actores": "Acteurs touristiques",
+    "eventos": "Événements",
+    "candela": "Festival Candela"
+  },
+  "footer": {
+    "explora": "Explorer",
+    "directorio": "Répertoire des acteurs",
+    "agenda": "Agenda régional",
+    "promociones": "Offres",
+    "candela": "Festival Candela",
+    "faq": "Questions fréquentes",
+    "contacto": "Contact",
+    "politica": "Politique de Traitement des Données",
+    "iniciativa": "Une initiative de la Corporación de Turismo del Occidente de Antioquia",
+    "descripcion": "Descubre el Occidente Antioqueño est la plateforme numérique officielle de la Corporación de Turismo del Occidente de Antioquia.",
+    "paraActores": "Pour les acteurs",
+    "gestionaMicrositio": "Gérer votre site",
+    "siguenos": "Suivez-nous",
+    "contactoTelefonico": "Contact téléphonique",
+    "inversionTitulo": "Intéressé à investir dans la plateforme ?",
+    "inversionSubtitulo": "Dites-nous en plus et nous vous contacterons pour discuter des opportunités d'investissement.",
+    "inversionGracias": "Merci ! Nous avons reçu votre message et vous contacterons bientôt.",
+    "nombreCompleto": "Nom complet",
+    "correoElectronico": "Adresse e-mail",
+    "telefono": "Téléphone",
+    "cuentanosInteres": "Parlez-nous brièvement de votre intérêt...",
+    "enviarMensaje": "Envoyer le message",
+    "enviando": "Envoi en cours...",
+    "errorEnvio": "Nous n'avons pas pu envoyer votre message. Réessayez ou écrivez-nous directement.",
+    "copyright": "Corporación de Turismo del Occidente de Antioquia · 25 ans à connecter le territoire"
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { obtenerAgendaRegional } from '../services/firestore';
 import { Calendar, MapPin } from 'lucide-react';
 
@@ -12,10 +13,12 @@ const MUNICIPIOS = [
   'Sopetrán', 'Uramita'
 ];
 
-function formatFechaCorta(fecha) {
+const LOCALES = { es: 'es-CO', en: 'en-US', fr: 'fr-FR' };
+
+function formatFechaCorta(fecha, idioma) {
   if (!fecha) return '';
   const date = fecha.toDate ? fecha.toDate() : new Date(fecha);
-  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  return date.toLocaleDateString(LOCALES[idioma] || 'es-CO', { day: 'numeric', month: 'short' });
 }
 
 export default function AgendaDestacada() {
@@ -23,6 +26,7 @@ export default function AgendaDestacada() {
   const [loading, setLoading] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroMunicipio, setFiltroMunicipio] = useState('');
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     cargar();
@@ -48,9 +52,9 @@ export default function AgendaDestacada() {
     <section className="relative py-16 bg-cover bg-center" style={{ backgroundImage: "linear-gradient(rgba(44,24,16,0.5), rgba(44,24,16,0.5)), url('/agenda-fondo.jpg')" }}>
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-white mb-2 text-center">
-          <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> Agenda Regional
+          <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> {t('destacados.agendaTitulo')}
         </h2>
-        <p className="text-white/90 text-center mb-8">Lo que está pasando en el Occidente Antioqueño</p>
+        <p className="text-white/90 text-center mb-8">{t('destacados.agendaSubtitulo')}</p>
 
         <div className="flex flex-wrap gap-3 justify-center mb-10">
           <select
@@ -58,7 +62,7 @@ export default function AgendaDestacada() {
             onChange={(e) => setFiltroCategoria(e.target.value)}
             className="border border-gris/30 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-terracota"
           >
-            <option value="">Todas las categorías</option>
+            <option value="">{t('comun.todasCategorias')}</option>
             {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <select
@@ -66,15 +70,15 @@ export default function AgendaDestacada() {
             onChange={(e) => setFiltroMunicipio(e.target.value)}
             className="border border-gris/30 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-terracota"
           >
-            <option value="">Todos los municipios</option>
+            <option value="">{t('comun.todosMunicipios')}</option>
             {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
 
         {loading ? (
-          <p className="text-center text-terracota">Cargando eventos...</p>
+          <p className="text-center text-terracota">{t('comun.cargando')}</p>
         ) : eventos.length === 0 ? (
-          <p className="text-center text-gris">No hay eventos próximos con estos filtros.</p>
+          <p className="text-center text-gris">{t('comun.sinEventos')}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             {eventos.map((evento) => (
@@ -98,7 +102,7 @@ export default function AgendaDestacada() {
                   </span>
                   <p className="font-bold text-marron text-xs md:text-sm leading-snug line-clamp-2">{evento.nombre}</p>
                   <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
-                    <Calendar size={11} /> {formatFechaCorta(evento.fechaInicio || evento.fecha)}
+                    <Calendar size={11} /> {formatFechaCorta(evento.fechaInicio || evento.fecha, i18n.language)}
                   </p>
                   {evento.municipio && (
                     <p className="hidden md:flex items-center gap-1 text-xs text-gris">
@@ -106,7 +110,7 @@ export default function AgendaDestacada() {
                     </p>
                   )}
                   {evento.nombreNegocio && (
-                    <p className="hidden md:block text-xs text-terracota font-semibold mt-1">Por {evento.nombreNegocio}</p>
+                    <p className="hidden md:block text-xs text-terracota font-semibold mt-1">{t('comun.por')} {evento.nombreNegocio}</p>
                   )}
                 </div>
               </Link>
@@ -119,7 +123,7 @@ export default function AgendaDestacada() {
             to="/agenda"
             className="inline-block bg-terracota text-white font-semibold px-6 py-3 rounded-lg hover:bg-terracota-dark transition"
           >
-            Ver agenda completa
+            {t('destacados.verAgenda')}
           </Link>
         </div>
       </div>
