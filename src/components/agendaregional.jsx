@@ -3,7 +3,7 @@ import { obtenerAgendaRegional, toggleAsistenciaEvento, obtenerAsistenciaEvento 
 import NavBar from './NavBar';
 import Banner from './Banner';
 import { useSEO } from '../hooks/useSEO';
-import { onAuthChange } from '../services/auth';
+import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import { Calendar, MapPin, Users, Clock, X, ExternalLink } from 'lucide-react';
 
@@ -91,6 +91,7 @@ export default function AgendaRegional() {
         nombre: usuario.displayName,
         email: usuario.email
       });
+      agregarContactoBrevo(usuario.email, usuario.displayName, 5); // Lista "Asiste Eventos"
       cargarAsistencia(eventId);
     } catch (error) {
       console.error('Error marcando asistencia:', error);

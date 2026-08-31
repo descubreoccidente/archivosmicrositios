@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   obtenerVotoUsuarioCandela, votarCandela, CANDELA_FECHA_INICIO, CANDELA_FECHA_LIMITE
 } from '../services/firestore';
-import { onAuthChange } from '../services/auth';
+import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import { Calendar, MapPin, Instagram, CheckCircle, Trophy } from 'lucide-react';
 import NavBar from './NavBar';
@@ -100,6 +100,7 @@ export default function CandelaFestival() {
     try {
       await votarCandela(participanteId, usuarioActivo.uid, usuarioActivo.displayName || 'Visitante');
       setMiVoto({ participanteId });
+      agregarContactoBrevo(usuarioActivo.email, usuarioActivo.displayName, 4); // Lista "Interes Candela"
     } catch (err) {
       setError(err.message || 'No pudimos registrar tu voto. Intenta de nuevo.');
     }

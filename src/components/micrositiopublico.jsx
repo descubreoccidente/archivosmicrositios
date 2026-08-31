@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
+import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento, registrarVisitaMicrositio } from '../services/firestore';
 import { useSEO } from '../hooks/useSEO';
-import { onAuthChange } from '../services/auth';
+import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import SistemaResenas from './sistemaresenas';
 import NavBar from './NavBar';
@@ -121,6 +121,7 @@ export default function MicrositioPublico({ slug }) {
         nombre: usuario.displayName,
         email: usuario.email
       });
+      agregarContactoBrevo(usuario.email, usuario.displayName, 5); // Lista "Asiste Eventos"
       cargarAsistencia(eventId);
     } catch (error) {
       console.error('Error marcando asistencia:', error);
@@ -143,6 +144,7 @@ export default function MicrositioPublico({ slug }) {
         setNotFound(true);
       } else {
         setData(result);
+        registrarVisitaMicrositio(result.actor.id);
       }
     } catch (error) {
       console.error('Error cargando micrositio público:', error);

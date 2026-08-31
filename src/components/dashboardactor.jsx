@@ -9,7 +9,7 @@ import CrearEvento from './crearevento';
 import TurismoResponsable from './turismoresponsable';
 import CrearPromocion from './CrearPromocion';
 import MisDatosActor from './misdatosactor';
-import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle, ShieldAlert } from 'lucide-react';
+import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle, ShieldAlert, Users, Star, TrendingUp } from 'lucide-react';
 import { obtenerReporteMesActual } from '../services/firestore';
 import NavBar from './NavBar';
 
@@ -100,6 +100,12 @@ export default function DashboardActor({ actorId }) {
     { id: 'datos', label: 'Mis Datos', icon: BarChart3 },
   ];
 
+  const stats = micrositio?.actor?.stats || {};
+  const visitas = stats.visitas || 0;
+  const totalResenas = stats.totalResenas || 0;
+  const ratingPromedio = stats.ratingPromedio || 0;
+  const totalAsistentes = (micrositio?.eventos || []).reduce((sum, e) => sum + (e.totalAsistentes || 0), 0);
+
   return (
     <div className="min-h-screen bg-crema">
       <NavBar />
@@ -139,6 +145,44 @@ export default function DashboardActor({ actorId }) {
           </button>
         </div>
       </div>
+
+      {/* Resumen de estadísticas */}
+      {micrositio && (
+        <div className="bg-white border-b border-gris/10">
+          <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-3 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-50 text-blue-600 p-2 rounded-lg">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-marron leading-none">{visitas}</p>
+                <p className="text-xs text-gris">Visitas al micrositio</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-yellow-50 text-yellow-600 p-2 rounded-lg">
+                <Star size={20} />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-marron leading-none">
+                  {totalResenas} {totalResenas > 0 && <span className="text-xs font-normal text-gris">({ratingPromedio.toFixed(1)}★)</span>}
+                </p>
+                <p className="text-xs text-gris">Reseñas</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-green-50 text-green-600 p-2 rounded-lg">
+                <Users size={20} />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-marron leading-none">{totalAsistentes}</p>
+                <p className="text-xs text-gris">Interesados en eventos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {faltaReportar && activeTab !== 'datos' && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-center gap-2 text-sm text-yellow-800">
           <AlertCircle size={16} />

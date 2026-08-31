@@ -830,3 +830,13 @@ export const verificarInvitacion = async (email) => {
     return false;
   }
 };
+// Registrar una visita al micrositio (contador simple, sin datos personales)
+export const registrarVisitaMicrositio = async (actorId) => {
+  try {
+    await updateDoc(doc(db, 'actors', actorId), {
+      'stats.visitas': increment(1)
+    });
+  } catch (error) {
+    console.error('Error registrando visita:', error);
+  }
+};
