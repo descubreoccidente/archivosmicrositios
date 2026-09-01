@@ -16,6 +16,8 @@ const SEDES = [
 
 const ALIADOS = [
   { nombre: 'Alcaldía de Santa Fe de Antioquia', archivo: 'alcaldia-santa-fe-de-antioquia.png' },
+  { nombre: 'Alcaldía de Sopetrán', archivo: 'sopetran-logo.jfif' },
+  { nombre: 'Alcaldía de San Jerónimo', archivo: 'sanjeronimo-logo.png' },
   { nombre: 'Cámara de Comercio de Medellín para Antioquia', archivo: 'camara-logo.png' },
   { nombre: 'Comfama', archivo: 'comfama.png' },
   { nombre: 'Comfenalco', archivo: 'comfenalco-logo.png' },
@@ -25,6 +27,7 @@ const ALIADOS = [
   { nombre: 'Museo', archivo: 'museo-jc-logo.png' },
   { nombre: 'Provincia Agroindustrial del Occidente Antioqueño', archivo: 'provinciaagro-logo.png' },
   { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
+  { nombre: 'Marketing para Emprendedores', archivo: 'mpe-logo.png' },
 ];
 
 const COLORES_FESTIVAL = [
