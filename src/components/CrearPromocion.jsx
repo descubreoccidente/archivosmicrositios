@@ -285,12 +285,12 @@ export default function CrearPromocion({ actorId, nombreNegocio, onPromoCreated 
                 value={formData.descripcion}
                 onChange={handleChange}
                 required
-                maxLength={150}
-                rows={3}
+                maxLength={500}
+                rows={5}
                 className="w-full border border-gris/30 rounded px-4 py-2 focus:outline-none focus:border-terracota resize-none"
                 placeholder="Describe tu oferta..."
               />
-              <p className="text-xs text-gris mt-1">{formData.descripcion.length}/150</p>
+              <p className="text-xs text-gris mt-1">{formData.descripcion.length}/500</p>
             </div>
 
             <div>

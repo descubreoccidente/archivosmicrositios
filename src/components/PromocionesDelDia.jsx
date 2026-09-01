@@ -1,16 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
-import { db } from '../services/firebase';
 import NavBar from './NavBar';
 import { useSEO } from '../hooks/useSEO';
-import { Trash2, Eye } from 'lucide-react';
+import { obtenerPromocionesDestacadas } from '../services/firestore';
+import { Tag, MapPin, Clock } from 'lucide-react';
 
+const MUNICIPIOS = [
+  'Abriaquí', 'Anzá', 'Armenia', 'Buriticá', 'Caicedo', 'Cañasgordas',
+  'Dabeiba', 'Ebéjico', 'Frontino', 'Giraldo', 'Heliconia', 'Liborina',
+  'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
+  'Sopetrán', 'Uramita'
+];
+
+const CATEGORIAS = [
+  'Alojamiento', 'Comidas rápidas', 'Comida Gourmet', 'Tours', 'Entrada a show',
+  'Bebidas y licores', 'Paquetes turísticos', 'Joyería en filigrana', 'Dulces y postres',
+  'Happy hour', 'Día de sol', 'Noche de luna', 'Lunas de miel', 'Escapadas', 'Karaoke',
+  'Entrada a museo', 'Afiliación', 'Formación', 'Gimnasio', 'Clases y talleres',
+  'Oportunidad tributaria', 'Asesoría profesional'
+];
+
+const CATEGORIA_COLORES = {
+  'Comidas rápidas': { badge: 'bg-red-500', accent: 'border-red-500', tag: 'bg-red-50 text-red-600' },
+  'Comida Gourmet': { badge: 'bg-red-500', accent: 'border-red-500', tag: 'bg-red-50 text-red-600' },
+  'Bebidas y licores': { badge: 'bg-orange-500', accent: 'border-orange-500', tag: 'bg-orange-50 text-orange-600' },
+  'Dulces y postres': { badge: 'bg-pink-500', accent: 'border-pink-500', tag: 'bg-pink-50 text-pink-600' },
+  'Happy hour': { badge: 'bg-orange-500', accent: 'border-orange-500', tag: 'bg-orange-50 text-orange-600' },
+  'Alojamiento': { badge: 'bg-blue-500', accent: 'border-blue-500', tag: 'bg-blue-50 text-blue-600' },
+  'Tours': { badge: 'bg-teal-500', accent: 'border-teal-500', tag: 'bg-teal-50 text-teal-600' },
+  'Paquetes turísticos': { badge: 'bg-teal-500', accent: 'border-teal-500', tag: 'bg-teal-50 text-teal-600' },
+  'Escapadas': { badge: 'bg-teal-500', accent: 'border-teal-500', tag: 'bg-teal-50 text-teal-600' },
+  'Día de sol': { badge: 'bg-yellow-500', accent: 'border-yellow-500', tag: 'bg-yellow-50 text-yellow-600' },
+  'Noche de luna': { badge: 'bg-indigo-500', accent: 'border-indigo-500', tag: 'bg-indigo-50 text-indigo-600' },
+  'Lunas de miel': { badge: 'bg-pink-500', accent: 'border-pink-500', tag: 'bg-pink-50 text-pink-600' },
+  'Entrada a show': { badge: 'bg-purple-500', accent: 'border-purple-500', tag: 'bg-purple-50 text-purple-600' },
+  'Karaoke': { badge: 'bg-purple-500', accent: 'border-purple-500', tag: 'bg-purple-50 text-purple-600' },
+  'Entrada a museo': { badge: 'bg-amber-600', accent: 'border-amber-600', tag: 'bg-amber-50 text-amber-700' },
+  'Joyería en filigrana': { badge: 'bg-amber-600', accent: 'border-amber-600', tag: 'bg-amber-50 text-amber-700' },
+  'Afiliación': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Formación': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Gimnasio': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Clases y talleres': { badge: 'bg-green-500', accent: 'border-green-500', tag: 'bg-green-50 text-green-600' },
+  'Oportunidad tributaria': { badge: 'bg-slate-600', accent: 'border-slate-600', tag: 'bg-slate-50 text-slate-700' },
+  'Asesoría profesional': { badge: 'bg-slate-600', accent: 'border-slate-600', tag: 'bg-slate-50 text-slate-700' },
+};
+
+function colorPromo(categoria) {
+  return CATEGORIA_COLORES[categoria] || { badge: 'bg-terracota', accent: 'border-terracota', tag: 'bg-crema text-terracota' };
+}
 
 export default function PromocionesDelDia() {
   const [promociones, setPromociones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState('todas');
-  
+  const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [filtroMunicipio, setFiltroMunicipio] = useState('');
+
   useSEO(
     'Promociones del Día — Ofertas del Occidente Antioqueño | Descubre Occidente',
     'Aprovecha las promociones y ofertas exclusivas de hoteles, restaurantes, tours y experiencias en el Occidente Antioqueño.'
@@ -18,64 +61,25 @@ export default function PromocionesDelDia() {
 
   useEffect(() => {
     cargarPromociones();
-    // Recargar cada minuto para actualizar duraciones
-    const interval = setInterval(cargarPromociones, 60000);
-    return () => clearInterval(interval);
   }, []);
 
   const cargarPromociones = async () => {
+    setLoading(true);
     try {
-      const ahora = new Date();
-      const hace24Horas = new Date(ahora.getTime() - 24 * 60 * 60 * 1000);
-
-      const q = query(
-        collection(db, 'promociones'),
-        where('activa', '==', true),
-        where('fechaCreacion', '>=', Timestamp.fromDate(hace24Horas)),
-        orderBy('fechaCreacion', 'desc')
-      );
-
-      const snap = await getDocs(q);
-      const promos = snap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        tiempoRestante: calcularTiempoRestante(doc.data().fechaCreacion)
-      }));
-
-      setPromociones(promos);
+      const data = await obtenerPromocionesDestacadas();
+      setPromociones(data);
     } catch (error) {
       console.error('Error cargando promociones:', error);
     }
     setLoading(false);
   };
 
-  const calcularTiempoRestante = (fechaCreacion) => {
-    const ahora = new Date();
-    const fecha = fechaCreacion.toDate ? fechaCreacion.toDate() : new Date(fechaCreacion);
-    const fin = new Date(fecha.getTime() + 24 * 60 * 60 * 1000);
-    const diferencia = fin - ahora;
+  const filtradas = promociones.filter(p =>
+    (!filtroCategoria || p.categoria === filtroCategoria) &&
+    (!filtroMunicipio || p.municipio === filtroMunicipio)
+  );
 
-    if (diferencia <= 0) return 'Expirada';
-
-    const horas = Math.floor(diferencia / (1000 * 60 * 60));
-    const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
-
-    return `${horas}h ${minutos}m`;
-  };
-
-  const filtradas = filtro === 'todas' 
-    ? promociones 
-    : promociones.filter(p => p.categoria === filtro);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-crema flex items-center justify-center">
-        <p className="text-terracota text-xl">Cargando promociones...</p>
-      </div>
-    );
-  }
-
- return (
+  return (
     <div className="min-h-screen bg-crema">
       <NavBar />
       {/* Header */}
@@ -92,125 +96,103 @@ export default function PromocionesDelDia() {
 
       {/* Filtros */}
       <div className="bg-white border-b border-gris/20 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-8 py-4">
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            <button
-              onClick={() => setFiltro('todas')}
-              className={`px-4 py-2 rounded-full font-semibold transition whitespace-nowrap ${
-                filtro === 'todas'
-                  ? 'bg-terracota text-white'
-                  : 'bg-gray-200 text-gris hover:bg-gray-300'
-              }`}
-            >
-              Todas
-            </button>
-            {['Hotel', 'Gastronomía', 'Tour operador', 'Ente territorial'].map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFiltro(cat)}
-                className={`px-4 py-2 rounded-full font-semibold transition whitespace-nowrap ${
-                  filtro === cat
-                    ? 'bg-terracota text-white'
-                    : 'bg-gray-200 text-gris hover:bg-gray-300'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+        <div className="max-w-6xl mx-auto px-8 py-4 flex flex-wrap gap-3">
+          <select
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value)}
+            className="border border-gris/30 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-terracota"
+          >
+            <option value="">Todas las subcategorías</option>
+            {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select
+            value={filtroMunicipio}
+            onChange={(e) => setFiltroMunicipio(e.target.value)}
+            className="border border-gris/30 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-terracota"
+          >
+            <option value="">Todos los municipios</option>
+            {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <span className="text-sm text-gris self-center ml-auto">
+            {filtradas.length} promoción{filtradas.length !== 1 ? 'es' : ''}
+          </span>
         </div>
       </div>
 
       {/* Grid de Promociones */}
       <div className="max-w-6xl mx-auto px-8 py-8">
-        {filtradas.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtradas.map((promo) => (
-              <div key={promo.id} className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition">
-                {/* Imagen */}
-                {promo.imagen && (
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={promo.imagen}
-                      alt={promo.titulo}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Badge de tiempo */}
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                      ⏰ {promo.tiempoRestante}
-                    </div>
-                    {/* Badge de descuento */}
-                    {promo.descuento && (
-                      <div className="absolute top-4 left-4 bg-dorado text-white px-3 py-1 rounded-full text-sm font-bold">
-                        -{promo.descuento}%
+        {loading ? (
+          <p className="text-center text-terracota">Cargando promociones...</p>
+        ) : filtradas.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtradas.map((promo) => {
+              const color = colorPromo(promo.categoria);
+              return (
+                <div key={promo.id} className={`bg-white rounded-lg overflow-hidden border-t-4 ${color.accent} shadow-md hover:shadow-lg transition-all`}>
+                  <div className="relative aspect-video bg-gray-100">
+                    {promo.imagen ? (
+                      <img src={promo.imagen} alt={promo.titulo} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className={`w-full h-full flex items-center justify-center ${color.tag}`}>
+                        <Tag size={32} />
                       </div>
                     )}
+                    {promo.descuento && (
+                      <span className={`absolute top-3 left-3 ${color.badge} text-white text-sm font-bold px-3 py-1 rounded-full`}>
+                        -{promo.descuento}%
+                      </span>
+                    )}
                   </div>
-                )}
-
-                {/* Contenido */}
-                <div className="p-6">
-                  {/* Negocio */}
-                  <p className="text-gris text-sm font-semibold mb-2">
-                    {promo.nombreNegocio}
-                  </p>
-
-                  {/* Título */}
-                  <h3 className="text-xl font-bold text-marron mb-2">
-                    {promo.titulo}
-                  </h3>
-
-                  {/* Descripción */}
-                  <p className="text-gris text-sm mb-4 line-clamp-2">
-                    {promo.descripcion}
-                  </p>
-
-                  {/* Categoría */}
-                  <div className="mb-4">
-                    <span className="inline-block bg-terracota/10 text-terracota px-3 py-1 rounded text-xs font-semibold">
+                  <div className="p-5">
+                    <span className={`inline-block ${color.tag} text-xs font-semibold px-2 py-0.5 rounded-full mb-2`}>
                       {promo.categoria}
                     </span>
+                    <p className="text-gris text-xs font-semibold mb-1">{promo.nombreNegocio}</p>
+                    <h3 className="text-lg font-bold text-marron mb-2">{promo.titulo}</h3>
+                    <p className="text-gris text-sm mb-3 line-clamp-2">{promo.descripcion}</p>
+
+                    {promo.municipio && (
+                      <p className="flex items-center gap-1 text-xs text-gris mb-3">
+                        <MapPin size={12} /> {promo.municipio}
+                      </p>
+                    )}
+
+                    {promo.precioOriginal && promo.precioDescuento && (
+                      <div className="mb-4">
+                        <span className="text-gris line-through text-sm mr-2">
+                          ${promo.precioOriginal.toLocaleString()}
+                        </span>
+                        <span className="text-terracota font-bold text-xl">
+                          ${promo.precioDescuento.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+
+                    {promo.fechaVencimiento && (
+                      <p className="flex items-center gap-1 text-xs text-gris mb-3">
+                        <Clock size={12} /> Vence: {promo.fechaVencimiento.toDate().toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}
+                      </p>
+                    )}
+
+                    {promo.enlace && (
+                      <a
+                        href={promo.enlace}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block text-center ${color.badge} text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition`}
+                      >
+                        Ver oferta →
+                      </a>
+                    )}
                   </div>
-
-                  {/* Precio Original y Descuento */}
-                  {promo.precioOriginal && promo.precioDescuento && (
-                    <div className="mb-4">
-                      <p className="text-gris line-through text-sm">
-                        ${promo.precioOriginal.toLocaleString()}
-                      </p>
-                      <p className="text-2xl font-bold text-terracota">
-                        ${promo.precioDescuento.toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Botón */}
-                  <button className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition">
-                    Ver Oferta
-                  </button>
-
-                  {/* Link externo */}
-                  {promo.enlace && (
-                    <a
-                      href={promo.enlace}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-center mt-3 text-terracota hover:underline text-sm font-semibold"
-                    >
-                      Ir al sitio →
-                    </a>
-                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-white rounded-lg p-12 text-center">
             <p className="text-gris text-lg">
-              No hay promociones disponibles en este momento.
-            </p>
-            <p className="text-gris text-sm mt-2">
-              ¡Vuelve pronto para descubrir nuevas ofertas!
+              No hay promociones que coincidan con estos filtros.
             </p>
           </div>
         )}
