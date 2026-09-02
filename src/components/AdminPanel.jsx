@@ -3,11 +3,21 @@ import {
   verificarAdmin, obtenerTodosLosActoresAdmin, toggleActivoActor,
   obtenerTodosLosEventosAdmin, eliminarEvento,
   obtenerTodasLasPromocionesAdmin, eliminarPromocion,
-  agregarInvitacionAdmin, obtenerVotosCandelaAdmin, obtenerReportesMesAdmin
+  agregarInvitacionAdmin, obtenerVotosCandelaAdmin, obtenerReportesMesAdmin,
+  obtenerPuntosInteres, crearPuntoInteres, eliminarPuntoInteres, TIPOS_PUNTO_INTERES
 } from '../services/firestore';
 import { loginConGoogle, logout, onAuthChange } from '../services/auth';
-import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame, BarChart3, Download } from 'lucide-react';
+import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame, BarChart3, Download, MapPin } from 'lucide-react';
 import * as XLSX from 'xlsx';
+
+const MUNICIPIOS = [
+  'Abriaquí', 'Anzá', 'Armenia', 'Buriticá', 'Caicedo', 'Cañasgordas',
+  'Dabeiba', 'Ebéjico', 'Frontino', 'Giraldo', 'Heliconia', 'Liborina',
+  'Olaya', 'Peque', 'Sabanalarga', 'San Jerónimo', 'Santa Fe de Antioquia',
+  'Sopetrán', 'Uramita'
+];
+
+const PUNTO_VACIO = { nombre: '', tipo: '', municipio: '', lat: '', lng: '' };
 
 function formatFecha(fecha) {
   if (!fecha) return '';
@@ -29,6 +39,10 @@ export default function AdminPanel() {
   const [reportesMes, setReportesMes] = useState([]);
   const [nuevoCorreo, setNuevoCorreo] = useState('');
   const [invitacionMsg, setInvitacionMsg] = useState(null);
+
+  const [puntosInteres, setPuntosInteres] = useState([]);
+  const [formPunto, setFormPunto] = useState(PUNTO_VACIO);
+  const [guardandoPunto, setGuardandoPunto] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthChange(async (user) => {
@@ -55,6 +69,7 @@ export default function AdminPanel() {
       if (tab === 'eventos') setEventos(await obtenerTodosLosEventosAdmin());
       if (tab === 'promociones') setPromociones(await obtenerTodasLasPromocionesAdmin());
       if (tab === 'candela') setVotosCandela(await obtenerVotosCandelaAdmin());
+      if (tab === 'puntos') setPuntosInteres(await obtenerPuntosInteres());
       if (tab === 'datos') {
         const ahora = new Date();
         const monthId = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
@@ -133,6 +148,45 @@ export default function AdminPanel() {
       setInvitacionMsg({ tipo: 'error', texto: `${exitosos} autorizados. Fallaron: ${fallidos.join(', ')}` });
     }
     setNuevoCorreo('');
+  };
+
+  const handleChangePunto = (e) => {
+    const { name, value } = e.target;
+    setFormPunto(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCrearPunto = async (e) => {
+    e.preventDefault();
+    if (!formPunto.nombre || !formPunto.tipo || !formPunto.lat || !formPunto.lng) {
+      setError('Completa nombre, tipo, latitud y longitud');
+      return;
+    }
+    setGuardandoPunto(true);
+    setError(null);
+    try {
+      await crearPuntoInteres({
+        nombre: formPunto.nombre,
+        tipo: formPunto.tipo,
+        municipio: formPunto.municipio || null,
+        lat: parseFloat(formPunto.lat),
+        lng: parseFloat(formPunto.lng)
+      });
+      setFormPunto(PUNTO_VACIO);
+      cargarDatos();
+    } catch (e) {
+      setError('No se pudo guardar el punto de interés');
+    }
+    setGuardandoPunto(false);
+  };
+
+  const handleEliminarPunto = async (id) => {
+    if (!confirm('¿Eliminar este punto de interés?')) return;
+    try {
+      await eliminarPuntoInteres(id);
+      cargarDatos();
+    } catch (e) {
+      setError('No se pudo eliminar el punto');
+    }
   };
 
   const gruposReportes = reportesMes.reduce((acc, r) => {
@@ -221,6 +275,7 @@ export default function AdminPanel() {
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'promociones', label: 'Promociones', icon: Tag },
     { id: 'candela', label: 'Candela', icon: Flame },
+    { id: 'puntos', label: 'Puntos de Interés', icon: MapPin },
     { id: 'datos', label: 'Datos', icon: BarChart3 },
     { id: 'invitaciones', label: 'Invitaciones', icon: UserPlus },
   ];
@@ -339,6 +394,96 @@ export default function AdminPanel() {
                       </div>
                     ))}
                 </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!loading && tab === 'puntos' && (
+          <div className="space-y-6">
+            <form onSubmit={handleCrearPunto} className="bg-white rounded-lg p-6 space-y-4">
+              <h3 className="font-bold text-terracota">Agregar punto de interés</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formPunto.nombre}
+                  onChange={handleChangePunto}
+                  placeholder="Nombre (ej: Terminal Santa Fe de Antioquia)"
+                  className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+                />
+                <select
+                  name="tipo"
+                  value={formPunto.tipo}
+                  onChange={handleChangePunto}
+                  className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+                >
+                  <option value="">Tipo de punto...</option>
+                  {Object.entries(TIPOS_PUNTO_INTERES).map(([key, info]) => (
+                    <option key={key} value={key}>{info.emoji} {info.label}</option>
+                  ))}
+                </select>
+                <select
+                  name="municipio"
+                  value={formPunto.municipio}
+                  onChange={handleChangePunto}
+                  className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+                >
+                  <option value="">Municipio (opcional)...</option>
+                  {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    name="lat"
+                    value={formPunto.lat}
+                    onChange={handleChangePunto}
+                    placeholder="Latitud"
+                    className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+                  />
+                  <input
+                    type="text"
+                    name="lng"
+                    value={formPunto.lng}
+                    onChange={handleChangePunto}
+                    placeholder="Longitud"
+                    className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gris">
+                Tip: usa la <a href="/coordenadas" target="_blank" className="text-terracota underline">herramienta de coordenadas</a> para obtener lat/lng fácilmente.
+              </p>
+              <button
+                type="submit"
+                disabled={guardandoPunto}
+                className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition disabled:opacity-50"
+              >
+                {guardandoPunto ? 'Guardando...' : '+ Agregar punto'}
+              </button>
+            </form>
+
+            <div className="space-y-2">
+              {puntosInteres.length === 0 ? (
+                <p className="text-center text-gris text-sm">Aún no hay puntos de interés creados.</p>
+              ) : (
+                puntosInteres.map((p) => (
+                  <div key={p.id} className="bg-white rounded-lg p-4 flex items-center justify-between border border-gris/10">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{TIPOS_PUNTO_INTERES[p.tipo]?.emoji}</span>
+                      <div>
+                        <p className="font-semibold text-marron">{p.nombre}</p>
+                        <p className="text-xs text-gris">{TIPOS_PUNTO_INTERES[p.tipo]?.label}{p.municipio ? ` · ${p.municipio}` : ''}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleEliminarPunto(p.id)}
+                      className="flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                    >
+                      <Trash2 size={14} /> Eliminar
+                    </button>
+                  </div>
+                ))
               )}
             </div>
           </div>

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { obtenerPuntosMapa } from '../services/firestore';
+import { obtenerPuntosMapa, obtenerPuntosInteres, TIPOS_PUNTO_INTERES } from '../services/firestore';
 import { obtenerParticipantesCandelaSheet } from '../services/candela';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -55,6 +55,7 @@ export default function MapaTerritorio() {
     try {
       const puntos = await obtenerPuntosMapa();
       const concursantes = await obtenerParticipantesCandelaSheet();
+      const puntosInteresGeneral = await obtenerPuntosInteres();
 
       const puntosConcursantes = concursantes
         .filter(c => c.lat && c.lng && !isNaN(parseFloat(c.lat)) && !isNaN(parseFloat(c.lng)))
@@ -67,10 +68,23 @@ export default function MapaTerritorio() {
           tipo: 'candela'
         }));
 
-      [...puntos, ...puntosConcursantes].forEach((punto) => {
+      const puntosInteresMapeados = puntosInteresGeneral
+        .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng))
+        .map(p => ({
+          nombre: p.nombre,
+          municipio: p.municipio,
+          categoria: TIPOS_PUNTO_INTERES[p.tipo]?.label || p.tipo,
+          lat: p.lat,
+          lng: p.lng,
+          tipo: 'interes',
+          subtipo: p.tipo
+        }));
+
+      [...puntos, ...puntosConcursantes, ...puntosInteresMapeados].forEach((punto) => {
        try {
         const esCandela = punto.tipo === 'candela';
-        const color = punto.tipo === 'actor' ? '#22c55e' : punto.tipo === 'evento' ? '#eab308' : '#f26631';
+        const esInteres = punto.tipo === 'interes';
+        const color = punto.tipo === 'actor' ? '#22c55e' : punto.tipo === 'evento' ? '#eab308' : esInteres ? '#5F5E5A' : '#f26631';
 
         const el = document.createElement('div');
         el.style.cursor = 'pointer';
@@ -87,6 +101,18 @@ export default function MapaTerritorio() {
           el.style.backgroundSize = '75%';
           el.style.backgroundPosition = 'center';
           el.style.backgroundRepeat = 'no-repeat';
+        } else if (esInteres) {
+          el.style.width = '30px';
+          el.style.height = '30px';
+          el.style.borderRadius = '50%';
+          el.style.backgroundColor = 'white';
+          el.style.border = `2px solid ${color}`;
+          el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.4)';
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.justifyContent = 'center';
+          el.style.fontSize = '15px';
+          el.innerText = TIPOS_PUNTO_INTERES[punto.subtipo]?.emoji || '📍';
         } else {
           el.style.width = '18px';
           el.style.height = '18px';
@@ -147,7 +173,7 @@ export default function MapaTerritorio() {
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-terracota mb-2 text-center">{t('mapa.titulo')}</h2>
         <p className="text-gris text-center mb-6">
-          {tieneDestino && targetNombre ? `${t('mapa.ubicacionDe') || t('comun.ubicacionDe')} ${targetNombre}` : t('mapa.subtitulo')}
+          {tieneDestino && targetNombre ? `${t('comun.ubicacionDe')} ${targetNombre}` : t('mapa.subtitulo')}
         </p>
 
         <div className="flex items-center justify-center gap-6 mb-4 text-sm flex-wrap">
@@ -159,6 +185,9 @@ export default function MapaTerritorio() {
           </span>
           <span className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#f26631] inline-block"></span> {t('mapa.candela')}
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#5F5E5A] inline-block"></span> Puntos de interés
           </span>
         </div>
 

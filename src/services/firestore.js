@@ -840,3 +840,51 @@ export const registrarVisitaMicrositio = async (actorId) => {
     console.error('Error registrando visita:', error);
   }
 };
+// ===== PUNTOS DE INTERÉS GENERAL (administrados por el admin) =====
+
+export const TIPOS_PUNTO_INTERES = {
+  'terminal': { label: 'Terminal de transporte', emoji: '🚌' },
+  'hospital': { label: 'Hospital / Centro de salud', emoji: '🏥' },
+  'info': { label: 'Punto de información turística', emoji: 'ℹ️' },
+  'parqueadero': { label: 'Parqueadero', emoji: '🅿️' },
+  'cambio': { label: 'Cambio de moneda', emoji: '💱' },
+  'policia': { label: 'Policía de Turismo', emoji: '👮' },
+  'farmacia': { label: 'Farmacia', emoji: '💊' },
+  'cajero': { label: 'Cajero / Banco', emoji: '🏧' },
+  'banos': { label: 'Baños públicos', emoji: '🚻' },
+  'mirador': { label: 'Mirador', emoji: '🔭' },
+  'iglesia': { label: 'Iglesia / Templo', emoji: '⛪' },
+};
+
+export const crearPuntoInteres = async (datos) => {
+  try {
+    const docRef = await addDoc(collection(db, 'puntosInteres'), {
+      ...datos,
+      createdAt: new Date()
+    });
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error creando punto de interés:', error);
+    throw error;
+  }
+};
+
+export const obtenerPuntosInteres = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'puntosInteres'));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error obteniendo puntos de interés:', error);
+    return [];
+  }
+};
+
+export const eliminarPuntoInteres = async (id) => {
+  try {
+    await deleteDoc(doc(db, 'puntosInteres', id));
+    return { success: true };
+  } catch (error) {
+    console.error('Error eliminando punto de interés:', error);
+    throw error;
+  }
+};
