@@ -254,10 +254,9 @@ export default function GaleriaFotos({ actorId, onUpdate }) {
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded-lg flex items-center justify-center gap-1">
                 <button
                   onClick={() => marcarPortada(foto.id)}
-                  title="Marcar como portada"
-                  className="text-white hover:bg-terracota p-2 rounded-full transition"
+                  className="flex items-center gap-1 bg-white/90 text-terracota hover:bg-terracota hover:text-white text-xs font-semibold px-2.5 py-1.5 rounded-full transition"
                 >
-                  <Star size={18} />
+                  <Star size={13} /> Portada
                 </button>
                 <button
                   onClick={() => handleDeleteFoto(foto.id)}
