@@ -9,7 +9,8 @@ import CrearEvento from './crearevento';
 import TurismoResponsable from './turismoresponsable';
 import CrearPromocion from './CrearPromocion';
 import MisDatosActor from './misdatosactor';
-import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle, ShieldAlert, Users, Star, TrendingUp } from 'lucide-react';
+import DescubreMas from './DescubreMas';
+import { LogOut, Eye, Info, Image, Calendar, Leaf, Tag, BarChart3, AlertCircle, HelpCircle, ShieldAlert, Users, Star, TrendingUp, MapPin } from 'lucide-react';
 import { obtenerReporteMesActual } from '../services/firestore';
 import NavBar from './NavBar';
 
@@ -91,11 +92,14 @@ export default function DashboardActor({ actorId }) {
     );
   }
 
+  const esEnteTerritorial = micrositio?.actor?.basicInfo?.categoria === 'Ente territorial';
+
   const tabs = [
     { id: 'info', label: 'Información', icon: Info },
     { id: 'fotos', label: 'Galería', icon: Image },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'promociones', label: 'Promociones', icon: Tag },
+    ...(esEnteTerritorial ? [{ id: 'descubremas', label: 'Descubre Más', icon: MapPin }] : []),
     { id: 'sostenibilidad', label: 'Turismo Responsable', icon: Leaf },
     { id: 'datos', label: 'Mis Datos', icon: BarChart3 },
   ];
@@ -234,6 +238,9 @@ export default function DashboardActor({ actorId }) {
             nombreNegocio={micrositio?.actor?.basicInfo?.nombre || ''}
             onPromoCreated={cargarMicrositio}
           />
+        )}
+        {activeTab === 'descubremas' && (
+          <DescubreMas actorId={actorId} />
         )}
         {activeTab === 'sostenibilidad' && (
           <TurismoResponsable actorId={actorId} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento, registrarVisitaMicrositio } from '../services/firestore';
+import { obtenerMicrositioPorSlug, toggleAsistenciaEvento, obtenerAsistenciaEvento, registrarVisitaMicrositio, obtenerItemsDescubreMas } from '../services/firestore';
 import { useSEO } from '../hooks/useSEO';
 import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
@@ -8,7 +8,7 @@ import NavBar from './NavBar';
 import {
   MapPin, Phone, Mail, Globe, Leaf, FileText, Download,
   Facebook, Instagram, Youtube, Music2, Link as LinkIcon, Calendar, Star, X, Clock, Users, ExternalLink, Linkedin, Award, Tag,
-  ChevronLeft, ChevronRight, Video
+  ChevronLeft, ChevronRight, Video, Package, Compass
 } from 'lucide-react';
 
 function WhatsAppIcon({ size = 18, className = '' }) {
@@ -83,6 +83,7 @@ export default function MicrositioPublico({ slug }) {
   const [asistencia, setAsistencia] = useState({ total: 0, yaAsiste: false });
   const [accionPendiente, setAccionPendiente] = useState(null);
   const [touchStartX, setTouchStartX] = useState(null);
+  const [descubreMasItems, setDescubreMasItems] = useState([]);
 
   useEffect(() => {
     cargar();
@@ -145,6 +146,10 @@ export default function MicrositioPublico({ slug }) {
       } else {
         setData(result);
         registrarVisitaMicrositio(result.actor.id);
+        if (result.actor.basicInfo?.categoria === 'Ente territorial') {
+          const items = await obtenerItemsDescubreMas(result.actor.id);
+          setDescubreMasItems(items);
+        }
       }
     } catch (error) {
       console.error('Error cargando micrositio público:', error);
@@ -359,6 +364,42 @@ export default function MicrositioPublico({ slug }) {
             )}
           </div>
         </div>
+
+        {/* Descubre más (solo Entes territoriales con items) */}
+        {descubreMasItems.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-terracota mb-1">
+              <Compass size={20} /> Descubre más
+            </h2>
+            <p className="text-xs text-gris mb-4">Lugares, productos y experiencias de interés turístico especial en {info.municipio || 'este municipio'}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {descubreMasItems.map((item) => (
+                <div key={item.id} className="border border-gris/20 rounded-lg overflow-hidden">
+                  {item.foto && (
+                    <div className="aspect-video bg-crema">
+                      <img src={item.foto} alt={item.titulo} className="w-full h-full object-contain" />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-terracota bg-terracota/10 px-2 py-0.5 rounded-full mb-2">
+                      {item.tipo === 'lugar' ? <><MapPin size={10} /> Lugar</> : <><Package size={10} /> Experiencia</>}
+                    </span>
+                    <p className="font-bold text-marron text-sm mb-1">{item.titulo}</p>
+                    <p className="text-xs text-gris line-clamp-3">{item.descripcion}</p>
+                    {item.tipo === 'lugar' && item.lat && item.lng && (
+                      <a
+                        href={`/?lat=${item.lat}&lng=${item.lng}&nombre=${encodeURIComponent(item.titulo)}#mapa-territorio`}
+                        className="flex items-center justify-center gap-1 w-full mt-3 text-xs font-semibold py-1.5 rounded border border-terracota text-terracota hover:bg-crema transition"
+                      >
+                        <MapPin size={12} /> Ver en el mapa
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* FILA INFERIOR: Contacto+Amenities | Descripción+Enlaces | Documentos+Videos+Certificaciones */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

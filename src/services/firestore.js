@@ -888,3 +888,52 @@ export const eliminarPuntoInteres = async (id) => {
     throw error;
   }
 };
+// ===== DESCUBRE MÁS (lugares/experiencias especiales para Entes Territoriales) =====
+
+export const crearItemDescubreMas = async (actorId, datos) => {
+  try {
+    const docRef = await addDoc(collection(db, 'actors', actorId, 'descubreMas'), {
+      ...datos,
+      createdAt: new Date()
+    });
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error creando item Descubre Más:', error);
+    throw error;
+  }
+};
+
+export const obtenerItemsDescubreMas = async (actorId) => {
+  try {
+    const snap = await getDocs(
+      query(collection(db, 'actors', actorId, 'descubreMas'), orderBy('createdAt', 'desc'))
+    );
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error obteniendo items Descubre Más:', error);
+    return [];
+  }
+};
+
+export const eliminarItemDescubreMas = async (actorId, itemId) => {
+  try {
+    await deleteDoc(doc(db, 'actors', actorId, 'descubreMas', itemId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error eliminando item Descubre Más:', error);
+    throw error;
+  }
+};
+
+// Para el mapa: obtener todos los lugares de "Descubre Más" de todos los entes territoriales
+export const obtenerLugaresDescubreMasParaMapa = async () => {
+  try {
+    const snap = await getDocs(collectionGroup(db, 'descubreMas'));
+    return snap.docs
+      .map(d => ({ id: d.id, actorId: d.ref.parent.parent.id, ...d.data() }))
+      .filter(item => item.tipo === 'lugar' && Number.isFinite(item.lat) && Number.isFinite(item.lng));
+  } catch (error) {
+    console.error('Error obteniendo lugares Descubre Más para mapa:', error);
+    return [];
+  }
+};
