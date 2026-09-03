@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   verificarAdmin, obtenerTodosLosActoresAdmin, toggleActivoActor,
-  obtenerTodosLosEventosAdmin, eliminarEvento,
+  obtenerTodosLosEventosAdmin, eliminarEvento, toggleDestacadoEvento,
   obtenerTodasLasPromocionesAdmin, eliminarPromocion,
   agregarInvitacionAdmin, obtenerVotosCandelaAdmin, obtenerReportesMesAdmin,
-  obtenerPuntosInteres, crearPuntoInteres, eliminarPuntoInteres, TIPOS_PUNTO_INTERES
+  obtenerPuntosInteres, crearPuntoInteres, actualizarPuntoInteres, eliminarPuntoInteres, TIPOS_PUNTO_INTERES
 } from '../services/firestore';
 import { loginConGoogle, logout, onAuthChange } from '../services/auth';
-import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame, BarChart3, Download, MapPin } from 'lucide-react';
+import { Shield, Store, Calendar, Tag, UserPlus, LogOut, Ban, CheckCircle, Trash2, Flame, BarChart3, Download, MapPin, Pencil, Star } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const MUNICIPIOS = [
@@ -18,6 +18,7 @@ const MUNICIPIOS = [
 ];
 
 const PUNTO_VACIO = { nombre: '', tipo: '', municipio: '', lat: '', lng: '' };
+const MAX_DESTACADOS = 3;
 
 function formatFecha(fecha) {
   if (!fecha) return '';
@@ -43,6 +44,7 @@ export default function AdminPanel() {
   const [puntosInteres, setPuntosInteres] = useState([]);
   const [formPunto, setFormPunto] = useState(PUNTO_VACIO);
   const [guardandoPunto, setGuardandoPunto] = useState(false);
+  const [puntoEditandoId, setPuntoEditandoId] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthChange(async (user) => {
@@ -109,6 +111,23 @@ export default function AdminPanel() {
     }
   };
 
+  const handleToggleDestacado = async (eventId, destacadoActual) => {
+    setError(null);
+    if (!destacadoActual) {
+      const totalDestacados = eventos.filter(e => e.destacado).length;
+      if (totalDestacados >= MAX_DESTACADOS) {
+        setError(`Ya hay ${MAX_DESTACADOS} eventos destacados. Quita uno antes de agregar otro.`);
+        return;
+      }
+    }
+    try {
+      await toggleDestacadoEvento(eventId, !destacadoActual);
+      cargarDatos();
+    } catch (e) {
+      setError('No se pudo actualizar el evento');
+    }
+  };
+
   const handleEliminarPromocion = async (promoId) => {
     if (!confirm('¿Eliminar esta promoción definitivamente?')) return;
     try {
@@ -155,6 +174,23 @@ export default function AdminPanel() {
     setFormPunto(prev => ({ ...prev, [name]: value }));
   };
 
+  const iniciarEdicionPunto = (p) => {
+    setFormPunto({
+      nombre: p.nombre || '',
+      tipo: p.tipo || '',
+      municipio: p.municipio || '',
+      lat: p.lat?.toString() || '',
+      lng: p.lng?.toString() || ''
+    });
+    setPuntoEditandoId(p.id);
+  };
+
+  const cancelarEdicionPunto = () => {
+    setFormPunto(PUNTO_VACIO);
+    setPuntoEditandoId(null);
+    setError(null);
+  };
+
   const handleCrearPunto = async (e) => {
     e.preventDefault();
     if (!formPunto.nombre || !formPunto.tipo || !formPunto.lat || !formPunto.lng) {
@@ -164,14 +200,20 @@ export default function AdminPanel() {
     setGuardandoPunto(true);
     setError(null);
     try {
-      await crearPuntoInteres({
+      const datos = {
         nombre: formPunto.nombre,
         tipo: formPunto.tipo,
         municipio: formPunto.municipio || null,
         lat: parseFloat(formPunto.lat),
         lng: parseFloat(formPunto.lng)
-      });
+      };
+      if (puntoEditandoId) {
+        await actualizarPuntoInteres(puntoEditandoId, datos);
+      } else {
+        await crearPuntoInteres(datos);
+      }
       setFormPunto(PUNTO_VACIO);
+      setPuntoEditandoId(null);
       cargarDatos();
     } catch (e) {
       setError('No se pudo guardar el punto de interés');
@@ -280,6 +322,8 @@ export default function AdminPanel() {
     { id: 'invitaciones', label: 'Invitaciones', icon: UserPlus },
   ];
 
+  const totalDestacadosActual = eventos.filter(e => e.destacado).length;
+
   return (
     <div className="min-h-screen bg-crema">
       <div className="bg-terracota text-white p-4 flex justify-between items-center shadow-md">
@@ -337,18 +381,32 @@ export default function AdminPanel() {
 
         {!loading && tab === 'eventos' && (
           <div className="space-y-2">
+            <p className="text-sm text-gris mb-2">Destacados: {totalDestacadosActual}/{MAX_DESTACADOS}</p>
             {eventos.map((e) => (
-              <div key={e.id} className="bg-white rounded-lg p-4 flex items-center justify-between border border-gris/10">
+              <div key={e.id} className={`bg-white rounded-lg p-4 flex items-center justify-between border ${e.destacado ? 'border-yellow-400' : 'border-gris/10'}`}>
                 <div>
-                  <p className="font-semibold text-marron">{e.nombre}</p>
+                  <p className="font-semibold text-marron flex items-center gap-2">
+                    {e.destacado && <Star size={14} className="fill-yellow-400 text-yellow-400" />}
+                    {e.nombre}
+                  </p>
                   <p className="text-xs text-gris">{e.categoria} · {formatFecha(e.fechaInicio || e.fecha)} · {e.nombreNegocio || ''}</p>
                 </div>
-                <button
-                  onClick={() => handleEliminarEvento(e.id)}
-                  className="flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
-                >
-                  <Trash2 size={14} /> Eliminar
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleToggleDestacado(e.id, e.destacado)}
+                    className={`flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-lg transition ${
+                      e.destacado ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' : 'bg-gray-50 text-gris hover:bg-gray-100'
+                    }`}
+                  >
+                    <Star size={14} /> {e.destacado ? 'Quitar destacado' : 'Destacar'}
+                  </button>
+                  <button
+                    onClick={() => handleEliminarEvento(e.id)}
+                    className="flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                  >
+                    <Trash2 size={14} /> Eliminar
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -402,7 +460,7 @@ export default function AdminPanel() {
         {!loading && tab === 'puntos' && (
           <div className="space-y-6">
             <form onSubmit={handleCrearPunto} className="bg-white rounded-lg p-6 space-y-4">
-              <h3 className="font-bold text-terracota">Agregar punto de interés</h3>
+              <h3 className="font-bold text-terracota">{puntoEditandoId ? 'Editar punto de interés' : 'Agregar punto de interés'}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
@@ -454,13 +512,24 @@ export default function AdminPanel() {
               <p className="text-xs text-gris">
                 Tip: usa la <a href="/coordenadas" target="_blank" className="text-terracota underline">herramienta de coordenadas</a> para obtener lat/lng fácilmente.
               </p>
-              <button
-                type="submit"
-                disabled={guardandoPunto}
-                className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition disabled:opacity-50"
-              >
-                {guardandoPunto ? 'Guardando...' : '+ Agregar punto'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={guardandoPunto}
+                  className="bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition disabled:opacity-50"
+                >
+                  {guardandoPunto ? 'Guardando...' : puntoEditandoId ? 'Guardar cambios' : '+ Agregar punto'}
+                </button>
+                {puntoEditandoId && (
+                  <button
+                    type="button"
+                    onClick={cancelarEdicionPunto}
+                    className="text-gris font-semibold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
             </form>
 
             <div className="space-y-2">
@@ -476,12 +545,20 @@ export default function AdminPanel() {
                         <p className="text-xs text-gris">{TIPOS_PUNTO_INTERES[p.tipo]?.label}{p.municipio ? ` · ${p.municipio}` : ''}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleEliminarPunto(p.id)}
-                      className="flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
-                    >
-                      <Trash2 size={14} /> Eliminar
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => iniciarEdicionPunto(p)}
+                        className="text-gris hover:text-terracota p-2 rounded-lg hover:bg-crema transition"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleEliminarPunto(p.id)}
+                        className="flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                      >
+                        <Trash2 size={14} /> Eliminar
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

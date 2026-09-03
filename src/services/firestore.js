@@ -937,3 +937,45 @@ export const obtenerLugaresDescubreMasParaMapa = async () => {
     return [];
   }
 };
+export const actualizarPuntoInteres = async (id, datos) => {
+  try {
+    await updateDoc(doc(db, 'puntosInteres', id), datos);
+    return { success: true };
+  } catch (error) {
+    console.error('Error actualizando punto de interés:', error);
+    throw error;
+  }
+};
+
+export const toggleDestacadoEvento = async (eventId, destacado) => {
+  try {
+    await updateDoc(doc(db, 'events', eventId), { destacado });
+    return { success: true };
+  } catch (error) {
+    console.error('Error actualizando destacado:', error);
+    throw error;
+  }
+};
+export const obtenerEventosDestacados = async () => {
+  try {
+    const ahora = new Date();
+    const q = query(collection(db, 'events'), where('destacado', '==', true));
+    const snap = await getDocs(q);
+    let eventos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    eventos = eventos.filter(e => {
+      const fecha = e.fechaInicio || e.fecha;
+      if (!fecha) return true;
+      const fechaDate = fecha.toDate ? fecha.toDate() : new Date(fecha);
+      return fechaDate >= ahora;
+    });
+    eventos.sort((a, b) => {
+      const fa = (a.fechaInicio || a.fecha)?.toMillis?.() || 0;
+      const fb = (b.fechaInicio || b.fecha)?.toMillis?.() || 0;
+      return fa - fb;
+    });
+    return eventos.slice(0, 3);
+  } catch (error) {
+    console.error('Error obteniendo eventos destacados:', error);
+    return [];
+  }
+};

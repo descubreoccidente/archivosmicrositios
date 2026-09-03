@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerAgendaRegional, toggleAsistenciaEvento, obtenerAsistenciaEvento } from '../services/firestore';
+import { obtenerAgendaRegional, toggleAsistenciaEvento, obtenerAsistenciaEvento, obtenerEventosDestacados } from '../services/firestore';
 import NavBar from './NavBar';
 import Banner from './Banner';
 import { useSEO } from '../hooks/useSEO';
 import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
-import { Calendar, MapPin, Users, Clock, X, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, X, ExternalLink, Star } from 'lucide-react';
 
 const CATEGORIAS_TIPOS = {
   'Cultural': ['Cine', 'Musical', 'Artes plásticas', 'Teatro', 'Artesanal', 'Danza', 'Literario'],
@@ -41,6 +41,7 @@ function formatFechaCorta(fecha) {
 export default function AgendaRegional() {
   const [eventos, setEventos] = useState([]);
   const [todosEventos, setTodosEventos] = useState([]);
+  const [destacados, setDestacados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [usuario, setUsuario] = useState(null);
@@ -63,6 +64,10 @@ export default function AgendaRegional() {
   useEffect(() => {
     cargarEventos();
   }, [filtros]);
+
+  useEffect(() => {
+    obtenerEventosDestacados().then(setDestacados);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthChange((user) => setUsuario(user));
@@ -151,6 +156,41 @@ export default function AgendaRegional() {
           </p>
         </div>
       </div>
+
+      {/* Eventos destacados (siempre visibles) */}
+      {destacados.length > 0 && (
+        <div className="bg-[#f26631] py-6">
+          <div className="max-w-6xl mx-auto px-8">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+              <Star size={20} className="fill-white text-white" /> Eventos destacados
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {destacados.map((evento) => (
+                <button
+                  key={evento.id}
+                  onClick={() => setEventoSeleccionado(evento)}
+                  className="text-left bg-white rounded-lg overflow-hidden border-2 border-yellow-400 shadow-md hover:shadow-lg transition"
+                >
+                  {evento.imagen && (
+                    <img src={evento.imagen} alt={evento.nombre} className="w-full h-28 object-cover" />
+                  )}
+                  <div className="p-3">
+                    <p className="font-bold text-marron text-sm leading-snug line-clamp-2">{evento.nombre}</p>
+                    <p className="flex items-center gap-1 text-xs text-gris mt-1">
+                      <Calendar size={11} /> {formatFechaCorta(evento.fechaInicio || evento.fecha)}
+                    </p>
+                    {evento.municipio && (
+                      <p className="flex items-center gap-1 text-xs text-gris">
+                        <MapPin size={11} /> {evento.municipio}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="bg-white border-b border-gris/20 sticky top-0 z-10">
@@ -272,7 +312,7 @@ export default function AgendaRegional() {
               <button
                 key={evento.id}
                 onClick={() => setEventoSeleccionado(evento)}
-                className="w-full text-left bg-white rounded-lg p-6 border-l-4 border-terracota hover:shadow-lg transition"
+                className={`w-full text-left bg-white rounded-lg p-6 border-l-4 hover:shadow-lg transition ${evento.destacado ? 'border-yellow-400' : 'border-terracota'}`}
               >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {evento.imagen && (
@@ -286,7 +326,8 @@ export default function AgendaRegional() {
                   )}
 
                   <div className={evento.imagen ? 'md:col-span-2' : 'md:col-span-3'}>
-                    <h3 className="text-xl font-bold text-marron mb-1">
+                    <h3 className="text-xl font-bold text-marron mb-1 flex items-center gap-2">
+                      {evento.destacado && <Star size={16} className="fill-yellow-400 text-yellow-400 flex-shrink-0" />}
                       {evento.nombre}
                     </h3>
                     {evento.nombreNegocio && (

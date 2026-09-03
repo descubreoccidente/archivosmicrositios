@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import NavBar from './NavBar';
 import {
-  Mail, FileText, Image, Calendar, Tag, BarChart3, Globe, ArrowRight, CheckCircle
+  Mail, FileText, Image, Calendar, Tag, BarChart3, Globe, ArrowRight, CheckCircle, Compass
 } from 'lucide-react';
 
 const PASOS = [
@@ -12,10 +12,10 @@ const PASOS = [
     titulo: 'Recibe tu invitación y crea tu cuenta',
     color: '#b34127',
     puntos: [
-      'La Corporación te envía o autoriza tu correo para gestionar tu micrositio.',
+      'La Corporación autoriza tu correo para gestionar tu micrositio.',
       'Entra a descubreoccidente.com/ingresar',
-      'Elige "Entrar con Google" (si tu correo es de Gmail) o "Continuar con correo electrónico" (funciona con cualquier correo, incluso institucional o Hotmail).',
-      'Si usas correo electrónico, te llegará un enlace — haz clic ahí para entrar, sin necesidad de contraseña.',
+      'Primera vez: haz clic en "Crea tu cuenta aquí", escribe tu correo autorizado y crea una contraseña (mínimo 6 caracteres).',
+      'Las siguientes veces: usa "Iniciar sesión con correo" con esa misma contraseña, o entra directo con "Entrar con Google" si prefieres.',
     ],
   },
   {
@@ -25,6 +25,7 @@ const PASOS = [
     color: '#f26631',
     puntos: [
       'En la pestaña "Información", llena tu nombre, categoría, municipio, teléfono y descripción.',
+      'Agrega también tu horario de atención.',
       'Marca los amenities/servicios que ofreces.',
       'Ubica tu negocio en el mapa: haz clic en el punto exacto, o arrastra el marcador para ajustarlo.',
       'No olvides guardar al final del formulario.',
@@ -37,8 +38,8 @@ const PASOS = [
     color: '#006468',
     puntos: [
       'En la pestaña "Galería", sube hasta 10 fotos de tu negocio.',
-      'Elige una como "portada" — es la que se ve primero en tu micrositio y en el directorio.',
-      'También puedes subir documentos (PDF) y hasta 2 videos.',
+      'Elige una como "Portada" — es la que se ve primero en tu micrositio y en el directorio.',
+      'También puedes subir documentos (PDF) y hasta 2 videos (enlaces de YouTube o Vimeo).',
     ],
   },
   {
@@ -65,6 +66,18 @@ const PASOS = [
   },
   {
     numero: 6,
+    icono: Compass,
+    titulo: 'Si eres Alcaldía: agrega "Descubre Más"',
+    color: '#9333ea',
+    puntos: [
+      'Esta pestaña solo aparece si tu categoría es "Ente territorial".',
+      'Comparte lugares de interés especial de tu municipio — aparecerán también en el mapa con un marcador propio.',
+      'También puedes compartir productos o experiencias turísticas, sin necesidad de ubicación.',
+      'Agrega una foto y una descripción corta para cada uno — se verán en tu micrositio público, en la sección "Descubre más".',
+    ],
+  },
+  {
+    numero: 7,
     icono: BarChart3,
     titulo: 'Reporta tus datos cada mes',
     color: '#f26631',
@@ -75,7 +88,7 @@ const PASOS = [
     ],
   },
   {
-    numero: 7,
+    numero: 8,
     icono: Globe,
     titulo: '¡Comparte tu micrositio!',
     color: '#006468',
