@@ -7,7 +7,12 @@ import { obtenerPuntosMapa, obtenerPuntosInteres, TIPOS_PUNTO_INTERES, obtenerLu
 import { obtenerParticipantesCandelaSheet } from '../services/candela';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-
+function escaparHtml(texto) {
+  if (!texto) return '';
+  const div = document.createElement('div');
+  div.textContent = texto;
+  return div.innerHTML;
+}
 export default function MapaTerritorio() {
   const mapContainer = useRef(null);
   const mapInstance = useRef(null);
@@ -146,9 +151,9 @@ export default function MapaTerritorio() {
 
         const popupHtml = `
           <div style="font-family: sans-serif; min-width: 160px;">
-            <p style="font-weight: bold; margin: 0 0 4px 0; color: #2C1810;">${punto.nombre}</p>
-            <p style="font-size: 12px; margin: 0; color: #6B5B52;">${punto.categoria || ''}</p>
-            <p style="font-size: 12px; margin: 0; color: #6B5B52;">${punto.municipio || ''}</p>
+            <p style="font-weight: bold; margin: 0 0 4px 0; color: #2C1810;">${escaparHtml(punto.nombre)}</p>
+            <p style="font-size: 12px; margin: 0; color: #6B5B52;">${escaparHtml(punto.categoria) || ''}</p>
+            <p style="font-size: 12px; margin: 0; color: #6B5B52;">${escaparHtml(punto.municipio) || ''}</p>
           </div>
         `;
 
