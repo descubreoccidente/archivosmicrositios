@@ -43,6 +43,7 @@ export default function AdminPanel() {
 
   const [puntosInteres, setPuntosInteres] = useState([]);
   const [formPunto, setFormPunto] = useState(PUNTO_VACIO);
+  const [coordenadasPuntoTexto, setCoordenadasPuntoTexto] = useState('');
   const [guardandoPunto, setGuardandoPunto] = useState(false);
   const [puntoEditandoId, setPuntoEditandoId] = useState(null);
 
@@ -174,6 +175,18 @@ export default function AdminPanel() {
     setFormPunto(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleCoordenadasPuntoChange = (e) => {
+    const texto = e.target.value;
+    setCoordenadasPuntoTexto(texto);
+
+    const partes = texto.split(/[,\t]+/).map(p => p.trim()).filter(Boolean);
+    if (partes.length === 2 && !isNaN(parseFloat(partes[0])) && !isNaN(parseFloat(partes[1]))) {
+      setFormPunto(prev => ({ ...prev, lat: partes[0], lng: partes[1] }));
+    } else {
+      setFormPunto(prev => ({ ...prev, lat: '', lng: '' }));
+    }
+  };
+
   const iniciarEdicionPunto = (p) => {
     setFormPunto({
       nombre: p.nombre || '',
@@ -182,11 +195,13 @@ export default function AdminPanel() {
       lat: p.lat?.toString() || '',
       lng: p.lng?.toString() || ''
     });
+    setCoordenadasPuntoTexto(p.lat && p.lng ? `${p.lat}, ${p.lng}` : '');
     setPuntoEditandoId(p.id);
   };
 
   const cancelarEdicionPunto = () => {
     setFormPunto(PUNTO_VACIO);
+    setCoordenadasPuntoTexto('');
     setPuntoEditandoId(null);
     setError(null);
   };
@@ -194,7 +209,7 @@ export default function AdminPanel() {
   const handleCrearPunto = async (e) => {
     e.preventDefault();
     if (!formPunto.nombre || !formPunto.tipo || !formPunto.lat || !formPunto.lng) {
-      setError('Completa nombre, tipo, latitud y longitud');
+      setError('Completa nombre, tipo, y pega las coordenadas en formato "latitud, longitud"');
       return;
     }
     setGuardandoPunto(true);
@@ -213,6 +228,7 @@ export default function AdminPanel() {
         await crearPuntoInteres(datos);
       }
       setFormPunto(PUNTO_VACIO);
+      setCoordenadasPuntoTexto('');
       setPuntoEditandoId(null);
       cargarDatos();
     } catch (e) {
@@ -490,27 +506,18 @@ export default function AdminPanel() {
                   <option value="">Municipio (opcional)...</option>
                   {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    name="lat"
-                    value={formPunto.lat}
-                    onChange={handleChangePunto}
-                    placeholder="Latitud"
-                    className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
-                  />
-                  <input
-                    type="text"
-                    name="lng"
-                    value={formPunto.lng}
-                    onChange={handleChangePunto}
-                    placeholder="Longitud"
-                    className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={coordenadasPuntoTexto}
+                  onChange={handleCoordenadasPuntoChange}
+                  placeholder="Pega aquí: 6.501903, -75.743388"
+                  className={`border rounded px-3 py-2 text-sm focus:outline-none ${
+                    coordenadasPuntoTexto && !formPunto.lat ? 'border-red-300 focus:border-red-400' : 'border-gris/30 focus:border-terracota'
+                  }`}
+                />
               </div>
               <p className="text-xs text-gris">
-                Tip: usa la <a href="/coordenadas" target="_blank" className="text-terracota underline">herramienta de coordenadas</a> para obtener lat/lng fácilmente.
+                Copia y pega directo desde la <a href="/coordenadas" target="_blank" className="text-terracota underline">herramienta de coordenadas</a> — ya viene lista en el formato correcto.
               </p>
               <div className="flex gap-2">
                 <button

@@ -9,6 +9,7 @@ const FORM_VACIO = { titulo: '', descripcion: '', tipo: 'lugar', foto: '', lat: 
 export default function DescubreMas({ actorId }) {
   const [items, setItems] = useState([]);
   const [formData, setFormData] = useState(FORM_VACIO);
+  const [coordenadasTexto, setCoordenadasTexto] = useState('');
   const [loading, setLoading] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -26,6 +27,18 @@ export default function DescubreMas({ actorId }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCoordenadasChange = (e) => {
+    const texto = e.target.value;
+    setCoordenadasTexto(texto);
+
+    const partes = texto.split(/[,\t]+/).map(p => p.trim()).filter(Boolean);
+    if (partes.length === 2 && !isNaN(parseFloat(partes[0])) && !isNaN(parseFloat(partes[1]))) {
+      setFormData(prev => ({ ...prev, lat: partes[0], lng: partes[1] }));
+    } else {
+      setFormData(prev => ({ ...prev, lat: '', lng: '' }));
+    }
   };
 
   const handleFotoUpload = async (e) => {
@@ -52,7 +65,7 @@ export default function DescubreMas({ actorId }) {
       return;
     }
     if (formData.tipo === 'lugar' && (!formData.lat || !formData.lng)) {
-      setError('Si es un lugar, debes indicar su ubicación (latitud y longitud)');
+      setError('Si es un lugar, pega las coordenadas en formato "latitud, longitud"');
       return;
     }
 
@@ -67,6 +80,7 @@ export default function DescubreMas({ actorId }) {
         lng: formData.tipo === 'lugar' ? parseFloat(formData.lng) : null,
       });
       setFormData(FORM_VACIO);
+      setCoordenadasTexto('');
       setMostrarForm(false);
       cargarItems();
     } catch (err) {
@@ -157,25 +171,19 @@ export default function DescubreMas({ actorId }) {
           </div>
 
           {formData.tipo === 'lugar' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-marron mb-2">Coordenadas</label>
               <input
                 type="text"
-                name="lat"
-                value={formData.lat}
-                onChange={handleChange}
-                placeholder="Latitud"
-                className="border border-gris/30 rounded px-4 py-2 text-sm focus:outline-none focus:border-terracota"
+                value={coordenadasTexto}
+                onChange={handleCoordenadasChange}
+                placeholder="Pega aquí: 6.501903, -75.743388"
+                className={`w-full border rounded px-4 py-2 text-sm focus:outline-none ${
+                  coordenadasTexto && !formData.lat ? 'border-red-300 focus:border-red-400' : 'border-gris/30 focus:border-terracota'
+                }`}
               />
-              <input
-                type="text"
-                name="lng"
-                value={formData.lng}
-                onChange={handleChange}
-                placeholder="Longitud"
-                className="border border-gris/30 rounded px-4 py-2 text-sm focus:outline-none focus:border-terracota"
-              />
-              <p className="col-span-2 text-xs text-gris">
-                Usa la <a href="/coordenadas" target="_blank" className="text-terracota underline">herramienta de coordenadas</a> para obtenerlas fácilmente.
+              <p className="text-xs text-gris mt-1">
+                Copia y pega directo desde la <a href="/coordenadas" target="_blank" className="text-terracota underline">herramienta de coordenadas</a> — ya viene lista en el formato correcto.
               </p>
             </div>
           )}
