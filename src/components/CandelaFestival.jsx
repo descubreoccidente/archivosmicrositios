@@ -4,9 +4,9 @@ import {
 } from '../services/firestore';
 import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
-import { Calendar, MapPin, Instagram, CheckCircle, Trophy } from 'lucide-react';
+import { Calendar, MapPin, Instagram, CheckCircle, Trophy, Clock } from 'lucide-react';
 import NavBar from './NavBar';
-import { obtenerParticipantesCandelaSheet } from '../services/candela';
+import { obtenerParticipantesCandelaSheet, obtenerProgramacionCandelaSheet } from '../services/candela';
 
 const SEDES = [
   { nombre: 'Santa Fe de Antioquia', lat: 6.5564, lng: -75.8281 },
@@ -49,6 +49,8 @@ async function obtenerParticipantesDesdeSheet() {
 export default function CandelaFestival() {
   const [participantes, setParticipantes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [programacion, setProgramacion] = useState([]);
+  const [loadingProgramacion, setLoadingProgramacion] = useState(true);
   const [usuario, setUsuario] = useState(null);
   const [miVoto, setMiVoto] = useState(null);
   const [mostrarLoginVisitante, setMostrarLoginVisitante] = useState(false);
@@ -64,6 +66,7 @@ export default function CandelaFestival() {
 
   useEffect(() => {
     cargarParticipantes();
+    cargarProgramacion();
     const unsubscribe = onAuthChange((user) => setUsuario(user));
     return () => unsubscribe();
   }, []);
@@ -85,6 +88,17 @@ export default function CandelaFestival() {
       console.error('Error cargando participantes:', error);
     }
     setLoading(false);
+  };
+
+  const cargarProgramacion = async () => {
+    setLoadingProgramacion(true);
+    try {
+      const data = await obtenerProgramacionCandelaSheet();
+      setProgramacion(data);
+    } catch (error) {
+      console.error('Error cargando programación:', error);
+    }
+    setLoadingProgramacion(false);
   };
 
   const iniciarVoto = (participanteId) => {
@@ -127,6 +141,13 @@ export default function CandelaFestival() {
     ? [...participantes].sort((a, b) => b.votos - a.votos)[0]
     : null;
 
+  const programacionPorDia = programacion.reduce((acc, item) => {
+    const dia = item.dia || 'Sin día';
+    if (!acc[dia]) acc[dia] = [];
+    acc[dia].push(item);
+    return acc;
+  }, {});
+
   return (
     <div className="min-h-screen bg-crema">
       <NavBar />
@@ -164,9 +185,7 @@ export default function CandelaFestival() {
             <Instagram size={18} /> Síguenos en Instagram
           </a>
           <a
-            href="https://drive.google.com/PENDIENTE-reemplazar-cuando-este-lista"
-            target="_blank"
-            rel="noreferrer"
+            href="#programacion"
             className="inline-flex items-center gap-2 bg-yellow-400 text-[#c81d3f] font-bold px-5 py-2.5 rounded-lg hover:bg-yellow-300 transition"
           >
             <Calendar size={18} /> Ver programación completa
@@ -193,6 +212,50 @@ export default function CandelaFestival() {
           interactivo, formulario de votación y una estrategia de difusión en redes sociales que permitirá llegar a
           miles de potenciales visitantes.
         </p>
+      </section>
+
+      {/* Programación */}
+      <section id="programacion" className="bg-white py-14">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">Programación del Festival</h2>
+          <p className="text-gris text-center mb-10">Todas las actividades, día a día</p>
+
+          {loadingProgramacion ? (
+            <p className="text-center text-terracota">Cargando programación...</p>
+          ) : programacion.length === 0 ? (
+            <p className="text-center text-gris">La programación se publicará próximamente.</p>
+          ) : (
+            <div className="space-y-8">
+              {Object.entries(programacionPorDia).map(([dia, actividades]) => (
+                <div key={dia}>
+                  <h3 className="inline-block bg-[#c81d3f] text-white font-bold px-4 py-1.5 rounded-full text-sm mb-4">
+                    {dia}{actividades[0]?.fecha ? ` · ${actividades[0].fecha}` : ''}
+                  </h3>
+                  <div className="space-y-3">
+                    {actividades.map((item, idx) => (
+                      <div key={idx} className="flex gap-4 bg-crema rounded-lg p-4 border-l-4" style={{ borderColor: '#f26631' }}>
+                        <div className="flex-shrink-0 w-20 text-right">
+                          <p className="flex items-center justify-end gap-1 text-sm font-bold text-[#c81d3f]">
+                            <Clock size={13} /> {item.hora}
+                          </p>
+                        </div>
+                        <div className="flex-1 border-l border-gris/20 pl-4">
+                          <p className="font-bold text-marron text-sm">{item.actividad}</p>
+                          {item.descripcion && <p className="text-xs text-gris mt-1">{item.descripcion}</p>}
+                          {(item.lugar || item.municipio) && (
+                            <p className="flex items-center gap-1 text-xs text-gris mt-1">
+                              <MapPin size={11} /> {[item.lugar, item.municipio].filter(Boolean).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Inscripción al concurso */}

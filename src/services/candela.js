@@ -1,4 +1,4 @@
-const SCRIPT_URL_CANDELA = 'https://script.google.com/macros/s/AKfycbxfrMrdDAhW45wCBaGqv7FJz9YDDox12lz1YZvOSOMYTZOKnA8mlX_RAK6U_am8LCyr/exec';
+const SCRIPT_URL_CANDELA = 'https://script.google.com/macros/s/AKfycbx22ivlaAPmnCX6q2LxtwYSDIV9eyeStJSC48DX2sb6x7xvu__qODQQX7d58JcjjcdI/exec';
 
 export function slugParticipante(nombre, municipio) {
   return `${nombre}-${municipio}`
@@ -19,6 +19,17 @@ export async function obtenerParticipantesCandelaSheet() {
     }));
   } catch (error) {
     console.error('Error obteniendo concursantes Candela:', error);
+    return [];
+  }
+}
+export async function obtenerProgramacionCandelaSheet() {
+  try {
+    const res = await fetch(`${SCRIPT_URL_CANDELA}?sheet=Programacion`);
+    const data = await res.json();
+    if (data.error) return [];
+    return data;
+  } catch (error) {
+    console.error('Error obteniendo programación Candela:', error);
     return [];
   }
 }

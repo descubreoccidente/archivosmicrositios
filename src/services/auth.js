@@ -126,7 +126,7 @@ export const logout = async () => {
 export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
-const SCRIPT_URL_BREVO = 'https://script.google.com/macros/s/AKfycbxfrMrdDAhW45wCBaGqv7FJz9YDDox12lz1YZvOSOMYTZOKnA8mlX_RAK6U_am8LCyr/exec';
+const SCRIPT_URL_BREVO = 'https://script.google.com/macros/s/AKfycbx22ivlaAPmnCX6q2LxtwYSDIV9eyeStJSC48DX2sb6x7xvu__qODQQX7d58JcjjcdI/exec';
 export const agregarContactoBrevo = async (email, nombre, listaId) => {
   try {
     await fetch(SCRIPT_URL_BREVO, {
