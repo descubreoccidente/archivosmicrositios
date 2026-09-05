@@ -4,14 +4,15 @@ import {
 } from '../services/firestore';
 import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
+import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Instagram, CheckCircle, Trophy, Clock } from 'lucide-react';
 import NavBar from './NavBar';
 import { obtenerParticipantesCandelaSheet, obtenerProgramacionCandelaSheet } from '../services/candela';
 
 const SEDES = [
-  { nombre: 'Santa Fe de Antioquia', lat: 6.5564, lng: -75.8281 },
-  { nombre: 'Sopetrán', lat: 6.5011, lng: -75.7439 },
-  { nombre: 'San Jerónimo', lat: 6.4433, lng: -75.7256 },
+  { nombre: 'Santa Fe de Antioquia', lat: 6.5564, lng: -75.8281, slug: 'santa-fe-de-antioquia' },
+  { nombre: 'Sopetrán', lat: 6.5011, lng: -75.7439, slug: 'municipio-de-sopetran' },
+  { nombre: 'San Jerónimo', lat: 6.4433, lng: -75.7256, slug: 'municipio-de-san-jeronimo' },
 ];
 
 const ALIADOS = [
@@ -38,10 +39,33 @@ const COLORES_FESTIVAL = [
   { bg: 'bg-[#F4E01B]', tag: 'bg-[#F4E01B]/10 text-yellow-700' },
 ];
 
+const CATEGORIAS_VOTACION = [
+  { key: 'restaurantes', label: 'Restaurantes' },
+  { key: 'dulce', label: 'Cafés, cacao y reposterías' },
+  { key: 'bares', label: 'Bares y pubs' },
+];
+
+  function formatFechaPrograma(fechaStr) {
+  if (!fechaStr) return '';
+  const date = new Date(fechaStr);
+  if (isNaN(date.getTime())) return fechaStr;
+  const texto = date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', weekday: 'long' });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function categoriaDeExperiencia(experiencia) {
+  const e = (experiencia || '').toLowerCase();
+  if (e.includes('restaurant')) return 'restaurantes';
+  if (e.includes('repost') || e.includes('cafe') || e.includes('café') || e.includes('cacao')) return 'dulce';
+  if (e.includes('bar') || e.includes('pub')) return 'bares';
+  return 'otros';
+}
+
 async function obtenerParticipantesDesdeSheet() {
   const data = await obtenerParticipantesCandelaSheet();
   return data.map((p, idx) => ({
     ...p,
+    categoriaVoto: categoriaDeExperiencia(p.experiencia),
     color: COLORES_FESTIVAL[idx % COLORES_FESTIVAL.length]
   }));
 }
@@ -52,9 +76,9 @@ export default function CandelaFestival() {
   const [programacion, setProgramacion] = useState([]);
   const [loadingProgramacion, setLoadingProgramacion] = useState(true);
   const [usuario, setUsuario] = useState(null);
-  const [miVoto, setMiVoto] = useState(null);
+  const [miVoto, setMiVoto] = useState({});
   const [mostrarLoginVisitante, setMostrarLoginVisitante] = useState(false);
-  const [participantePendiente, setParticipantePendiente] = useState(null);
+  const [votoPendiente, setVotoPendiente] = useState(null);
   const [votando, setVotando] = useState(false);
   const [error, setError] = useState(null);
   const [busqueda, setBusqueda] = useState('');
@@ -73,9 +97,9 @@ export default function CandelaFestival() {
 
   useEffect(() => {
     if (usuario) {
-      obtenerVotoUsuarioCandela(usuario.uid).then(setMiVoto);
+      obtenerVotoUsuarioCandela(usuario.uid).then((data) => setMiVoto(data?.votos || {}));
     } else {
-      setMiVoto(null);
+      setMiVoto({});
     }
   }, [usuario]);
 
@@ -101,22 +125,22 @@ export default function CandelaFestival() {
     setLoadingProgramacion(false);
   };
 
-  const iniciarVoto = (participanteId) => {
-    if (!votacionAbierta || miVoto) return;
+  const iniciarVoto = (participanteId, categoria) => {
+    if (!votacionAbierta || miVoto[categoria]) return;
     if (!usuario) {
-      setParticipantePendiente(participanteId);
+      setVotoPendiente({ participanteId, categoria });
       setMostrarLoginVisitante(true);
       return;
     }
-    confirmarVoto(participanteId, usuario);
+    confirmarVoto(participanteId, categoria, usuario);
   };
 
-  const confirmarVoto = async (participanteId, usuarioActivo) => {
+  const confirmarVoto = async (participanteId, categoria, usuarioActivo) => {
     setVotando(true);
     setError(null);
     try {
-      await votarCandela(participanteId, usuarioActivo.uid, usuarioActivo.displayName || 'Visitante');
-      setMiVoto({ participanteId });
+      await votarCandela(participanteId, categoria, usuarioActivo.uid, usuarioActivo.displayName || 'Visitante');
+      setMiVoto(prev => ({ ...prev, [categoria]: participanteId }));
       agregarContactoBrevo(usuarioActivo.email, usuarioActivo.displayName, 4); // Lista "Interes Candela"
     } catch (err) {
       setError(err.message || 'No pudimos registrar tu voto. Intenta de nuevo.');
@@ -127,9 +151,9 @@ export default function CandelaFestival() {
   const handleLoginExitoso = (user) => {
     setUsuario(user);
     setMostrarLoginVisitante(false);
-    if (participantePendiente) {
-      confirmarVoto(participantePendiente, user);
-      setParticipantePendiente(null);
+    if (votoPendiente) {
+      confirmarVoto(votoPendiente.participanteId, votoPendiente.categoria, user);
+      setVotoPendiente(null);
     }
   };
 
@@ -137,16 +161,14 @@ export default function CandelaFestival() {
     !busqueda || p.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || p.municipio?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const ganador = votacionCerrada && participantes.length > 0
-    ? [...participantes].sort((a, b) => b.votos - a.votos)[0]
-    : null;
-
   const programacionPorDia = programacion.reduce((acc, item) => {
     const dia = item.dia || 'Sin día';
     if (!acc[dia]) acc[dia] = [];
     acc[dia].push(item);
     return acc;
   }, {});
+
+  const totalVotosEmitidos = Object.keys(miVoto).length;
 
   return (
     <div className="min-h-screen bg-crema">
@@ -215,9 +237,13 @@ export default function CandelaFestival() {
       </section>
 
       {/* Programación */}
-      <section id="programacion" className="bg-white py-14">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">Programación del Festival</h2>
+      <section
+        id="programacion"
+        className="py-14 bg-cover bg-center relative"
+        style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), url('/candela-programacion-fondo.jpg')" }}
+      >
+        <div className="max-w-6xl mx-auto px-6 relative">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">Programación Candela Festival 2026</h2>
           <p className="text-gris text-center mb-10">Todas las actividades, día a día</p>
 
           {loadingProgramacion ? (
@@ -225,29 +251,25 @@ export default function CandelaFestival() {
           ) : programacion.length === 0 ? (
             <p className="text-center text-gris">La programación se publicará próximamente.</p>
           ) : (
-            <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {Object.entries(programacionPorDia).map(([dia, actividades]) => (
                 <div key={dia}>
                   <h3 className="inline-block bg-[#c81d3f] text-white font-bold px-4 py-1.5 rounded-full text-sm mb-4">
-                    {dia}{actividades[0]?.fecha ? ` · ${actividades[0].fecha}` : ''}
+                    {dia}{actividades[0]?.fecha ? ` · ${formatFechaPrograma(actividades[0].fecha)}` : ''}
                   </h3>
                   <div className="space-y-3">
                     {actividades.map((item, idx) => (
-                      <div key={idx} className="flex gap-4 bg-crema rounded-lg p-4 border-l-4" style={{ borderColor: '#f26631' }}>
-                        <div className="flex-shrink-0 w-20 text-right">
-                          <p className="flex items-center justify-end gap-1 text-sm font-bold text-[#c81d3f]">
-                            <Clock size={13} /> {item.hora}
+                      <div key={idx} className="bg-white/95 rounded-lg p-4 border-l-4 shadow-sm" style={{ borderColor: '#f26631' }}>
+                        <p className="flex items-center gap-1 text-xs font-bold text-[#c81d3f] mb-1">
+                          <Clock size={12} /> {item.hora}
+                        </p>
+                        <p className="font-bold text-marron text-sm">{item.actividad}</p>
+                        {item.descripcion && <p className="text-xs text-gris mt-1">{item.descripcion}</p>}
+                        {(item.lugar || item.municipio) && (
+                          <p className="flex items-center gap-1 text-xs text-gris mt-1">
+                            <MapPin size={11} /> {[item.lugar, item.municipio].filter(Boolean).join(', ')}
                           </p>
-                        </div>
-                        <div className="flex-1 border-l border-gris/20 pl-4">
-                          <p className="font-bold text-marron text-sm">{item.actividad}</p>
-                          {item.descripcion && <p className="text-xs text-gris mt-1">{item.descripcion}</p>}
-                          {(item.lugar || item.municipio) && (
-                            <p className="flex items-center gap-1 text-xs text-gris mt-1">
-                              <MapPin size={11} /> {[item.lugar, item.municipio].filter(Boolean).join(', ')}
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -347,10 +369,15 @@ export default function CandelaFestival() {
           <h2 className="text-2xl font-bold text-[#c81d3f] mb-6 text-center">Municipios sede</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {SEDES.map((sede) => (
-              <div key={sede.nombre} className="bg-crema rounded-lg p-6 text-center border-t-4" style={{ borderColor: '#f26631' }}>
+              <Link
+                key={sede.nombre}
+                to={`/micrositio/${sede.slug}`}
+                className="bg-crema rounded-lg p-6 text-center border-t-4 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                style={{ borderColor: '#f26631' }}
+              >
                 <MapPin size={24} className="mx-auto mb-2" style={{ color: '#f26631' }} />
                 <p className="font-bold text-marron">{sede.nombre}</p>
-              </div>
+              </Link>
             ))}
           </div>
           <p className="text-center text-xs text-gris mt-4">
@@ -399,23 +426,19 @@ export default function CandelaFestival() {
           Concurso de Experiencias Gastronómicas
         </h2>
         <p className="text-gris text-center mb-2">
-          Vota por tu experiencia gastronómica favorita del Candela Festival 2026
+          Vota por tu favorito en cada una de las 3 categorías
         </p>
-        <p className="text-xs text-gris text-center mb-10">
+        <p className="text-xs text-gris text-center mb-2">
           {votacionNoIniciada
             ? 'La votación abre el 30 de septiembre a las 7:00 PM.'
             : votacionCerrada
               ? 'La votación cerró el 4 de octubre a las 10:00 PM.'
-              : 'Votación abierta hasta el 4 de octubre de 2026, 10:00 PM · Un voto por persona'}
+              : 'Votación abierta hasta el 4 de octubre de 2026, 10:00 PM · Hasta 1 voto por categoría, por persona'}
         </p>
-
-        {votacionCerrada && ganador && (
-          <div className="max-w-md mx-auto mb-10 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 text-center">
-            <Trophy size={32} className="mx-auto text-yellow-600 mb-2" />
-            <p className="font-bold text-marron text-lg">{ganador.nombre}</p>
-            <p className="text-sm text-gris">{ganador.negocio}</p>
-            <p className="text-xs text-gris mt-2">Ganador del Concurso de Experiencias Gastronómicas 2026</p>
-          </div>
+        {votacionAbierta && (
+          <p className="text-xs text-terracota font-semibold text-center mb-10">
+            Tus votos: {totalVotosEmitidos}/3 categorías
+          </p>
         )}
 
         {error && (
@@ -424,14 +447,8 @@ export default function CandelaFestival() {
           </div>
         )}
 
-        {miVoto && !votacionCerrada && (
-          <div className="max-w-md mx-auto mb-6 bg-green-50 border border-green-200 rounded p-3 text-green-700 text-sm text-center flex items-center justify-center gap-2">
-            <CheckCircle size={16} /> Ya registraste tu voto. ¡Gracias por participar!
-          </div>
-        )}
-
         {!loading && participantes.length > 0 && (
-          <div className="max-w-md mx-auto mb-8">
+          <div className="max-w-md mx-auto mb-10">
             <input
               type="text"
               value={busqueda}
@@ -446,58 +463,85 @@ export default function CandelaFestival() {
           <p className="text-center text-terracota">Cargando participantes...</p>
         ) : participantes.length === 0 ? (
           <p className="text-center text-gris">Los participantes se publicarán próximamente.</p>
-        ) : participantesFiltrados.length === 0 ? (
-          <p className="text-center text-gris">No encontramos ningún participante con ese nombre.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
-            {participantesFiltrados.map((p) => {
-              const esMiVoto = miVoto?.participanteId === p.id;
-              const tieneCoordenadas = p.lat && p.lng && !isNaN(parseFloat(p.lat)) && !isNaN(parseFloat(p.lng));
+          <div className="space-y-12">
+            {CATEGORIAS_VOTACION.map((cat) => {
+              const deEstaCategoria = participantesFiltrados.filter(p => p.categoriaVoto === cat.key);
+              const miVotoCategoria = miVoto[cat.key];
+              const ganadorCategoria = votacionCerrada && deEstaCategoria.length > 0
+                ? [...deEstaCategoria].sort((a, b) => (b.votos || 0) - (a.votos || 0))[0]
+                : null;
+
+              if (deEstaCategoria.length === 0) return null;
+
               return (
-                <div
-                  key={p.id}
-                  className={`bg-white rounded-lg overflow-hidden shadow-md border-2 ${esMiVoto ? 'border-yellow-400' : 'border-transparent'}`}
-                >
-                  <div className="aspect-square bg-gray-100">
-                    {p.foto ? (
-                      <img src={p.foto} alt={p.nombre} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className={`w-full h-full flex items-center justify-center text-3xl font-bold text-white ${p.color.bg}`}>
-                        {p.nombre?.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-2 md:p-3">
-                    <p className="font-bold text-marron text-xs md:text-sm leading-snug">{p.nombre}</p>
-                    {p.negocio && <p className="text-[10px] md:text-xs text-gris">{p.negocio}</p>}
-                    {p.municipio && (
-                      <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
-                        <MapPin size={10} /> {p.municipio}
-                      </p>
-                    )}
-                    {tieneCoordenadas && (
-                      <a
-                        href={`/?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}#mapa-territorio`}
-                        className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
-                      >
-                        <MapPin size={10} /> Cómo llegar
-                      </a>
-                    )}
-                    {votacionAbierta && (
-                      <button
-                        onClick={() => iniciarVoto(p.id)}
-                        disabled={votando || !!miVoto}
-                        className={`w-full mt-2 text-xs md:text-sm font-semibold py-1.5 md:py-2 rounded-lg transition ${
-                          esMiVoto
-                            ? 'bg-yellow-400 text-marron'
-                            : miVoto
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : `text-white hover:opacity-90 ${p.color.bg}`
-                        }`}
-                      >
-                        {esMiVoto ? '✓ Tu voto' : 'Votar'}
-                      </button>
-                    )}
+                <div key={cat.key}>
+                  <h3 className="text-xl font-bold text-marron mb-1 text-center">{cat.label}</h3>
+                  {votacionCerrada && ganadorCategoria && (
+                    <div className="max-w-sm mx-auto mb-6 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 text-center">
+                      <Trophy size={24} className="mx-auto text-yellow-600 mb-1" />
+                      <p className="font-bold text-marron text-sm">{ganadorCategoria.nombre}</p>
+                      <p className="text-xs text-gris">Ganador de la categoría</p>
+                    </div>
+                  )}
+                  {miVotoCategoria && !votacionCerrada && (
+                    <p className="flex items-center justify-center gap-2 text-green-700 text-xs mb-4">
+                      <CheckCircle size={14} /> Ya votaste en esta categoría
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
+                    {deEstaCategoria.map((p) => {
+                      const esMiVoto = miVotoCategoria === p.id;
+                      const tieneCoordenadas = p.lat && p.lng && !isNaN(parseFloat(p.lat)) && !isNaN(parseFloat(p.lng));
+                      return (
+                        <div
+                          key={p.id}
+                          className={`bg-white rounded-lg overflow-hidden shadow-md border-2 ${esMiVoto ? 'border-yellow-400' : 'border-transparent'}`}
+                        >
+                          <div className="aspect-square bg-gray-100">
+                            {p.foto ? (
+                              <img src={p.foto} alt={p.nombre} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={`w-full h-full flex items-center justify-center text-3xl font-bold text-white ${p.color.bg}`}>
+                                {p.nombre?.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-2 md:p-3">
+                            <p className="font-bold text-marron text-xs md:text-sm leading-snug">{p.nombre}</p>
+                            {p.negocio && <p className="text-[10px] md:text-xs text-gris">{p.negocio}</p>}
+                            {p.municipio && (
+                              <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
+                                <MapPin size={10} /> {p.municipio}
+                              </p>
+                            )}
+                            {tieneCoordenadas && (
+                              <a
+                                href={`/?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}#mapa-territorio`}
+                                className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
+                              >
+                                <MapPin size={10} /> Cómo llegar
+                              </a>
+                            )}
+                            {votacionAbierta && (
+                              <button
+                                onClick={() => iniciarVoto(p.id, cat.key)}
+                                disabled={votando || !!miVotoCategoria}
+                                className={`w-full mt-2 text-xs md:text-sm font-semibold py-1.5 md:py-2 rounded-lg transition ${
+                                  esMiVoto
+                                    ? 'bg-yellow-400 text-marron'
+                                    : miVotoCategoria
+                                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                      : `text-white hover:opacity-90 ${p.color.bg}`
+                                }`}
+                              >
+                                {esMiVoto ? '✓ Tu voto' : 'Votar'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

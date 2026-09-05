@@ -658,21 +658,23 @@ export const obtenerVotoUsuarioCandela = async (userId) => {
   }
 };
 
-// Registrar un voto (una sola vez por usuario)
-export const votarCandela = async (participanteId, userId, nombreUsuario) => {
+// Registrar un voto por categoría (hasta 3 votos por usuario: uno por categoría)
+export const votarCandela = async (participanteId, categoria, userId, nombreUsuario) => {
   try {
     const votoRef = doc(db, 'candelaVotos', userId);
-    const yaVoto = await getDoc(votoRef);
-    if (yaVoto.exists()) {
-      throw new Error('Ya has votado anteriormente');
+    const votoDoc = await getDoc(votoRef);
+    const votosActuales = votoDoc.exists() ? (votoDoc.data().votos || {}) : {};
+
+    if (votosActuales[categoria]) {
+      throw new Error('Ya votaste en esta categoría');
     }
 
     await setDoc(votoRef, {
       userId,
-      participanteId,
       nombreUsuario,
+      votos: { ...votosActuales, [categoria]: participanteId },
       fecha: new Date()
-    });
+    }, { merge: true });
 
     await setDoc(
       doc(db, 'candelaParticipantes', participanteId, 'votos', userId),
@@ -784,11 +786,15 @@ export const obtenerVotosCandelaAdmin = async () => {
   try {
     const snap = await getDocs(collection(db, 'candelaVotos'));
     const conteo = {};
+    let totalVotos = 0;
     snap.docs.forEach(d => {
-      const pid = d.data().participanteId;
-      conteo[pid] = (conteo[pid] || 0) + 1;
+      const votos = d.data().votos || {};
+      Object.values(votos).forEach(pid => {
+        conteo[pid] = (conteo[pid] || 0) + 1;
+        totalVotos++;
+      });
     });
-    return { total: snap.size, porParticipante: conteo };
+    return { total: totalVotos, porParticipante: conteo };
   } catch (error) {
     console.error('Error obteniendo votos Candela:', error);
     throw error;
