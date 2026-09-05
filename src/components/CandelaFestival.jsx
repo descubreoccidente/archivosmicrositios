@@ -55,10 +55,18 @@ const CATEGORIAS_VOTACION = [
 
 function categoriaDeExperiencia(experiencia) {
   const e = (experiencia || '').toLowerCase();
+  if (e.includes('matrona')) return 'matronas';
   if (e.includes('restaurant')) return 'restaurantes';
   if (e.includes('repost') || e.includes('cafe') || e.includes('café') || e.includes('cacao')) return 'dulce';
   if (e.includes('bar') || e.includes('pub')) return 'bares';
   return 'otros';
+}
+
+function formatWhatsApp(numero) {
+  const digitos = (numero || '').replace(/\D/g, '');
+  if (digitos.startsWith('57') && digitos.length >= 12) return digitos;
+  if (digitos.length === 10) return `57${digitos}`;
+  return digitos;
 }
 
 async function obtenerParticipantesDesdeSheet() {
@@ -465,6 +473,61 @@ export default function CandelaFestival() {
           <p className="text-center text-gris">Los participantes se publicarán próximamente.</p>
         ) : (
           <div className="space-y-12">
+            {(() => {
+              const matronas = participantesFiltrados.filter(p => p.categoriaVoto === 'matronas');
+              if (matronas.length === 0) return null;
+              return (
+                <div>
+                  <h3 className="text-xl font-bold text-marron mb-1 text-center">Matronas de la Tradición</h3>
+                  <p className="text-xs text-gris text-center mb-6">Guardianas de la identidad culinaria del Occidente Antioqueño</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
+                    {matronas.map((p) => {
+                      const tieneCoordenadas = p.lat && p.lng && !isNaN(parseFloat(p.lat)) && !isNaN(parseFloat(p.lng));
+                      return (
+                        <div key={p.id} className="bg-white rounded-lg overflow-hidden shadow-md border-2 border-transparent">
+                          <div className="aspect-square bg-gray-100">
+                            {p.foto ? (
+                              <img src={p.foto} alt={p.nombre} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={`w-full h-full flex items-center justify-center text-3xl font-bold text-white ${p.color.bg}`}>
+                                {p.nombre?.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-2 md:p-3">
+                            <p className="font-bold text-marron text-xs md:text-sm leading-snug">{p.nombre}</p>
+                            {p.negocio && <p className="text-[10px] md:text-xs text-gris">{p.negocio}</p>}
+                            {p.municipio && (
+                              <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
+                                <MapPin size={10} /> {p.municipio}
+                              </p>
+                            )}
+                            {tieneCoordenadas && (
+                              <a
+                                href={`/?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}#mapa-territorio`}
+                                className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
+                              >
+                                <MapPin size={10} /> Cómo llegar
+                              </a>
+                            )}
+                            {p.telefono && (
+                              <a
+                                href={`https://wa.me/${formatWhatsApp(p.telefono)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1.5 rounded bg-[#25D366] text-white hover:bg-[#20BD5A] transition"
+                              >
+                                Llamar a {p.nombre.split(' ')[0]}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
             {CATEGORIAS_VOTACION.map((cat) => {
               const deEstaCategoria = participantesFiltrados.filter(p => p.categoriaVoto === cat.key);
               const miVotoCategoria = miVoto[cat.key];
