@@ -5,7 +5,7 @@ import {
 import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Instagram, CheckCircle, Trophy, Clock } from 'lucide-react';
+import { Calendar, MapPin, Instagram, CheckCircle, Flame, Clock, Share2, Download, X } from 'lucide-react';
 import NavBar from './NavBar';
 import { obtenerParticipantesCandelaSheet, obtenerProgramacionCandelaSheet } from '../services/candela';
 
@@ -45,14 +45,6 @@ const CATEGORIAS_VOTACION = [
   { key: 'bares', label: 'Bares y pubs' },
 ];
 
-  function formatFechaPrograma(fechaStr) {
-  if (!fechaStr) return '';
-  const date = new Date(fechaStr);
-  if (isNaN(date.getTime())) return fechaStr;
-  const texto = date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', weekday: 'long' });
-  return texto.charAt(0).toUpperCase() + texto.slice(1);
-}
-
 function categoriaDeExperiencia(experiencia) {
   const e = (experiencia || '').toLowerCase();
   if (e.includes('matrona')) return 'matronas';
@@ -67,6 +59,84 @@ function formatWhatsApp(numero) {
   if (digitos.startsWith('57') && digitos.length >= 12) return digitos;
   if (digitos.length === 10) return `57${digitos}`;
   return digitos;
+}
+
+function formatFechaPrograma(fechaStr) {
+  if (!fechaStr) return '';
+  const date = new Date(fechaStr);
+  if (isNaN(date.getTime())) return fechaStr;
+  const texto = date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', weekday: 'long' });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function envolverTexto(ctx, texto, x, y, maxWidth, lineHeight) {
+  const palabras = texto.split(' ');
+  let linea = '';
+  const lineas = [];
+  for (let n = 0; n < palabras.length; n++) {
+    const lineaPrueba = linea + palabras[n] + ' ';
+    if (ctx.measureText(lineaPrueba).width > maxWidth && n > 0) {
+      lineas.push(linea.trim());
+      linea = palabras[n] + ' ';
+    } else {
+      linea = lineaPrueba;
+    }
+  }
+  lineas.push(linea.trim());
+  const inicioY = y - ((lineas.length - 1) * lineHeight) / 2;
+  lineas.forEach((l, i) => ctx.fillText(l, x, inicioY + i * lineHeight));
+  return lineas.length;
+}
+
+function generarImagenVoto(nombreParticipante, categoriaLabel) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+
+    const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+    grad.addColorStop(0, '#c81d3f');
+    grad.addColorStop(1, '#f26631');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    const dibujarResto = () => {
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 56px Arial';
+      ctx.fillText('¡YA VOTÉ! 🔥', 540, 500);
+
+      ctx.font = 'bold 66px Arial';
+      envolverTexto(ctx, nombreParticipante, 540, 610, 880, 76);
+
+      ctx.font = '38px Arial';
+      ctx.fillStyle = '#FFE9A8';
+      ctx.fillText(categoriaLabel, 540, 770);
+
+      ctx.font = 'bold 34px Arial';
+      ctx.fillStyle = 'white';
+      ctx.fillText('Candela Festival 2026', 540, 900);
+
+      ctx.font = '28px Arial';
+      ctx.fillText('descubreoccidente.com/candela-festival', 540, 945);
+
+      ctx.font = 'bold 30px Arial';
+      ctx.fillText('#CandelaFestival2026', 540, 995);
+
+      resolve(canvas.toDataURL('image/png'));
+    };
+
+    const logo = new Image();
+    logo.onload = () => {
+      const logoW = 380;
+      const logoH = (logo.height / logo.width) * logoW;
+      ctx.drawImage(logo, (1080 - logoW) / 2, 80, logoW, logoH);
+      dibujarResto();
+    };
+    logo.onerror = () => dibujarResto();
+    logo.src = '/candela-logo.png';
+  });
 }
 
 async function obtenerParticipantesDesdeSheet() {
@@ -90,6 +160,8 @@ export default function CandelaFestival() {
   const [votando, setVotando] = useState(false);
   const [error, setError] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  const [imagenCompartir, setImagenCompartir] = useState(null);
+  const [generandoImagen, setGenerandoImagen] = useState(false);
 
   const ahora = new Date();
   const votacionNoIniciada = ahora < CANDELA_FECHA_INICIO;
@@ -150,10 +222,55 @@ export default function CandelaFestival() {
       await votarCandela(participanteId, categoria, usuarioActivo.uid, usuarioActivo.displayName || 'Visitante');
       setMiVoto(prev => ({ ...prev, [categoria]: participanteId }));
       agregarContactoBrevo(usuarioActivo.email, usuarioActivo.displayName, 4); // Lista "Interes Candela"
+
+      const participante = participantes.find(p => p.id === participanteId);
+      const catInfo = CATEGORIAS_VOTACION.find(c => c.key === categoria);
+      if (participante && catInfo) {
+        mostrarCompartir(participante.nombre, catInfo.label);
+      }
     } catch (err) {
       setError(err.message || 'No pudimos registrar tu voto. Intenta de nuevo.');
     }
     setVotando(false);
+  };
+
+  const mostrarCompartir = async (nombreParticipante, categoriaLabel) => {
+    setGenerandoImagen(true);
+    try {
+      const dataUrl = await generarImagenVoto(nombreParticipante, categoriaLabel);
+      setImagenCompartir(dataUrl);
+    } catch (err) {
+      console.error('Error generando imagen para compartir:', err);
+    }
+    setGenerandoImagen(false);
+  };
+
+  const descargarImagen = () => {
+    if (!imagenCompartir) return;
+    const link = document.createElement('a');
+    link.href = imagenCompartir;
+    link.download = 'mi-voto-candela-festival.png';
+    link.click();
+  };
+
+  const compartirImagen = async () => {
+    if (!imagenCompartir) return;
+    try {
+      const res = await fetch(imagenCompartir);
+      const blob = await res.blob();
+      const archivo = new File([blob], 'mi-voto-candela-festival.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        await navigator.share({
+          files: [archivo],
+          title: 'Candela Festival 2026',
+          text: '¡Ya voté en el Candela Festival! Vota tú también en descubreoccidente.com/candela-festival #CandelaFestival2026'
+        });
+      } else {
+        descargarImagen();
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') descargarImagen();
+    }
   };
 
   const handleLoginExitoso = (user) => {
@@ -202,7 +319,7 @@ export default function CandelaFestival() {
           href="#concurso"
           className="inline-flex items-center gap-2 bg-white text-[#c81d3f] font-bold px-8 py-3.5 rounded-lg hover:bg-crema transition text-lg mt-6 shadow-lg"
         >
-          🏆 Vota ya por tu favorito
+          🔥 ¡Vota ya por tu favorito!
         </a>
 
         <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
@@ -438,7 +555,7 @@ export default function CandelaFestival() {
         </p>
         <p className="text-xs text-gris text-center mb-2">
           {votacionNoIniciada
-            ? 'La votación abre el 30 de septiembre a las 7:00 PM.'
+            ? 'La votación abre el 30 de septiembre a las 10:00 AM.'
             : votacionCerrada
               ? 'La votación cerró el 4 de octubre a las 10:00 PM.'
               : 'Votación abierta hasta el 4 de octubre de 2026, 10:00 PM · Hasta 1 voto por categoría, por persona'}
@@ -477,9 +594,14 @@ export default function CandelaFestival() {
               const matronas = participantesFiltrados.filter(p => p.categoriaVoto === 'matronas');
               if (matronas.length === 0) return null;
               return (
-                <div>
-                  <h3 className="text-xl font-bold text-marron mb-1 text-center">Matronas de la Tradición</h3>
-                  <p className="text-xs text-gris text-center mb-6">Guardianas de la identidad culinaria del Occidente Antioqueño</p>
+                <div className="-mx-6 px-6 py-10 rounded-xl" style={{ backgroundColor: '#2AA876' }}>
+                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-3 text-center">Matronas del Saber Culinario</h3>
+                  <p className="text-sm text-white/90 text-center mb-8 max-w-2xl mx-auto leading-relaxed">
+                    Las matronas son mujeres que han llevado por generaciones la identidad gastronómica del occidente
+                    antioqueño. No olvidemos que desde el occidente salieron quienes fundaron los pueblos antioqueños, del viejo Caldas
+                    y norte del Valle del Cauca. Esta tradición pasó de abuelas y madres a hijas, y nos deleitan con esta
+                    parte esencial de nuestra cultura desde épocas antes de la colonia española.
+                  </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
                     {matronas.map((p) => {
                       const tieneCoordenadas = p.lat && p.lng && !isNaN(parseFloat(p.lat)) && !isNaN(parseFloat(p.lng));
@@ -542,15 +664,27 @@ export default function CandelaFestival() {
                   <h3 className="text-xl font-bold text-marron mb-1 text-center">{cat.label}</h3>
                   {votacionCerrada && ganadorCategoria && (
                     <div className="max-w-sm mx-auto mb-6 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 text-center">
-                      <Trophy size={24} className="mx-auto text-yellow-600 mb-1" />
+                      <Flame size={24} className="mx-auto text-orange-500 mb-1" />
                       <p className="font-bold text-marron text-sm">{ganadorCategoria.nombre}</p>
                       <p className="text-xs text-gris">Ganador de la categoría</p>
                     </div>
                   )}
                   {miVotoCategoria && !votacionCerrada && (
-                    <p className="flex items-center justify-center gap-2 text-green-700 text-xs mb-4">
-                      <CheckCircle size={14} /> Ya votaste en esta categoría
-                    </p>
+                    <div className="flex flex-col items-center gap-2 mb-4">
+                      <p className="flex items-center justify-center gap-2 text-green-700 text-xs">
+                        <CheckCircle size={14} /> Ya votaste en esta categoría
+                      </p>
+                      <button
+                        onClick={() => {
+                          const p = deEstaCategoria.find(x => x.id === miVotoCategoria);
+                          if (p) mostrarCompartir(p.nombre, cat.label);
+                        }}
+                        disabled={generandoImagen}
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[#c81d3f] text-white hover:bg-[#a51834] transition disabled:opacity-50"
+                      >
+                        <Share2 size={13} /> Comparte tu voto
+                      </button>
+                    </div>
                   )}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
                     {deEstaCategoria.map((p) => {
@@ -618,6 +752,51 @@ export default function CandelaFestival() {
           onClose={() => setMostrarLoginVisitante(false)}
           onSuccess={handleLoginExitoso}
         />
+      )}
+
+      {/* Modal compartir voto */}
+      {(imagenCompartir || generandoImagen) && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+          onClick={() => setImagenCompartir(null)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-sm w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 border-b border-gris/10">
+              <h3 className="font-bold text-marron">¡Comparte tu voto!</h3>
+              <button onClick={() => setImagenCompartir(null)} className="text-gris hover:text-terracota">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4">
+              {generandoImagen ? (
+                <div className="aspect-square bg-crema flex items-center justify-center rounded-lg">
+                  <p className="text-terracota text-sm">Generando imagen...</p>
+                </div>
+              ) : (
+                <img src={imagenCompartir} alt="Mi voto Candela Festival" className="w-full rounded-lg" />
+              )}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={compartirImagen}
+                  disabled={generandoImagen}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#c81d3f] text-white font-semibold py-3 rounded-lg hover:bg-[#a51834] transition disabled:opacity-50"
+                >
+                  <Share2 size={18} /> Compartir
+                </button>
+                <button
+                  onClick={descargarImagen}
+                  disabled={generandoImagen}
+                  className="flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold px-4 py-3 rounded-lg hover:bg-crema transition disabled:opacity-50"
+                >
+                  <Download size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
