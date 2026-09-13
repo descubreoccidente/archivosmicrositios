@@ -29,6 +29,7 @@ const ALIADOS = [
   { nombre: 'Provincia Agroindustrial del Occidente Antioqueño', archivo: 'provinciaagro-logo.png' },
   { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
   { nombre: 'Marketing para Emprendedores', archivo: 'mpe-logo.png' },
+  { nombre: 'Occidente Limpio', archivo: 'occidentelimpio-logo.jpeg' },
 ];
 
 const COLORES_FESTIVAL = [
