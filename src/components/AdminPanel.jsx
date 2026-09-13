@@ -253,8 +253,26 @@ export default function AdminPanel() {
     acc[clave].push(r);
     return acc;
   }, {});
+const descargarActoresExcel = () => {
+    if (actores.length === 0) return;
+    const filas = actores.map(a => ({
+      Nombre: a.nombre,
+      Categoria: a.categoria,
+      Subcategoria: a.subcategoria,
+      Municipio: a.municipio,
+      Email: a.email,
+      Telefono: a.telefono,
+      Estado: a.activo ? 'Activo' : 'Suspendido',
+      Slug: a.slug
+    }));
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Actores');
+    XLSX.writeFile(wb, `actores-descubre-occidente-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
 
   const descargarExcel = () => {
+  
     if (reportesMes.length === 0) return;
 
     const camposExcluir = ['mes', 'actualizadoEn', 'categoria', 'subcategoria'];
@@ -371,6 +389,15 @@ export default function AdminPanel() {
 
         {!loading && tab === 'actores' && (
           <div className="space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-sm text-gris">{actores.length} actores registrados</p>
+              <button
+                onClick={descargarActoresExcel}
+                className="flex items-center gap-2 bg-terracota text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-terracota-dark transition"
+              >
+                <Download size={16} /> Descargar Excel Actores
+              </button>
+            </div>
             {actores.map((a) => (
               <div key={a.id} className="bg-white rounded-lg p-4 flex items-center justify-between border border-gris/10">
                 <div>

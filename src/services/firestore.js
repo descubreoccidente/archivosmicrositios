@@ -710,7 +710,10 @@ export const obtenerTodosLosActoresAdmin = async () => {
           id: d.id,
           nombre: info.nombre || '(Sin nombre)',
           categoria: info.categoria || '',
+          subcategoria: info.subcategoria || '',
           municipio: info.municipio || '',
+          email: info.email || '',
+          telefono: info.telefono || '',
           slug: info.slug || '',
           activo: d.data().config?.activo !== false
         };
