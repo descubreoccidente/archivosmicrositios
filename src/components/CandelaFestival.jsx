@@ -30,6 +30,8 @@ const ALIADOS = [
   { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
   { nombre: 'Marketing para Emprendedores', archivo: 'mpe-logo.png' },
   { nombre: 'Occidente Limpio', archivo: 'occidentelimpio-logo.jpeg' },
+  { nombre: 'juan munoz chef', archivo: 'juanmunoz-logo.jpeg' },
+  { nombre: 'john sepulveda', archivo: 'johnsepulveda-logo.jpeg' },
 ];
 
 const COLORES_FESTIVAL = [
