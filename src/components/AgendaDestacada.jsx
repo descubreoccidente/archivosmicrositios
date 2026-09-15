@@ -15,6 +15,8 @@ const MUNICIPIOS = [
 
 const LOCALES = { es: 'es-CO', en: 'en-US', fr: 'fr-FR' };
 
+const FONDOS_AGENDA = ['/agenda-fondo-1.jpg', '/agenda-fondo-2.jpg', '/agenda-fondo-3.jpg', '/agenda-fondo-4.jpg'];
+
 function formatFechaCorta(fecha, idioma) {
   if (!fecha) return '';
   const date = fecha.toDate ? fecha.toDate() : new Date(fecha);
@@ -26,11 +28,19 @@ export default function AgendaDestacada() {
   const [loading, setLoading] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroMunicipio, setFiltroMunicipio] = useState('');
+  const [indiceFondo, setIndiceFondo] = useState(0);
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
     cargar();
   }, [filtroCategoria, filtroMunicipio]);
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setIndiceFondo((prev) => (prev + 1) % FONDOS_AGENDA.length);
+    }, 6000);
+    return () => clearInterval(intervalo);
+  }, []);
 
   const cargar = async () => {
     setLoading(true);
@@ -49,8 +59,20 @@ export default function AgendaDestacada() {
   };
 
   return (
-    <section className="relative py-16 bg-cover bg-center" style={{ backgroundImage: "linear-gradient(rgba(44,24,16,0.5), rgba(44,24,16,0.5)), url('/agenda-fondo.jpg')" }}>
-      <div className="max-w-6xl mx-auto px-6">
+    <section className="relative py-16 overflow-hidden">
+      {FONDOS_AGENDA.map((src, idx) => (
+        <img
+          key={src}
+          src={src}
+          alt=""
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            idx === indiceFondo ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+      <div className="absolute inset-0 bg-marron/50" />
+
+      <div className="max-w-6xl mx-auto px-6 relative">
         <h2 className="flex items-center justify-center gap-2 text-3xl font-bold text-white mb-2 text-center">
           <img src="/logo-teal.png" alt="" className="h-16 brightness-0 invert" /> {t('destacados.agendaTitulo')}
         </h2>

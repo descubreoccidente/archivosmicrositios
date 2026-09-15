@@ -10,7 +10,10 @@ import MapaTerritorio from './MapaTerritorio';
 import Footer from './Footer';
 import Banner from './Banner';
 
-const FONDOS_HERO = ['/fondo-hero-1.jpg', '/fondo-hero-2.jpeg', '/fondo-hero-3.jpg'];
+const FONDOS_HERO = [
+  '/fondo-hero-1.jpg', '/fondo-hero-2.jpeg', '/fondo-hero-3.jpg',
+  '/fondo-hero-4.jpg', '/fondo-hero-5.jpg', '/fondo-hero-6.jpg', '/fondo-hero-7.jpg'
+];
 
 export default function Home() {
   const [indiceFondo, setIndiceFondo] = useState(0);
