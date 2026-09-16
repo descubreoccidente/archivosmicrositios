@@ -968,7 +968,8 @@ export const toggleDestacadoEvento = async (eventId, destacado) => {
 };
 export const obtenerEventosDestacados = async () => {
   try {
-    const ahora = new Date();
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
     const q = query(collection(db, 'events'), where('destacado', '==', true));
     const snap = await getDocs(q);
     let eventos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -976,7 +977,8 @@ export const obtenerEventosDestacados = async () => {
       const fecha = e.fechaInicio || e.fecha;
       if (!fecha) return true;
       const fechaDate = fecha.toDate ? fecha.toDate() : new Date(fecha);
-      return fechaDate >= ahora;
+      fechaDate.setHours(0, 0, 0, 0);
+      return fechaDate >= hoy;
     });
     eventos.sort((a, b) => {
       const fa = (a.fechaInicio || a.fecha)?.toMillis?.() || 0;
