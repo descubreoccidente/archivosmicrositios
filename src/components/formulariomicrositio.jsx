@@ -36,9 +36,8 @@ const MUNICIPIOS = [
 
 const CIUDADES_SEDE = ['Medellín', 'Bogotá', 'Barranquilla', 'Cartagena'];
 const AMENITIES_POR_CATEGORIA = {
-  'Alojamiento': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación', 'Spa', 'Restaurante', 'Recepción 24h', 'Conserje', 'Snacks', 'Parqueadero sin cobro', 'Parqueadero de pago', 'Dispositivos contra incendios', 'Plancha', 'Billar', 'Mesa de pingpong', 'Senderos', 'Portería 24h', 'Misa dominical', 'Enfermería', 'Auditorio', 'Juegos infantiles', 'Piscina niños'],
-  'Gastronomía': ['Patio al aire libre', 'Música en vivo', 'Galería de arte', 'Agenda de talleres', 'WiFi gratis', 'Parqueadero', 'Zona de fumadores', 'Terraza', 'Menú infantil', 'Opciones vegetarianas/veganas', 'Domicilios', 'Accesible para discapacitados', 'Mascotas permitidas'],
-  'Bares y pubs': ['Zona de fumadores', 'Música en vivo', 'Terraza/patio al aire libre', 'Karaoke', 'Mesa de billar', 'Pantallas deportivas', 'WiFi gratis', 'Parqueadero', 'Mascotas permitidas', 'Happy hour'],
+  'Alojamiento': ['Piscina', 'Turco/Sauna', 'Zona de fumadores', 'WiFi gratis', 'Parqueadero', 'Aire acondicionado', 'Desayuno incluido', 'Mascotas permitidas', 'Accesible para discapacitados', 'Jacuzzi', 'Gimnasio', 'Zona de eventos', 'Vista panorámica', 'Servicio a la habitación', 'Spa', 'Restaurante', 'Recepción 24h', 'Conserje', 'Snacks', 'Parqueadero sin cobro', 'Parqueadero de pago', 'Dispositivos contra incendios', 'Plancha', 'Billar', 'Mesa de pingpong', 'Senderos', 'Portería 24h', 'Misa dominical', 'Enfermería', 'Auditorio', 'Juegos infantiles', 'Piscina niños', 'Creador de experiencia', 'Bodas', 'Jupá para bodas', 'Golf', 'Golfito', 'Ping pong', 'Tenis', 'Squash', 'Tours'],
+  'Gastronomía': ['Patio al aire libre', 'Música en vivo', 'Galería de arte', 'Agenda de talleres', 'WiFi gratis', 'Parqueadero', 'Zona de fumadores', 'Terraza', 'Menú infantil', 'Opciones vegetarianas/veganas', 'Domicilios', 'Accesible para discapacitados', 'Mascotas permitidas', 'Creador de Experiencia', 'Bodas', 'Venue', 'Decoración mesas'],
   'Eventos': ['Wedding planner', 'Salón', 'Lago', 'Capilla', 'Zona verde', 'Campestre', 'Jupa', 'Gazebo', 'Decoración', 'Alimentación', 'Mobiliario', 'Pasabocas', 'Meseros', 'Bartender', 'Transporte'],
 };
 const RED_ICONOS = {
@@ -64,6 +63,7 @@ export default function FormularioMicrositio({ actorId, onSave }) {
     nombre: '',
     categoria: '',
     subcategoria: '',
+    categoriasAdicionales: [],
     municipio: '',
     telefono: '',
     email: '',
@@ -97,7 +97,8 @@ export default function FormularioMicrositio({ actorId, onSave }) {
           ...actorDoc.data().basicInfo,
           redesSociales: { ...prev.redesSociales, ...(actorDoc.data().basicInfo.redesSociales || {}) },
           enlacesInteres: actorDoc.data().basicInfo.enlacesInteres || [],
-          certificaciones: actorDoc.data().basicInfo.certificaciones || []
+          certificaciones: actorDoc.data().basicInfo.certificaciones || [],
+          categoriasAdicionales: actorDoc.data().basicInfo.categoriasAdicionales || []
         }));
       }
     } catch (error) {
@@ -202,8 +203,31 @@ export default function FormularioMicrositio({ actorId, onSave }) {
       certificaciones: prev.certificaciones.filter((_, i) => i !== idx)
     }));
   };
+const agregarCategoriaExtra = () => {
+    if (formData.categoriasAdicionales.length >= 3) return;
+    setFormData(prev => ({
+      ...prev,
+      categoriasAdicionales: [...prev.categoriasAdicionales, { categoria: '', subcategoria: '' }]
+    }));
+  };
 
-  const handleSubmit = async (e) => {
+  const handleChangeCategoriaExtra = (idx, campo, valor) => {
+    setFormData(prev => {
+      const nuevas = [...prev.categoriasAdicionales];
+      nuevas[idx] = { ...nuevas[idx], [campo]: valor };
+      if (campo === 'categoria') nuevas[idx].subcategoria = '';
+      return { ...prev, categoriasAdicionales: nuevas };
+    });
+  };
+
+  const eliminarCategoriaExtra = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      categoriasAdicionales: prev.categoriasAdicionales.filter((_, i) => i !== idx)
+    }));
+  };
+
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -327,6 +351,58 @@ export default function FormularioMicrositio({ actorId, onSave }) {
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="bg-crema/50 border border-gris/20 rounded-lg p-4">
+          <label className="block text-sm font-semibold text-marron mb-2">
+            ¿Tu negocio también ofrece otras categorías? <span className="text-gris font-normal">(opcional, hasta 3)</span>
+          </label>
+          <p className="text-xs text-gris mb-3">
+            Por ejemplo, un hotel que también hace gastronomía y tours — así aparecerás en los filtros de todas.
+          </p>
+
+          {formData.categoriasAdicionales.map((extra, idx) => (
+            <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 mb-2">
+              <select
+                value={extra.categoria}
+                onChange={(e) => handleChangeCategoriaExtra(idx, 'categoria', e.target.value)}
+                className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota"
+              >
+                <option value="">Categoría...</option>
+                {CATEGORIAS.filter(cat => cat !== formData.categoria).map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <select
+                value={extra.subcategoria}
+                onChange={(e) => handleChangeCategoriaExtra(idx, 'subcategoria', e.target.value)}
+                disabled={!extra.categoria}
+                className="border border-gris/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-terracota disabled:opacity-50 disabled:bg-gray-50"
+              >
+                <option value="">Subcategoría...</option>
+                {(extra.categoria ? (CATEGORIAS_SUBCATEGORIAS[extra.categoria] || []) : []).map(sub => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => eliminarCategoriaExtra(idx)}
+                className="text-red-500 hover:text-red-700 px-2"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+
+          {formData.categoriasAdicionales.length < 3 && (
+            <button
+              type="button"
+              onClick={agregarCategoriaExtra}
+              className="text-terracota text-sm font-semibold hover:underline mt-1"
+            >
+              + Agregar otra categoría
+            </button>
+          )}
         </div>
 
         <div>

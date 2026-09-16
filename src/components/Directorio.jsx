@@ -69,7 +69,7 @@ export default function Directorio() {
   };
 
   const filtrados = actores.filter(a =>
-    (!filtroCategoria || a.categoria === filtroCategoria) &&
+    (!filtroCategoria || a.categoria === filtroCategoria || (a.categoriasAdicionales || []).some(c => c.categoria === filtroCategoria)) &&
     (!filtroMunicipio || a.municipio === filtroMunicipio)
   );
 

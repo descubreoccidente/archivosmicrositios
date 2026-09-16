@@ -492,6 +492,7 @@ export const obtenerActoresPublicos = async () => {
         nombre: info.nombre,
         categoria: info.categoria,
         subcategoria: info.subcategoria,
+        categoriasAdicionales: info.categoriasAdicionales || [],
         municipio: info.municipio,
         logo: info.logo || null,
         fotoPortada,

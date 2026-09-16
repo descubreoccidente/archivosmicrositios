@@ -226,6 +226,15 @@ export default function MicrositioPublico({ slug }) {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">{info.nombre}</h1>
             <p className="text-white/90">{info.categoria}{info.subcategoria ? ` · ${info.subcategoria}` : ''}</p>
+            {info.categoriasAdicionales && info.categoriasAdicionales.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {info.categoriasAdicionales.filter(c => c.categoria).map((c, idx) => (
+                  <span key={idx} className="bg-white/20 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {c.categoria}{c.subcategoria ? ` · ${c.subcategoria}` : ''}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-3 mt-2">
               {info.municipio && (
                 <span className="flex items-center gap-1 text-sm">
