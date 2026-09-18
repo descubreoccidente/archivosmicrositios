@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSEO } from '../hooks/useSEO';
 import { Link } from 'react-router-dom';
 import { ChevronDown, HelpCircle, Users, Store } from 'lucide-react';
 import NavBar from './NavBar';
@@ -86,6 +87,10 @@ function Acordeon({ preguntas }) {
 }
 
 export default function FAQ() {
+  useSEO(
+    'Preguntas Frecuentes — Descubre Occidente Antioqueño',
+    'Resuelve tus dudas sobre cómo usar la plataforma, cómo gestionar tu micrositio como actor turístico, y todo sobre el Occidente Antioqueño.'
+  );
   const [tab, setTab] = useState('visitantes');
 
   return (

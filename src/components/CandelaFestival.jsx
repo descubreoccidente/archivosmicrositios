@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Instagram, CheckCircle, Flame, Clock, Share2, Download, X } from 'lucide-react';
 import NavBar from './NavBar';
 import { obtenerParticipantesCandelaSheet, obtenerProgramacionCandelaSheet } from '../services/candela';
+import { useSEO } from '../hooks/useSEO';
 
 const SEDES = [
   { nombre: 'Santa Fe de Antioquia', lat: 6.5564, lng: -75.8281, slug: 'santa-fe-de-antioquia' },
@@ -32,6 +33,7 @@ const ALIADOS = [
   { nombre: 'Occidente Limpio', archivo: 'occidentelimpio-logo.jpeg' },
   { nombre: 'juan munoz chef', archivo: 'juanmunoz-logo.jpeg' },
   { nombre: 'john sepulveda', archivo: 'johnsepulveda-logo.jpeg' },
+  { nombre: 'teleregion', archivo: 'teleregion-logo.jpg' },
 ];
 
 const COLORES_FESTIVAL = [
@@ -152,6 +154,10 @@ async function obtenerParticipantesDesdeSheet() {
 }
 
 export default function CandelaFestival() {
+  useSEO(
+    'Candela Festival 2026 — Festival Gastronómico del Occidente Antioqueño | Descubre Occidente',
+    'Vive el Candela Festival del 30 de septiembre al 4 de octubre en Santa Fe de Antioquia, Sopetrán y San Jerónimo. Vota por tu experiencia gastronómica favorita.'
+  );
   const [participantes, setParticipantes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [programacion, setProgramacion] = useState([]);

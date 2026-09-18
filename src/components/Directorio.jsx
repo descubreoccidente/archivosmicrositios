@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { obtenerActoresPublicos } from '../services/firestore';
+import { useSEO } from '../hooks/useSEO';
 import NavBar from './NavBar';
 import Banner from './Banner';
 import { MapPin, Star } from 'lucide-react';
@@ -43,6 +44,10 @@ function colorCategoria(categoria) {
 const PAGINA = 16;
 
 export default function Directorio() {
+  useSEO(
+    'Directorio de Actores Turísticos — 19 Municipios del Occidente Antioqueño | Descubre Occidente',
+    'Explora el directorio completo de hoteles, restaurantes, tours, y experiencias turísticas del Occidente Antioqueño. Filtra por categoría y municipio.'
+  );
   const [actores, setActores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState('');
