@@ -34,6 +34,7 @@ const ALIADOS = [
   { nombre: 'juan munoz chef', archivo: 'juanmunoz-logo.jpeg' },
   { nombre: 'john sepulveda', archivo: 'johnsepulveda-logo.jpeg' },
   { nombre: 'teleregion', archivo: 'teleregion-logo.jpg' },
+  { nombre: 'arasa', archivo: 'arasa-logo.jpeg' },
 ];
 
 const COLORES_FESTIVAL = [
