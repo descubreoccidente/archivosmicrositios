@@ -28,7 +28,7 @@ const ALIADOS = [
   { nombre: 'Marca Ciudad', archivo: 'marca-ciudad.png' },
   { nombre: 'Museo', archivo: 'museo-jc-logo.png' },
   { nombre: 'Provincia Agroindustrial del Occidente Antioqueño', archivo: 'provinciaagro-logo.png' },
-  { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.png' },
+  { nombre: 'Provincia Turística y Agroecológica del Occidente Antioqueño', archivo: 'provinciaagrotur-logo.jpg' },
   { nombre: 'Marketing para Emprendedores', archivo: 'mpe-logo.png' },
   { nombre: 'Occidente Limpio', archivo: 'occidentelimpio-logo.jpeg' },
   { nombre: 'juan munoz chef', archivo: 'juanmunoz-logo.jpeg' },
