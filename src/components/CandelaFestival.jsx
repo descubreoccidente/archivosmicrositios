@@ -302,6 +302,11 @@ export default function CandelaFestival() {
     acc[dia].push(item);
     return acc;
   }, {});
+  const diasOrdenados = Object.entries(programacionPorDia).sort((a, b) => {
+    const numA = parseInt((a[0].match(/\d+/) || [999])[0]);
+    const numB = parseInt((b[0].match(/\d+/) || [999])[0]);
+    return numA - numB;
+  });
 
   const totalVotosEmitidos = Object.keys(miVoto).length;
 
@@ -386,9 +391,9 @@ export default function CandelaFestival() {
           ) : programacion.length === 0 ? (
             <p className="text-center text-gris">La programación se publicará próximamente.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {Object.entries(programacionPorDia).map(([dia, actividades]) => (
-                <div key={dia}>
+            <div className="columns-1 md:columns-3 gap-6">
+              {diasOrdenados.map(([dia, actividades]) => (
+                <div key={dia} className="break-inside-avoid mb-6">
                   <h3 className="inline-block bg-[#c81d3f] text-white font-bold px-4 py-1.5 rounded-full text-sm mb-4">
                     {dia}{actividades[0]?.fecha ? ` · ${formatFechaPrograma(actividades[0].fecha)}` : ''}
                   </h3>

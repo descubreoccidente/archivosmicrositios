@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginConGoogle, registrarConEmail, loginConEmailPassword, crearPerfilUsuario, eliminarCuentaActual } from '../services/auth.js';
+import { loginConGoogle, registrarConEmail, loginConEmailPassword, crearPerfilUsuario, eliminarCuentaActual, enviarRestablecerPassword } from '../services/auth.js';
 import { verificarYRegistrarInvitacion } from '../services/firestore.js';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User } from 'lucide-react';
@@ -8,7 +8,8 @@ import NavBar from './NavBar';
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [modo, setModo] = useState('inicial'); // inicial | login | registro
+  const [mensaje, setMensaje] = useState(null);
+  const [modo, setModo] = useState('inicial'); // inicial | login | registro | recuperar
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmarPassword, setConfirmarPassword] = useState('');
@@ -91,6 +92,26 @@ export default function Login() {
     setLoading(false);
   };
 
+  const handleRecuperar = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setMensaje(null);
+    setLoading(true);
+    try {
+      await enviarRestablecerPassword(email);
+      setMensaje('Si ese correo tiene una cuenta, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada (y spam).');
+    } catch (err) {
+      setMensaje('Si ese correo tiene una cuenta, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada (y spam).');
+    }
+    setLoading(false);
+  };
+
+  const cambiarModo = (nuevoModo) => {
+    setModo(nuevoModo);
+    setError(null);
+    setMensaje(null);
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col relative bg-cover bg-center"
@@ -114,6 +135,11 @@ export default function Login() {
               {error}
             </div>
           )}
+          {mensaje && (
+            <div className="bg-green-50 border border-green-200 rounded p-3 mb-6 text-green-700 text-sm">
+              {mensaje}
+            </div>
+          )}
 
           {modo === 'inicial' && (
             <>
@@ -132,7 +158,7 @@ export default function Login() {
               </button>
 
               <button
-                onClick={() => { setModo('login'); setError(null); }}
+                onClick={() => cambiarModo('login')}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-3 bg-crema text-terracota font-semibold py-3 px-4 rounded-lg hover:bg-crema/70 transition disabled:opacity-50"
               >
@@ -141,7 +167,7 @@ export default function Login() {
 
               <p className="text-center text-sm text-gris mt-4">
                 ¿Primera vez?{' '}
-                <button onClick={() => { setModo('registro'); setError(null); }} className="text-terracota font-semibold underline">
+                <button onClick={() => cambiarModo('registro')} className="text-terracota font-semibold underline">
                   Crea tu cuenta aquí
                 </button>
               </p>
@@ -173,9 +199,18 @@ export default function Login() {
               >
                 {loading ? 'Entrando...' : 'Iniciar sesión'}
               </button>
+              <p className="text-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => cambiarModo('recuperar')}
+                  className="text-terracota underline hover:no-underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </p>
               <button
                 type="button"
-                onClick={() => { setModo('inicial'); setError(null); }}
+                onClick={() => cambiarModo('inicial')}
                 className="w-full text-gris text-sm hover:underline"
               >
                 ← Volver a las demás opciones
@@ -226,7 +261,37 @@ export default function Login() {
               </button>
               <button
                 type="button"
-                onClick={() => { setModo('inicial'); setError(null); }}
+                onClick={() => cambiarModo('inicial')}
+                className="w-full text-gris text-sm hover:underline"
+              >
+                ← Volver a las demás opciones
+              </button>
+            </form>
+          )}
+
+          {modo === 'recuperar' && (
+            <form onSubmit={handleRecuperar} className="space-y-4">
+              <p className="text-sm text-gris">
+                Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.
+              </p>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="tu@correo.com"
+                className="w-full border border-gris/30 rounded-lg px-4 py-3 focus:outline-none focus:border-terracota"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-terracota text-white font-semibold py-3 rounded-lg hover:bg-terracota-dark transition disabled:opacity-50"
+              >
+                {loading ? 'Enviando...' : 'Enviar enlace de recuperación'}
+              </button>
+              <button
+                type="button"
+                onClick={() => cambiarModo('inicial')}
                 className="w-full text-gris text-sm hover:underline"
               >
                 ← Volver a las demás opciones

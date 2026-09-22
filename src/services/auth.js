@@ -7,7 +7,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  deleteUser
+  deleteUser,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -136,5 +137,14 @@ export const agregarContactoBrevo = async (email, nombre, listaId) => {
     });
   } catch (error) {
     console.error('Error agregando contacto a Brevo:', error);
+  }
+};
+export const enviarRestablecerPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+    return { success: true };
+  } catch (error) {
+    console.error('Error enviando restablecimiento:', error);
+    throw error;
   }
 };
