@@ -35,6 +35,9 @@ const ALIADOS = [
   { nombre: 'john sepulveda', archivo: 'johnsepulveda-logo.jpeg' },
   { nombre: 'teleregion', archivo: 'teleregion-logo.jpg' },
   { nombre: 'arasa', archivo: 'arasa-logo.jpeg' },
+  { nombre: 'hotel mariscal', archivo: 'mariscal-logo.jpg' },
+  { nombre: 'telemedellin', archivo: 'telemedellin-logo.jpg' },
+  { nombre: 'policia y guardianes', archivo: 'polnalguardias-logo.png' },
 ];
 
 const COLORES_FESTIVAL = [
