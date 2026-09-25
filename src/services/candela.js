@@ -33,3 +33,26 @@ export async function obtenerProgramacionCandelaSheet() {
     return [];
   }
 }
+export async function obtenerExpertosCandelaSheet() {
+  try {
+    const res = await fetch(`${SCRIPT_URL_CANDELA}?sheet=Expertos`);
+    const data = await res.json();
+    if (data.error) return [];
+    return data;
+  } catch (error) {
+    console.error('Error obteniendo expertos Candela:', error);
+    return [];
+  }
+}
+
+export async function obtenerConciertosCandelaSheet() {
+  try {
+    const res = await fetch(`${SCRIPT_URL_CANDELA}?sheet=Conciertos`);
+    const data = await res.json();
+    if (data.error) return [];
+    return data;
+  } catch (error) {
+    console.error('Error obteniendo conciertos Candela:', error);
+    return [];
+  }
+}

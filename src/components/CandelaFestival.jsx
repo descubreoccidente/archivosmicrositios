@@ -5,9 +5,12 @@ import {
 import { onAuthChange, agregarContactoBrevo } from '../services/auth';
 import ModalLoginVisitante from './modallogivisitante';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Instagram, CheckCircle, Flame, Clock, Share2, Download, X } from 'lucide-react';
+import { Calendar, MapPin, Instagram, CheckCircle, Flame, Clock, Share2, Download, X, Mic, Music } from 'lucide-react';
 import NavBar from './NavBar';
-import { obtenerParticipantesCandelaSheet, obtenerProgramacionCandelaSheet } from '../services/candela';
+import {
+  obtenerParticipantesCandelaSheet, obtenerProgramacionCandelaSheet,
+  obtenerExpertosCandelaSheet, obtenerConciertosCandelaSheet
+} from '../services/candela';
 import { useSEO } from '../hooks/useSEO';
 
 const SEDES = [
@@ -156,7 +159,45 @@ async function obtenerParticipantesDesdeSheet() {
     color: COLORES_FESTIVAL[idx % COLORES_FESTIVAL.length]
   }));
 }
-
+function TarjetaConMapa({ foto, nombre, subtitulo, fechaHora, descripcion, lat, lng, municipio, colorClass = 'bg-terracota', icono: Icono }) {
+  const tieneCoordenadas = lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+  return (
+    <div className="bg-white rounded-lg overflow-hidden shadow-md">
+      <div className="aspect-square bg-gray-100">
+        {foto ? (
+          <img src={foto} alt={nombre} className="w-full h-full object-cover" />
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center text-white ${colorClass}`}>
+            {Icono && <Icono size={32} />}
+          </div>
+        )}
+      </div>
+      <div className="p-3">
+        <p className="font-bold text-marron text-sm leading-snug">{nombre}</p>
+        {fechaHora && (
+          <p className="flex items-center gap-1 text-[11px] text-terracota font-semibold mt-1">
+            <Clock size={10} /> {fechaHora}
+          </p>
+        )}
+        {subtitulo && <p className="text-xs text-marron mt-0.5">{subtitulo}</p>}
+        {descripcion && <p className="text-xs text-gris mt-1 line-clamp-3">{descripcion}</p>}
+        {municipio && (
+          <p className="flex items-center gap-1 text-xs text-gris mt-1">
+            <MapPin size={10} /> {municipio}
+          </p>
+        )}
+        {tieneCoordenadas && (
+          <a
+            href={`/?lat=${lat}&lng=${lng}&nombre=${encodeURIComponent(nombre)}#mapa-territorio`}
+            className="flex items-center justify-center gap-1 w-full mt-2 text-xs font-semibold py-1.5 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
+          >
+            <MapPin size={11} /> Cómo llegar
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
 export default function CandelaFestival() {
   useSEO(
     'Candela Festival 2026 — Festival Gastronómico del Occidente Antioqueño | Descubre Occidente',
@@ -175,6 +216,8 @@ export default function CandelaFestival() {
   const [busqueda, setBusqueda] = useState('');
   const [imagenCompartir, setImagenCompartir] = useState(null);
   const [generandoImagen, setGenerandoImagen] = useState(false);
+const [expertos, setExpertos] = useState([]);
+  const [conciertos, setConciertos] = useState([]);
 
   const ahora = new Date();
   const votacionNoIniciada = ahora < CANDELA_FECHA_INICIO;
@@ -182,8 +225,9 @@ export default function CandelaFestival() {
   const votacionAbierta = !votacionNoIniciada && !votacionCerrada;
 
   useEffect(() => {
-    cargarParticipantes();
+   cargarParticipantes();
     cargarProgramacion();
+    cargarExpertosYConciertos();
     const unsubscribe = onAuthChange((user) => setUsuario(user));
     return () => unsubscribe();
   }, []);
@@ -216,6 +260,18 @@ export default function CandelaFestival() {
       console.error('Error cargando programación:', error);
     }
     setLoadingProgramacion(false);
+  };
+  const cargarExpertosYConciertos = async () => {
+    try {
+      const [dataExpertos, dataConciertos] = await Promise.all([
+        obtenerExpertosCandelaSheet(),
+        obtenerConciertosCandelaSheet()
+      ]);
+      setExpertos(dataExpertos);
+      setConciertos(dataConciertos);
+    } catch (error) {
+      console.error('Error cargando expertos/conciertos:', error);
+    }
   };
 
   const iniciarVoto = (participanteId, categoria) => {
@@ -422,46 +478,60 @@ export default function CandelaFestival() {
           )}
         </div>
       </section>
-
-      {/* Inscripción al concurso */}
-      <section className="py-14" style={{ backgroundColor: '#c81d3f' }}>
-        <div className="max-w-3xl mx-auto px-6 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">¿Tienes un restaurante, café o bar?</h2>
-          <p className="text-white/90 mb-6">
-            Inscribe tu establecimiento y sé parte del Concurso de Experiencias Gastronómicas 2026 — sin ningún costo.
-          </p>
-
-          <div className="bg-white/10 rounded-lg p-4 mb-8 inline-flex items-center gap-2">
-            <Calendar size={18} />
-            <span className="font-semibold">Cierre de inscripciones: 10 de septiembre de 2026</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
-            {[
-              'Acompañamiento profesional',
-              'Presencia en el micrositio oficial y en redes sociales del evento',
-              'Identificador oficial para tu restaurante, café, panadería, repostería, bar o pub',
-              'Inclusión en el formulario de votación y en el mapa interactivo de Descubre Occidente',
-            ].map((beneficio, idx) => (
-              <div key={idx} className="flex items-start gap-2 bg-white/10 rounded-lg p-3">
-                <CheckCircle size={18} className="flex-shrink-0 mt-0.5 text-yellow-300" />
-                <span className="text-sm">{beneficio}</span>
-              </div>
+{/* Expertos y conversatorios */}
+      {expertos.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 py-14">
+          <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">
+            <Mic size={28} /> Expertos y Conversatorios
+          </h2>
+          <p className="text-gris text-center mb-10">Charlas gastronómicas con expertos invitados</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+            {expertos.map((exp, idx) => (
+              <TarjetaConMapa
+                key={idx}
+                foto={exp.foto}
+                nombre={exp.nombre}
+                fechaHora={[formatFechaPrograma(exp.fecha), exp.hora].filter(Boolean).join(' · ')}
+                subtitulo={exp.titulo}
+                descripcion={exp.resena}
+                lat={exp.lat}
+                lng={exp.lng}
+                municipio={exp.municipio}
+                colorClass="bg-[#c81d3f]"
+                icono={Mic}
+              />
             ))}
           </div>
+        </section>
+      )}
 
-          <a
-            href="https://forms.gle/Wi5NTMxNbUWa2V649"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-block bg-yellow-400 text-[#c81d3f] font-bold px-8 py-4 rounded-lg hover:bg-yellow-300 transition text-lg"
-          >
-            Inscribe tu establecimiento aquí →
-          </a>
-          <p className="text-white/70 text-xs mt-3">Todo sin costo, gracias al apoyo de las instituciones vinculadas.</p>
-        </div>
-      </section>
-
+      {/* Conciertos musicales */}
+      {conciertos.length > 0 && (
+        <section className="bg-white py-14">
+          <div className="max-w-6xl mx-auto px-6">
+            <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">
+              <Music size={28} /> Conciertos Musicales
+            </h2>
+            <p className="text-gris text-center mb-10">La música que acompaña al Candela Festival</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
+              {conciertos.map((c, idx) => (
+                <TarjetaConMapa
+                  key={idx}
+                  foto={c.foto}
+                  nombre={c.artista}
+                  fechaHora={[formatFechaPrograma(c.fecha), c.hora].filter(Boolean).join(' · ')}
+                  descripcion={c.descripcion}
+                  lat={c.lat}
+                  lng={c.lng}
+                  municipio={c.municipio}
+                  colorClass="bg-[#f26631]"
+                  icono={Music}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       {/* Paquetes de experiencia */}
       <section className="max-w-5xl mx-auto px-6 py-14">
         <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">¿Qué experiencia ofrecerás?</h2>
