@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { obtenerPuntosMapa, obtenerPuntosInteres, TIPOS_PUNTO_INTERES, obtenerLugaresDescubreMasParaMapa } from '../services/firestore';
-import { obtenerParticipantesCandelaSheet } from '../services/candela';
-
+import { obtenerParticipantesCandelaSheet, obtenerExpertosCandelaSheet, obtenerConciertosCandelaSheet } from '../services/candela';
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 function escaparHtml(texto) {
   if (!texto) return '';
@@ -62,6 +61,8 @@ export default function MapaTerritorio() {
       const concursantes = await obtenerParticipantesCandelaSheet();
       const puntosInteresGeneral = await obtenerPuntosInteres();
       const lugaresDescubreMas = await obtenerLugaresDescubreMasParaMapa();
+      const expertos = await obtenerExpertosCandelaSheet();
+      const conciertos = await obtenerConciertosCandelaSheet();
 
       const puntosConcursantes = concursantes
         .filter(c => c.lat && c.lng && !isNaN(parseFloat(c.lat)) && !isNaN(parseFloat(c.lng)))
@@ -94,12 +95,52 @@ export default function MapaTerritorio() {
         tipo: 'descubremas'
       }));
 
-      [...puntos, ...puntosConcursantes, ...puntosInteresMapeados, ...puntosDescubreMas].forEach((punto) => {
+      const puntosExpertos = expertos
+        .filter(e => e.lat && e.lng && !isNaN(parseFloat(e.lat)) && !isNaN(parseFloat(e.lng)))
+        .map(e => ({
+          nombre: e.nombre,
+          categoria: e.titulo || 'Conversatorio Candela',
+          municipio: e.municipio,
+          lat: parseFloat(e.lat),
+          lng: parseFloat(e.lng),
+          tipo: 'experto'
+        }));
+
+      const puntosConciertos = conciertos
+        .filter(c => c.lat && c.lng && !isNaN(parseFloat(c.lat)) && !isNaN(parseFloat(c.lng)))
+        .map(c => ({
+          nombre: c.artista,
+          categoria: 'Concierto Candela',
+          municipio: c.municipio,
+          lat: parseFloat(c.lat),
+          lng: parseFloat(c.lng),
+          tipo: 'concierto'
+        }));
+
+      const todosPuntos = [...puntos, ...puntosConcursantes, ...puntosInteresMapeados, ...puntosDescubreMas, ...puntosExpertos, ...puntosConciertos];
+
+      // Separar automáticamente puntos con coordenadas idénticas, para que no se tapen entre sí
+      const contadorPorCoordenada = {};
+      todosPuntos.forEach((punto) => {
+        const clave = `${punto.lat},${punto.lng}`;
+        const indice = contadorPorCoordenada[clave] || 0;
+        if (indice > 0) {
+          const angulo = (indice * 137.5) * (Math.PI / 180);
+          const radio = 0.00025 * Math.ceil(indice / 1);
+          punto.lat = punto.lat + Math.cos(angulo) * radio;
+          punto.lng = punto.lng + Math.sin(angulo) * radio;
+        }
+        contadorPorCoordenada[clave] = indice + 1;
+      });
+
+      todosPuntos.forEach((punto) => {
        try {
         const esCandela = punto.tipo === 'candela';
         const esInteres = punto.tipo === 'interes';
         const esDescubreMas = punto.tipo === 'descubremas';
-        const color = punto.tipo === 'actor' ? '#22c55e' : punto.tipo === 'evento' ? '#eab308' : esInteres ? '#5F5E5A' : esDescubreMas ? '#9333ea' : '#f26631';
+        const esExperto = punto.tipo === 'experto';
+        const esConcierto = punto.tipo === 'concierto';
+        const color = punto.tipo === 'actor' ? '#22c55e' : punto.tipo === 'evento' ? '#eab308' : esInteres ? '#5F5E5A' : esDescubreMas ? '#9333ea' : (esExperto || esConcierto) ? '#c81d3f' : '#f26631';
 
         const el = document.createElement('div');
         el.style.cursor = 'pointer';
@@ -128,7 +169,19 @@ export default function MapaTerritorio() {
           el.style.justifyContent = 'center';
           el.style.fontSize = '15px';
           el.innerText = TIPOS_PUNTO_INTERES[punto.subtipo]?.emoji || '📍';
-        } else if (esDescubreMas) {
+          } else if (esExperto || esConcierto) {
+          el.style.width = '30px';
+          el.style.height = '30px';
+          el.style.borderRadius = '50%';
+          el.style.backgroundColor = 'white';
+          el.style.border = `2px solid ${color}`;
+          el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.4)';
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.justifyContent = 'center';
+          el.style.fontSize = '15px';
+          el.innerText = esExperto ? '🎤' : '🎵';
+          } else if (esDescubreMas) {
           el.style.width = '22px';
           el.style.height = '22px';
           el.style.borderRadius = '50%';

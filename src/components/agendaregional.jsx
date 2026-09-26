@@ -496,7 +496,7 @@ export default function AgendaRegional() {
 
               {eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
                 <a
-                  href={`/?lat=${eventoSeleccionado.ubicacion.lat}&lng=${eventoSeleccionado.ubicacion.lng}&nombre=${encodeURIComponent(eventoSeleccionado.nombre)}#mapa-territorio`}
+                  href={`/mapa?lat=${eventoSeleccionado.ubicacion.lat}&lng=${eventoSeleccionado.ubicacion.lng}&nombre=${encodeURIComponent(eventoSeleccionado.nombre)}`}
                   className="mt-4 w-full flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold py-2.5 rounded-lg hover:bg-crema transition text-sm"
                 >
                   <MapPin size={16} /> Ver en el mapa

@@ -41,6 +41,7 @@ const ALIADOS = [
   { nombre: 'hotel mariscal', archivo: 'mariscal-logo.jpg' },
   { nombre: 'telemedellin', archivo: 'telemedellin-logo.jpg' },
   { nombre: 'policia y guardianes', archivo: 'polnalguardias-logo.png' },
+  { nombre: 'frukito', archivo: 'frukito-logo.jpg' },
 ];
 
 const COLORES_FESTIVAL = [
@@ -188,7 +189,7 @@ function TarjetaConMapa({ foto, nombre, subtitulo, fechaHora, descripcion, lat, 
         )}
         {tieneCoordenadas && (
           <a
-            href={`/?lat=${lat}&lng=${lng}&nombre=${encodeURIComponent(nombre)}#mapa-territorio`}
+            href={`/mapa?lat=${lat}&lng=${lng}&nombre=${encodeURIComponent(nombre)}`}
             className="flex items-center justify-center gap-1 w-full mt-2 text-xs font-semibold py-1.5 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
           >
             <MapPin size={11} /> Cómo llegar
@@ -480,11 +481,15 @@ const [expertos, setExpertos] = useState([]);
       </section>
 {/* Expertos y conversatorios */}
       {expertos.length > 0 && (
-        <section className="max-w-6xl mx-auto px-6 py-14">
-          <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">
+        <section
+          className="py-14 bg-cover bg-center relative"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('/fondo-expertos-1.jpeg')" }}
+        >
+          <div className="max-w-6xl mx-auto px-6 relative">
+          <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-bold text-white mb-2 text-center drop-shadow-md">
             <Mic size={28} /> Expertos y Conversatorios
           </h2>
-          <p className="text-gris text-center mb-10">Charlas gastronómicas con expertos invitados</p>
+          <p className="text-white text-center mb-10 drop-shadow-md">Charlas gastronómicas con expertos invitados</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
             {expertos.map((exp, idx) => (
               <TarjetaConMapa
@@ -502,17 +507,21 @@ const [expertos, setExpertos] = useState([]);
               />
             ))}
           </div>
+          </div>
         </section>
       )}
 
       {/* Conciertos musicales */}
       {conciertos.length > 0 && (
-        <section className="bg-white py-14">
-          <div className="max-w-6xl mx-auto px-6">
-            <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">
-              <Music size={28} /> Conciertos Musicales
+        <section
+          className="py-14 bg-cover bg-center relative"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('/fondo-concierto-1.jpg')" }}
+        >
+          <div className="max-w-6xl mx-auto px-6 relative">
+            <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-bold text-white mb-2 text-center drop-shadow-md">
+              <Music size={28} /> Música en Vivo
             </h2>
-            <p className="text-gris text-center mb-10">La música que acompaña al Candela Festival</p>
+            <p className="text-white text-center mb-10 drop-shadow-md">La música que acompaña al Candela Festival</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
               {conciertos.map((c, idx) => (
                 <TarjetaConMapa
@@ -714,7 +723,7 @@ const [expertos, setExpertos] = useState([]);
                             )}
                             {tieneCoordenadas && (
                               <a
-                                href={`/?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}#mapa-territorio`}
+                               href={`/mapa?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}`}
                                 className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
                               >
                                 <MapPin size={10} /> Cómo llegar
@@ -802,7 +811,7 @@ const [expertos, setExpertos] = useState([]);
                             )}
                             {tieneCoordenadas && (
                               <a
-                                href={`/?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}#mapa-territorio`}
+                                href={`/mapa?lat=${p.lat}&lng=${p.lng}&nombre=${encodeURIComponent(p.nombre)}`}
                                 className="flex items-center justify-center gap-1 w-full mt-1.5 text-[10px] md:text-xs font-semibold py-1 rounded border border-[#f26631] text-[#f26631] hover:bg-[#f26631]/10 transition"
                               >
                                 <MapPin size={10} /> Cómo llegar

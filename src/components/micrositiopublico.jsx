@@ -397,7 +397,7 @@ export default function MicrositioPublico({ slug }) {
                     <p className="text-xs text-gris line-clamp-3">{item.descripcion}</p>
                     {item.tipo === 'lugar' && item.lat && item.lng && (
                       <a
-                        href={`/?lat=${item.lat}&lng=${item.lng}&nombre=${encodeURIComponent(item.titulo)}#mapa-territorio`}
+                        href={`/mapa?lat=${item.lat}&lng=${item.lng}&nombre=${encodeURIComponent(item.titulo)}`}
                         className="flex items-center justify-center gap-1 w-full mt-3 text-xs font-semibold py-1.5 rounded border border-terracota text-terracota hover:bg-crema transition"
                       >
                         <MapPin size={12} /> Ver en el mapa
@@ -463,7 +463,7 @@ export default function MicrositioPublico({ slug }) {
               )}
               {info.ubicacion?.lat && info.ubicacion?.lng && (
                 <a
-                  href={`/?lat=${info.ubicacion.lat}&lng=${info.ubicacion.lng}&nombre=${encodeURIComponent(info.nombre)}#mapa-territorio`}
+                  href={`/mapa?lat=${info.ubicacion.lat}&lng=${info.ubicacion.lng}&nombre=${encodeURIComponent(info.nombre)}`}
                   className="mt-4 w-full flex items-center justify-center gap-2 bg-terracota text-white font-semibold py-2.5 rounded-lg hover:bg-terracota-dark transition text-sm"
                 >
                   <MapPin size={16} /> Ver en el mapa
@@ -816,7 +816,7 @@ export default function MicrositioPublico({ slug }) {
 
               {eventoSeleccionado.ubicacion?.lat && eventoSeleccionado.ubicacion?.lng && (
                 <a
-                  href={`/?lat=${eventoSeleccionado.ubicacion.lat}&lng=${eventoSeleccionado.ubicacion.lng}&nombre=${encodeURIComponent(eventoSeleccionado.nombre)}#mapa-territorio`}
+                  href={`/mapa?lat=${eventoSeleccionado.ubicacion.lat}&lng=${eventoSeleccionado.ubicacion.lng}&nombre=${encodeURIComponent(eventoSeleccionado.nombre)}`}
                   className="mt-4 w-full flex items-center justify-center gap-2 border-2 border-terracota text-terracota font-semibold py-2.5 rounded-lg hover:bg-crema transition text-sm"
                 >
                   <MapPin size={16} /> Ver en el mapa
