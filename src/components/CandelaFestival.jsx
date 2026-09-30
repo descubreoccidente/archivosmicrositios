@@ -543,48 +543,17 @@ const [expertos, setExpertos] = useState([]);
       )}
       {/* Paquetes de experiencia */}
       <section className="max-w-5xl mx-auto px-6 py-14">
-        <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">¿Qué experiencia ofrecerás?</h2>
-        <p className="text-gris text-center mb-10">Precios de referencia para la experiencia de 2 personas</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-[#c81d3f] mb-2 text-center">¡No te pierdas las experiencias Candela 2026!</h2>
+        <p className="text-gris text-center mb-10">3 categorías, 3 precios y la posibilidad de votar por tu favorito, ahorrando</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              titulo: 'Restaurantes',
-              precio: '$119.900',
-              color: '#D6203C',
-              items: ['1 entrada para compartir', '2 platos fuertes', '1 postre para compartir', '2 bebidas'],
-            },
-            {
-              titulo: 'Cafés, cacao y reposterías',
-              precio: '$39.900',
-              color: '#F5821F',
-              items: ['2 bebidas', '2 experiencias reposteras'],
-            },
-            {
-              titulo: 'Bares y pubs',
-              precio: '$69.900',
-              color: '#E2568C',
-              items: ['1 experiencia de bebidas para compartir', 'Maridaje para compartir'],
-            },
-          ].map((paquete) => (
-            <div key={paquete.titulo} className="bg-white rounded-lg shadow-md overflow-hidden border-t-4" style={{ borderColor: paquete.color }}>
-              <div className="p-6">
-                <h3 className="font-bold text-marron text-lg mb-1">{paquete.titulo}</h3>
-                <p className="text-2xl font-extrabold mb-1" style={{ color: paquete.color }}>{paquete.precio}</p>
-                <p className="text-xs text-gris mb-4">Experiencia para 2 personas</p>
-                <ul className="space-y-2">
-                  {paquete.items.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-marron">
-                      <span style={{ color: paquete.color }}>●</span> {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {['/experiencia-1.jpg', '/experiencia-2.jpg', '/experiencia-3.jpg'].map((foto) => (
+            <div key={foto} className="rounded-lg shadow-md overflow-hidden">
+              <img src={foto} alt="Experiencia Candela Festival" className="w-full h-auto" />
             </div>
           ))}
         </div>
       </section>
-
       {/* Sedes en mapa */}
       <section className="bg-white py-14">
         <div className="max-w-4xl mx-auto px-6">
