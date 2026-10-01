@@ -685,7 +685,6 @@ const [expertos, setExpertos] = useState([]);
                           <div className="p-2 md:p-3">
                             <p className="font-bold text-marron text-xs md:text-sm leading-snug">{p.nombre}</p>
                             {p.negocio && <p className="text-[10px] md:text-xs text-gris">{p.negocio}</p>}
-                            {p.descripcion && <p className="text-[10px] md:text-xs text-gris mt-0.5 line-clamp-2">{p.descripcion}</p>}
                             {p.municipio && (
                               <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
                                 <MapPin size={10} /> {p.municipio}
@@ -774,7 +773,6 @@ const [expertos, setExpertos] = useState([]);
                           <div className="p-2 md:p-3">
                             <p className="font-bold text-marron text-xs md:text-sm leading-snug">{p.nombre}</p>
                             {p.negocio && <p className="text-[10px] md:text-xs text-gris">{p.negocio}</p>}
-                            {p.descripcion && <p className="text-[10px] md:text-xs text-gris mt-0.5 line-clamp-2">{p.descripcion}</p>}
                             {p.municipio && (
                               <p className="flex items-center gap-1 text-[10px] md:text-xs text-gris mt-1">
                                 <MapPin size={10} /> {p.municipio}
